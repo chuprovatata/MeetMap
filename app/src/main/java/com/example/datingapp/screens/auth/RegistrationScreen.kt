@@ -428,7 +428,7 @@ fun RegistrationScreen(
 
                                     NumberedItem(
                                         number = 2,
-                                        text = "Найди письмо от МипМап"
+                                        text = "Найди письмо от МитМап"
                                     )
 
                                     NumberedItem(
