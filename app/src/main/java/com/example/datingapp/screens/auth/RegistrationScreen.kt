@@ -1,0 +1,594 @@
+// screens/auth/RegistrationScreen.kt
+package com.example.datingapp.screens.auth
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.datingapp.R
+import com.example.datingapp.components.buttons.PrimaryButton
+import com.example.datingapp.components.buttons.TextButtonWithUnderline
+import com.example.datingapp.components.buttons.WhiteButton
+import com.example.datingapp.components.forms.DatingTextField
+import com.example.datingapp.components.forms.TermsCheckbox
+import com.example.datingapp.components.progress.ProgressLine
+import com.example.datingapp.navigation.NavigationProgress
+import com.example.datingapp.navigation.Screen
+import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
+
+@Composable
+fun RegistrationScreen(
+    navController: NavController
+) {
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var isAgreedWithTerms by rememberSaveable { mutableStateOf(false) }
+
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
+
+    var showVerificationScreen by rememberSaveable { mutableStateOf(false) }
+
+    var isLoading by remember { mutableStateOf(false) }
+
+    var isContinueClicked by rememberSaveable { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
+
+    val auth = Firebase.auth
+
+    val emailFocusRequester = remember { FocusRequester() }
+    val passwordFocusRequester = remember { FocusRequester() }
+
+    val spacing = LocalDatingAppSpacing.current
+
+    val progress = NavigationProgress.getProgress(Screen.Registration)
+
+    val canContinue = !isContinueClicked &&
+            email.isNotEmpty() &&
+            password.isNotEmpty() &&
+            isValidEmail(email) &&
+            isValidPassword(password) &&
+            !isLoading
+
+    val canRegister = isAgreedWithTerms && !isLoading
+
+    val moveToPassword = {
+        passwordFocusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
+    LaunchedEffect(email) {
+        emailError = email.isNotEmpty() && !isValidEmail(email)
+    }
+
+    LaunchedEffect(password) {
+        passwordError = password.isNotEmpty() && !isValidPassword(password)
+    }
+
+    // Функция регистрации через Firebase
+    fun registerWithFirebase() {
+        if (!validateForm(email, password)) return
+
+        isLoading = true
+        isContinueClicked = true
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                isLoading = false
+
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+
+                    user?.sendEmailVerification()
+                        ?.addOnCompleteListener { verificationTask ->
+                            if (verificationTask.isSuccessful) {
+                                showVerificationScreen = true
+
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Письмо с подтверждением отправлено на $email"
+                                    )
+                                }
+                            } else {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Ошибка отправки email"
+                                    )
+                                }
+                            }
+                        }
+                } else {
+                    isContinueClicked = false
+
+                    val errorMessage = when (task.exception?.message) {
+                        "The email address is already in use by another account." ->
+                            "Этот email уже используется"
+                        "The email address is badly formatted." ->
+                            "Некорректный формат email"
+                        "Password should be at least 6 characters" ->
+                            "Пароль должен содержать минимум 6 символов"
+                        else -> "Ошибка регистрации"
+                    }
+
+                    scope.launch {
+                        snackbarHostState.showSnackbar(errorMessage)
+                    }
+                }
+            }
+    }
+
+    // Функция проверки email верификации
+    fun checkEmailVerification() {
+        isLoading = true
+        val user = auth.currentUser
+
+        user?.reload()?.addOnCompleteListener { reloadTask ->
+            isLoading = false
+
+            if (reloadTask.isSuccessful) {
+                if (user.isEmailVerified) {
+                    navController.navigate("profileSetup") {
+                        // Очищаем стек навигации, чтобы нельзя было вернуться назад
+                        popUpTo("registration") { inclusive = true }
+                    }
+                } else {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Email еще не подтвержден. Проверьте вашу почту"
+                        )
+                    }
+                }
+            } else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        "Ошибка проверки email"
+                    )
+                }
+            }
+        }
+    }
+
+    // Функция повторной отправки email верификации
+    fun resendVerificationEmail() {
+        isLoading = true
+        val user = auth.currentUser
+
+        user?.sendEmailVerification()
+            ?.addOnCompleteListener { task ->
+                isLoading = false
+
+                if (task.isSuccessful) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Новое письмо отправлено на $email")
+                    }
+                } else {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Ошибка отправки email"
+                        )
+                    }
+                }
+            }
+    }
+
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ProgressLine(
+                        progress = progress,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(spacing.medium))
+
+                    TextButtonWithUnderline(
+                        text = "Пропустить",
+                        onClick = {
+                            navController.navigate("profileSetup")
+                        },
+                        showUnderline = false,
+                        textColor = MaterialTheme.colorScheme.surfaceVariant,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 16
+                    )
+                }
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = "Регистрация",
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text(
+                text = "Это нужно для твоей безопасности",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(spacing.large))
+
+            // Первая часть: email и пароль
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                DatingTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = "Электронная почта",
+                    placeholder = "pochta@gmail.com",
+                    isError = emailError,
+                    errorMessage = if (emailError) "Введи корректный email" else null,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { moveToPassword() }
+                    ),
+                    focusRequester = emailFocusRequester,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                )
+
+                Spacer(modifier = Modifier.height(spacing.medium))
+
+                DatingTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Пароль",
+                    placeholder = "Придумай пароль для входа в аккаунт",
+                    isError = passwordError,
+                    errorMessage = if (passwordError) "Пароль должен быть не менее 6 символов" else null,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            keyboardController?.hide()
+                            if (validateForm(email, password) && !isContinueClicked) {
+                                registerWithFirebase()
+                            }
+                        }
+                    ),
+                    focusRequester = passwordFocusRequester,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                )
+
+                Spacer(modifier = Modifier.height(spacing.large))
+
+                Box(
+                    modifier = Modifier
+                        .width(360.dp)
+                        .height(57.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    } else {
+                        PrimaryButton(
+                            text = "Продолжить",
+                            textSize = 20.sp,
+                            onClick = {
+                                keyboardController?.hide()
+                                if (!isContinueClicked) {
+                                    registerWithFirebase()
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                            enabled = canContinue
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(spacing.large))
+
+            // Вторая часть: подтверждение email
+            AnimatedVisibility(
+                visible = showVerificationScreen,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(spacing.medium))
+
+                    // Информационное сообщение
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = spacing.medium),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp, horizontal = 20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Мы отправили письмо с подтверждением на:",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Text(
+                                    text = email,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        textDecoration = TextDecoration.Underline
+                                    ),
+                                    textAlign = TextAlign.Left,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Divider(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    NumberedItem(
+                                        number = 1,
+                                        text = "Проверь почту"
+                                    )
+
+                                    NumberedItem(
+                                        number = 2,
+                                        text = "Найди письмо от МипМап"
+                                    )
+
+                                    NumberedItem(
+                                        number = 3,
+                                        text = "Нажми на ссылку в письме"
+                                    )
+
+                                    NumberedItem(
+                                        number = 4,
+                                        text = "Возвращайся в приложение"
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(spacing.medium))
+
+                        TextButton(
+                            onClick = { resendVerificationEmail() },
+                            enabled = !isLoading,
+                            modifier = Modifier.padding(horizontal = spacing.medium)
+                        ) {
+                            Text(
+                                text = "Не пришло письмо? Отправить еще раз",
+                                textAlign = TextAlign.Left,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(spacing.large))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                    ) {
+                        TermsCheckbox(
+                            checked = isAgreedWithTerms,
+                            onCheckedChange = { isAgreedWithTerms = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            showDetailsLink = false
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    navController.navigate("termsOfService")
+                                }
+                                .padding(start = 64.dp)
+                        ) {
+                            Text(
+                                text = "Читать подробнее",
+                                textAlign = TextAlign.Left,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(spacing.large))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.picture_registration_screen),
+                            contentDescription = "Регистрация",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(360.dp)
+                                .height(57.dp)
+                                .padding(bottom = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            } else {
+                                WhiteButton(
+                                    text = "Зарегистрироваться",
+                                    textSize = 18.sp,
+                                    onClick = {
+                                        keyboardController?.hide()
+                                        checkEmailVerification()
+                                    },
+                                    modifier = Modifier.fillMaxSize(),
+                                    enabled = canRegister
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(spacing.small))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NumberedItem(number: Int, text: String) {
+    Row(
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = number.toString(),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+// Функции валидации
+private fun isValidEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+private fun isValidPassword(password: String): Boolean {
+    return password.length >= 6
+}
+
+private fun validateForm(email: String, password: String): Boolean {
+    return isValidEmail(email) && isValidPassword(password)
+}

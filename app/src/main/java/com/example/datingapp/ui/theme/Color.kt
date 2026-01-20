@@ -1,0 +1,13 @@
+package com.example.datingapp.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val PurplePrimary = Color(0xFFA75CC6)     // Акцентный фиолетовый
+val GrayLight = Color(0xFFE3E3E3)         // Разделы/фон
+val GrayMedium = Color(0xFFE0E0E0)        // Неактивная кнопка
+val GrayDark = Color(0xFF696969)          // Темно-серый фон
+val Black = Color(0xFF000000)             // Основной текст
+val White = Color(0xFFFFFFFF)             // Белый текст на кнопках
+
+val PurpleLight = Color(0xFFD4A5E0)      // Светлый фиолетовый
+val PurpleDark = Color(0xFF8C4CA6)       // Темный фиолетовый
