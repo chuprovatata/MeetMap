@@ -164,7 +164,7 @@ fun PlacesTutorialScreen2(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(0.15f)
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 24.dp)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxSize(),

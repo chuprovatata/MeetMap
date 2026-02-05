@@ -25,7 +25,10 @@ class ProfileSetupViewModel : ViewModel() {
     sealed class SetupEvent {
         object NavigateToTargets : SetupEvent()
         object NavigateToCategories : SetupEvent()
+
+        object NavigateToTutorial : SetupEvent()
         object NavigateToMain : SetupEvent()
+
         data class ShowError(val message: String) : SetupEvent()
         object ShowSuccessMessage : SetupEvent()
     }

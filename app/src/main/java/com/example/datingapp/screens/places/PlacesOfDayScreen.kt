@@ -117,11 +117,16 @@ fun PlacesOfDayScreen(
                 title = {
                     Text(
                         "Места дня",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.displaySmall
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.Main.route) {
+                                popUpTo(0)
+                            }
+                        }) {
                         Icon(
                             painter = painterResource(id = R.drawable.icon_back),
                             contentDescription = "Назад"

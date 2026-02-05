@@ -6,7 +6,10 @@ object NavigationProgress {
         Screen.Registration,
         Screen.ProfileSetup,
         Screen.TargetSelection,
-        Screen.CategorySelection
+        Screen.CategorySelection,
+        Screen.PlacesTutorial,
+        Screen.PlacesTutorial2,
+        Screen.FinalTutorial
     )
 
     fun getProgress(currentScreen: Screen): Float {

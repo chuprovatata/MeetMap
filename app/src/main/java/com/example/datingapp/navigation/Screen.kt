@@ -7,11 +7,13 @@ sealed class Screen(val route: String) {
     object ProfileSetup : Screen("profileSetup")
     object TargetSelection : Screen("targetSelection")
     object CategorySelection : Screen("categorySelection")
+    object PlacesTutorial : Screen("places_tutorial")
+    object PlacesTutorial2 : Screen("places_tutorial2")
+    object FinalTutorial : Screen("final_tutorial")
     object Main : Screen("main")
-
+    object Notification : Screen("notification")
     object PlacesOfDay : Screen("placesOfDay")
     object PlaceLiked : Screen("placeLiked")
-
     object MyPlaces : Screen("myPlaces")
     object Settings : Screen("settings") // будет добавлен позже
     object Profile : Screen("profile") // будет добавлен позже

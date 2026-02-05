@@ -131,6 +131,11 @@ fun ProfileSetupScreen(
                 }
                 is ProfileSetupViewModel.SetupEvent.NavigateToCategories -> {
                 }
+                is ProfileSetupViewModel.SetupEvent.NavigateToTutorial -> {
+                    navController.navigate(Screen.PlacesTutorial.route) {
+                        popUpTo(0)
+                    }
+                }
                 is ProfileSetupViewModel.SetupEvent.NavigateToMain -> {
                 }
                 is ProfileSetupViewModel.SetupEvent.ShowError -> {

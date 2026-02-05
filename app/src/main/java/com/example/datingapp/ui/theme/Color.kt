@@ -11,3 +11,5 @@ val White = Color(0xFFFFFFFF)             // Белый текст на кноп
 
 val PurpleLight = Color(0xFFD4A5E0)      // Светлый фиолетовый
 val PurpleDark = Color(0xFF8C4CA6)       // Темный фиолетовый
+val PurpleMedium = Color(0xFFEBCFF7)
+val Pink = Color(0xFFF8E9FF)

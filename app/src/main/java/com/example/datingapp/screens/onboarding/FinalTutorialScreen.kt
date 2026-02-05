@@ -137,7 +137,11 @@ fun FinalTutorialScreen(
                 ) {
                     PrimaryButton(
                         text = "Завершить обучение",
-                        onClick = onReadyClick,
+                        onClick = {
+                            navController?.navigate(Screen.PlacesOfDay.route) {
+                                popUpTo(0)
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(57.dp)
