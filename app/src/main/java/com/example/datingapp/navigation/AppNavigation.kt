@@ -1,5 +1,6 @@
 package com.example.datingapp.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
@@ -14,7 +15,10 @@ import com.example.datingapp.screens.profile.ProfileSetupScreen
 import com.example.datingapp.screens.profile.TargetSelectionScreen
 import com.example.datingapp.viewmodels.ProfileSetupViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.datingapp.screens.myplaces.MyPlacesScreen
+import com.example.datingapp.screens.places.PlaceLikedScreen
 import kotlinx.coroutines.flow.collectLatest
+import com.example.datingapp.screens.places.PlacesOfDayScreen
 
 @Composable
 fun AppNavigation() {
@@ -105,7 +109,53 @@ fun AppNavigation() {
         }
 
         composable(Screen.Main.route) {
-            MainScreen()
+            MainScreen(navController = navController)
+        }
+
+        composable(Screen.PlacesOfDay.route) {
+            PlacesOfDayScreen(navController = navController)
+        }
+
+        composable(Screen.PlacesOfDay.route) {
+            PlacesOfDayScreen(navController = navController)
+        }
+
+        composable(Screen.PlaceLiked.route) {
+            PlaceLikedScreen(
+                onBackClick = { navController.popBackStack() },
+                onVisitedClick = {
+                    // Добавить место в посещённые
+                    navController.popBackStack() // Возвращаемся назад после добавления
+                },
+                onPlannedClick = {
+                    // Добавить место в планы
+                    navController.popBackStack() // Возвращаемся назад после добавления
+                }
+            )
+        }
+
+        composable(Screen.MyPlaces.route) {
+            MyPlacesScreen(navController = navController)
+        }
+
+        composable(Screen.Settings.route) {
+            // SettingsScreen() - будет добавлен позже
+            Text("Настройки - скоро будет") // временно
+        }
+
+        composable(Screen.Profile.route) {
+            // ProfileScreen() - будет добавлен позже
+            Text("Профиль - скоро будет") // временно
+        }
+
+        composable(Screen.Dating.route) {
+            // DatingScreen() - будет добавлен позже
+            Text("Знакомства - скоро будет") // временно
+        }
+
+        composable(Screen.Friends.route) {
+            // FriendsScreen() - будет добавлен позже
+            Text("Друзья - скоро будет") // временно
         }
     }
 }

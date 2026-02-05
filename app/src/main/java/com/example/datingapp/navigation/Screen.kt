@@ -9,6 +9,15 @@ sealed class Screen(val route: String) {
     object CategorySelection : Screen("categorySelection")
     object Main : Screen("main")
 
+    object PlacesOfDay : Screen("placesOfDay")
+    object PlaceLiked : Screen("placeLiked")
+
+    object MyPlaces : Screen("myPlaces")
+    object Settings : Screen("settings") // будет добавлен позже
+    object Profile : Screen("profile") // будет добавлен позже
+    object Dating : Screen("dating") // будет добавлен позже
+    object Friends : Screen("friends") // будет добавлен позже
+
     fun withArgs(vararg args: String): String {
         return buildString {
             append(route)

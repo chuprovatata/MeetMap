@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="purple_primary">#FFA75CC6</color>
+    <color name="purple_light">#FFF0E3F6</color>
     <color name="gray_light">#FFE3E3E3</color>
     <color name="gray_medium">#FFE0E0E0</color>
     <color name="gray_dark">#FF696969</color>
@@ -11,6 +12,7 @@
     <color name="error">#FFF44336</color>
     <color name="warning">#FFFF9800</color>
     <color name="info">#FF2196F3</color>
+    <color name="text_gray">#FF888888</color>
 
     <color name="primary_color">#FFA75CC6</color>
     <color name="primary_variant">#FF8C4CA6</color>
