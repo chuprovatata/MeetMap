@@ -15,7 +15,7 @@ sealed class Screen(val route: String) {
     object PlacesOfDay : Screen("placesOfDay")
     object PlaceLiked : Screen("placeLiked")
     object MyPlaces : Screen("myPlaces")
-    object Settings : Screen("settings") // будет добавлен позже
+    object Settings : Screen("settings")
     object Profile : Screen("profile") // будет добавлен позже
     object Dating : Screen("dating") // будет добавлен позже
     object Friends : Screen("friends") // будет добавлен позже

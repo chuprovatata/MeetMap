@@ -1,5 +1,7 @@
 package com.example.datingapp.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
@@ -21,6 +23,7 @@ import com.example.datingapp.screens.places.PlaceLikedScreen
 import com.example.datingapp.screens.places.PlacesOfDayScreen
 import com.example.datingapp.screens.myplaces.MyPlacesScreen
 import com.example.datingapp.screens.notification.NotificationScreen
+import com.example.datingapp.screens.settings.SettingsScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
@@ -182,6 +185,9 @@ fun AppNavigation() {
         }
         composable(Screen.Notification.route) {
             NotificationScreen(navController = navController)
+        }
+        composable(Screen.Settings.route) {
+            SettingsScreen(navController = navController)
         }
     }
 }
