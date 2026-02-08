@@ -15,10 +15,14 @@ sealed class Screen(val route: String) {
     object PlacesOfDay : Screen("placesOfDay")
     object PlaceLiked : Screen("placeLiked")
     object MyPlaces : Screen("myPlaces")
-    object Settings : Screen("settings") // будет добавлен позже
-    object Profile : Screen("profile") // будет добавлен позже
-    object Dating : Screen("dating") // будет добавлен позже
-    object Friends : Screen("friends") // будет добавлен позже
+    object MainFriends : Screen("main_friends")
+
+
+
+    object MyFriends : Screen("my_friends")
+    object CurFriend : Screen("cur_friend")
+    object MyProfile: Screen("my_profile")
+    object Settings: Screen("settings")
 
     fun withArgs(vararg args: String): String {
         return buildString {

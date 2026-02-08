@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.GrayBlock
 import com.example.datingapp.components.blocks.SimpleBlock
+import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.ui.theme.Pink
@@ -25,7 +26,7 @@ import com.example.datingapp.ui.theme.Pink
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    navController: NavController? = null
+    navController: NavController
 ) {
     val spacing = LocalDatingAppSpacing.current
 
@@ -36,53 +37,10 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(vertical = 40.dp, horizontal = spacing.large)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Привет!",
-                        style = MaterialTheme.typography.displayLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(7.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable {
-                                    navController?.navigate("settings")
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.icon_settings),
-                                contentDescription = "Настройки",
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable {
-                                    navController?.navigate("profile")
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.icon_person),
-                                contentDescription = "Профиль",
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    }
-                }
+                Heading("Привет!", true, true, navController = navController)
+
+
             }
         },
         bottomBar = {
@@ -136,7 +94,7 @@ fun MainScreen(
                 title = "Места дня",
                 subtitle = "Смотри, что нового мы нашли специально для тебя!",
                 imageResId = R.mipmap.picture_places_of_the_day_foreground,
-                onClick = { navController?.navigate(Screen.PlacesOfDay.route) },
+                onClick = { navController.navigate(Screen.PlacesOfDay.route) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.large),
@@ -157,7 +115,15 @@ fun MainScreen(
                     subtitle = "Отмечай любимое, а мы подберем людей с похожими местами!",
                     onClick = {
 
-                        navController?.navigate(Screen.MyPlaces.route)
+                        navController.navigate("main_bottom_menu/screen_2") {
+                            //тут я поставила запрет на возврат на главный экран c привет!
+                            //потом можно будет исправить
+                            popUpTo(0) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+
+                        }
                     },
                     modifier = Modifier.weight(1f),
                     height = 200.dp
@@ -178,7 +144,17 @@ fun MainScreen(
                 title = "Знакомства",
                 subtitle = "Кажется, самое время написать кому-то!",
                 imageResId = null,
-                onClick = { navController?.navigate("history") },
+                onClick = {
+                    navController.navigate("main_bottom_menu/screen_1") {
+                        //тут я поставила запрет на возврат на главный экран c привет!
+                        //потом можно будет исправить
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.large),
@@ -193,7 +169,16 @@ fun MainScreen(
                 title = "Мои друзья",
                 subtitle = "Смотри, любимые места своих друзей и планируйте встречи вместе!",
                 imageResId = null,
-                onClick = { navController?.navigate("my_friends") },
+                onClick = {
+                    //тут я поставила запрет на возврат на главный экран по стрелке
+                    //потом можно будет исправить
+                    navController.navigate("main_bottom_menu/screen_3") {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.large),
