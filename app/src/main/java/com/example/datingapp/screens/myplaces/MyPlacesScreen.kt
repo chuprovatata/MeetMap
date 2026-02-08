@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.datingapp.R
+import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.components.places.PlaceGridItem
 import com.example.datingapp.navigation.Screen
 
@@ -65,141 +66,14 @@ fun MyPlacesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                //TODO : поправьте отступы
                 title = {
-                    Text(
-                        "Мои места",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
+                    Heading("Мои места",  true, true, navController= navController)
                 },
-                actions = {
-                    // Кнопка настроек (фиолетовый контур)
-                    OutlinedIconButton(
-                        onClick = { navController.navigate(Screen.Settings.route) },
-                        modifier = Modifier.size(40.dp),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(
-                            width = 1.dp
-                        ),
-                        colors = IconButtonDefaults.outlinedIconButtonColors(
-                            contentColor = Color(0xFFA75CC6),
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Настройки",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
 
-                    // Кнопка профиля (фиолетовый контур)
-                    OutlinedIconButton(
-                        onClick = { navController.navigate(Screen.Profile.route) },
-                        modifier = Modifier.size(40.dp),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(
-                            width = 1.dp
-                        ),
-                        colors = IconButtonDefaults.outlinedIconButtonColors(
-                            contentColor = Color(0xFFA75CC6),
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Профиль",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
             )
         },
-        bottomBar = {
-            // Нижнее меню навигации
-            NavigationBar(
-                containerColor = Color.White,
-                contentColor = Color(0xFFA75CC6)
-            ) {
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Знакомства",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    label = {
-                        Text(
-                            "Знакомства",
-                            fontSize = 10.sp
-                        )
-                    },
-                    selected = false,
-                    onClick = {
-                        navController.navigate(Screen.Dating.route)
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFFA75CC6),
-                        selectedTextColor = Color(0xFFA75CC6),
-                        unselectedIconColor = Color(0xFF888888),
-                        unselectedTextColor = Color(0xFF888888),
-                        indicatorColor = Color.Transparent
-                    )
-                )
 
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Мои места",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    label = {
-                        Text(
-                            "Мои места",
-                            fontSize = 10.sp
-                        )
-                    },
-                    selected = true,
-                    onClick = { },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFFA75CC6),
-                        selectedTextColor = Color(0xFFA75CC6),
-                        unselectedIconColor = Color(0xFF888888),
-                        unselectedTextColor = Color(0xFF888888),
-                        indicatorColor = Color.Transparent
-                    )
-                )
-
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icon_friends),
-                            contentDescription = "Друзья",
-                            modifier = Modifier.size(22.dp)
-                        )
-                    },
-                    label = {
-                        Text(
-                            "Друзья",
-                            fontSize = 10.sp
-                        )
-                    },
-                    selected = false,
-                    onClick = {
-                        navController.navigate(Screen.Friends.route)
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFFA75CC6),
-                        selectedTextColor = Color(0xFFA75CC6),
-                        unselectedIconColor = Color(0xFF888888),
-                        unselectedTextColor = Color(0xFF888888),
-                        indicatorColor = Color.Transparent
-                    )
-                )
-            }
-        },
         floatingActionButton = {
             // Кнопка добавления (фиолетовый круг с плюсом)
             FloatingActionButton(

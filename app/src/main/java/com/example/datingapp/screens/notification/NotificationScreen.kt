@@ -1,5 +1,6 @@
 package com.example.datingapp.screens.notification
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,12 +10,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.datingapp.components.notification.NotificationItem
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.R
+import com.example.datingapp.components.headers.Heading
+import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.notification.Notification
 import com.example.datingapp.components.notification.NotificationType
 
@@ -25,27 +29,18 @@ fun NotificationScreen(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
+
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Уведомления",
-                        style = MaterialTheme.typography.displaySmall.copy()
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            navController.popBackStack()
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icon_back),
-                            contentDescription = "Назад"
-                        )
-                    }
-                }
-            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 6.dp)
+                    .padding(top = 40.dp, bottom = 20.dp)
+            ) {
+                Heading_Arrow("Уведомления", navController)
+            }
         }
     ) { paddingValues ->
         if (sampleNotifications.isEmpty()) {
@@ -132,12 +127,15 @@ private fun handleNotificationClick(
         NotificationType.NEW_PLACE -> {
             navController.navigate("${Screen.Main.route}/$notificationId")
         }
+
         NotificationType.PROMOTION -> {
             navController.navigate(Screen.PlacesOfDay.route)
         }
+
         NotificationType.REMINDER -> {
             println("Нажато напоминание с id: $notificationId")
         }
+
         NotificationType.NEW_PERSON -> {
             navController.navigate(Screen.Main.route)
         }

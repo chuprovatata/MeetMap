@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.datingapp.R
+import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.navigation.Screen
 import kotlinx.coroutines.launch
 
@@ -113,27 +115,15 @@ fun PlacesOfDayScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Места дня",
-                        style = MaterialTheme.typography.displaySmall
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            navController.navigate(Screen.Main.route) {
-                                popUpTo(0)
-                            }
-                        }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icon_back),
-                            contentDescription = "Назад"
-                        )
-                    }
-                }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 6.dp)
+                    .padding(top = 40.dp, bottom = 20.dp)
+            ) {
+                Heading_Arrow("Места дня", navController)
+            }
         }
     ) { paddingValues ->
         Column(
