@@ -139,7 +139,6 @@ fun FinalTutorialScreen(
                         text = "Завершить обучение",
                         onClick = {
                             navController?.navigate(Screen.PlacesOfDay.route) {
-                                popUpTo(0)
                             }
                         },
                         modifier = Modifier

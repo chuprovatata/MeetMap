@@ -59,7 +59,6 @@ class ProfileSetupViewModel : ViewModel() {
                 val userId = currentUser.uid
                 val username = userProfile["username"] as? String ?: ""
 
-                // Проверяем уникальность username
                 if (username.isNotBlank()) {
                     val existingUser = firestore.collection("users")
                         .whereEqualTo("username", username)
@@ -76,7 +75,6 @@ class ProfileSetupViewModel : ViewModel() {
                     }
                 }
 
-                // Собираем данные для сохранения
                 val userData = mutableMapOf<String, Any>(
                     "name" to (userProfile["name"] ?: ""),
                     "username" to username,

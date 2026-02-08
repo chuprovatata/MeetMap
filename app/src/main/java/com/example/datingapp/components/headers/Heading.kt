@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.datingapp.R
+import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.boundedFamily
 
 
@@ -37,10 +38,12 @@ fun Heading_Arrow(heading: String, navController: NavController) {
             .fillMaxWidth()
 
     ) {
-        IconButton(onClick = {
-            navController.navigateUp()
+        IconButton(
+            onClick = {
+                navController?.navigate(Screen.Main.route) {
+                }
+            }
 
-        }
         ) {
             Icon(
                 painter = painterResource(R.drawable.arrow_left),

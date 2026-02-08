@@ -9,15 +9,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -196,11 +192,8 @@ fun SettingsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = spacing.large)
-                        .padding(top = spacing.large),
-                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Box(modifier = Modifier.size(120.dp)) {
+                    Box(modifier = Modifier.size(200.dp)) {
                         if (isUploadingImage) {
                             Box(
                                 modifier = Modifier
@@ -216,17 +209,17 @@ fun SettingsScreen(
                                 painter = painterResource(id = R.mipmap.picture_defaullt_profile_foreground),
                                 contentDescription = "Фото профиля",
                                 modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
+                                    .size(280.dp)
+                                    .clip(CircleShape)
+                                    .align(Alignment.CenterStart)
                             )
                         }
 
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
+                                .offset(x = (-40).dp, y = (-30).dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
                                 .clickable {
                                     pickImageLauncher.launch(
                                         PickVisualMediaRequest(
@@ -234,21 +227,16 @@ fun SettingsScreen(
                                         )
                                     )
                                 }
-                                .padding(8.dp)
+                                .padding(12.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.CameraAlt,
+                                painter = painterResource(id = R.drawable.icon_edit_photo),
                                 contentDescription = "Изменить фото",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(spacing.medium))
             }
 
             listOf(

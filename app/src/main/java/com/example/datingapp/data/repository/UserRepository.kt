@@ -20,17 +20,14 @@ class UserRepository @Inject constructor(
         val userId = currentUser.uid
 
         try {
-            // 1. Загружаем в Storage
             val storageRef = storage.reference.child("profile_images/$userId.jpg")
             val uploadTask = storageRef.putFile(uri).await()
 
-            // 2. Получаем URL
             val downloadUrl = uploadTask.metadata?.reference?.downloadUrl?.await()
                 ?: throw Exception("Не удалось получить URL изображения")
 
             val imageUrl = downloadUrl.toString()
 
-            // 3. Сохраняем URL в Firestore
             firestore.collection("users")
                 .document(userId)
                 .update("profileImageUrl", imageUrl)

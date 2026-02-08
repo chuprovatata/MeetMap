@@ -15,7 +15,7 @@ import com.example.datingapp.screens.friends.My_Friends
 import com.example.datingapp.screens.meets.MainMeets
 import com.example.datingapp.screens.myplaces.MyPlacesScreen
 import com.example.datingapp.screens.profile.MyProfile
-import com.example.datingapp.screens.settings.Settings
+import com.example.datingapp.screens.settings.SettingsScreen
 
 
 @Composable
@@ -44,7 +44,7 @@ fun NavGraph(navHostController: NavHostController) {
         }
 
         composable(Screen.Settings.route) {
-            Settings(navHostController)
+            SettingsScreen(navHostController)
         }
         composable(Screen.MyProfile.route) {
             MyProfile(navHostController)

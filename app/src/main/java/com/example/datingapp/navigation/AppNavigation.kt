@@ -37,7 +37,7 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController, startDestination = Screen.PlacesTutorial.route
+        navController = navController, startDestination = Screen.FinalTutorial.route
     ) {
         composable(Screen.Start.route) {
             StartScreen {

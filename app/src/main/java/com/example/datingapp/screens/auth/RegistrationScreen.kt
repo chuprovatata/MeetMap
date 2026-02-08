@@ -1,6 +1,8 @@
-// screens/auth/RegistrationScreen.kt
 package com.example.datingapp.screens.auth
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -477,23 +479,23 @@ fun RegistrationScreen(
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
-                        Box(
+
+                        TextButtonWithUnderline(
+                            text = "Читать подробнее",
+                            onClick = {
+                                openPdfFile(
+                                    context,
+                                    "https://docs.google.com/document/d/1ZdU4hvSO9TTyQIQ3GvCkoeHl0wH_uUKb/edit?usp=sharing&ouid=114657470889365860950&rtpof=true&sd=true"
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    navController.navigate("termsOfService")
-                                }
-                                .padding(start = 64.dp)
-                        ) {
-                            Text(
-                                text = "Читать подробнее",
-                                textAlign = TextAlign.Left,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            )
-                        }
+                                .padding(start = 64.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium,
+                            showUnderline = true,
+                            fontWeight = FontWeight.Normal,
+                            textColor = MaterialTheme.colorScheme.primary
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(spacing.large))
@@ -577,6 +579,24 @@ fun NumberedItem(number: Int, text: String) {
             ),
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+fun openPdfFile(context: Context, pdfUrl: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(Uri.parse(pdfUrl), "application/pdf")
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val packageManager = context.packageManager
+        if (intent.resolveActivity(packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(pdfUrl))
+            context.startActivity(browserIntent)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 
