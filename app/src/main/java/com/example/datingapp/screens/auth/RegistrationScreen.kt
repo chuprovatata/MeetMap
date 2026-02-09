@@ -480,22 +480,27 @@ fun RegistrationScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        TextButtonWithUnderline(
-                            text = "Читать подробнее",
-                            onClick = {
-                                openPdfFile(
-                                    context,
-                                    "https://docs.google.com/document/d/1ZdU4hvSO9TTyQIQ3GvCkoeHl0wH_uUKb/edit?usp=sharing&ouid=114657470889365860950&rtpof=true&sd=true"
-                                )
-                            },
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 64.dp),
-                            textStyle = MaterialTheme.typography.bodyMedium,
-                            showUnderline = true,
-                            fontWeight = FontWeight.Normal,
-                            textColor = MaterialTheme.colorScheme.primary
-                        )
+                                .padding(start = spacing.large),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            TextButtonWithUnderline(
+                                text = "Читать подробнее",
+                                onClick = {
+                                    openPdfFile(
+                                        context,
+                                        "https://docs.google.com/document/d/1ZdU4hvSO9TTyQIQ3GvCkoeHl0wH_uUKb/export?format=pdf"
+                                    )
+                                },
+                                modifier = Modifier,
+                                textStyle = MaterialTheme.typography.bodyMedium,
+                                showUnderline = true,
+                                fontWeight = FontWeight.Normal,
+                                textColor = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(spacing.large))

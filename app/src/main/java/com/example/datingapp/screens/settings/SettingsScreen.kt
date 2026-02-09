@@ -14,11 +14,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.datingapp.components.forms.DatingTextField
+import com.example.datingapp.components.forms.TermsSwitch
+import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.R
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.viewmodels.UserViewModel
@@ -52,6 +56,10 @@ fun SettingsScreen(
     var age by remember { mutableStateOf("") }
     var university by remember { mutableStateOf("") }
     var favoritePlace by remember { mutableStateOf("") }
+
+    var isPrivateAccount by remember { mutableStateOf(false) }
+    var isNotificationsEnabled by remember { mutableStateOf(true) }
+    var isNotificationSoundEnabled by remember { mutableStateOf(true) }
 
     var showExitDialog by remember { mutableStateOf(false) }
     var hasUnsavedChanges by remember { mutableStateOf(false) }
@@ -99,7 +107,10 @@ fun SettingsScreen(
                 email != (originalData["email"] as? String ?: "") ||
                 age != ((originalData["age"] as? Long)?.toString() ?: "") ||
                 university != (originalData["university"] as? String ?: "") ||
-                favoritePlace != (originalData["favoritePlace"] as? String ?: "")
+                favoritePlace != (originalData["favoritePlace"] as? String ?: "") ||
+                isPrivateAccount != (originalData["isPrivateAccount"] as? Boolean ?: false) ||
+                isNotificationsEnabled != (originalData["notificationsEnabled"] as? Boolean ?: true) ||
+                isNotificationSoundEnabled != (originalData["notificationSoundEnabled"] as? Boolean ?: true)
 
         hasUnsavedChanges = hasChanges
 
@@ -118,7 +129,10 @@ fun SettingsScreen(
             "email" to email,
             "age" to age.toLongOrNull(),
             "university" to university,
-            "favoritePlace" to favoritePlace
+            "favoritePlace" to favoritePlace,
+            "isPrivateAccount" to isPrivateAccount,
+            "notificationsEnabled" to isNotificationsEnabled,
+            "notificationSoundEnabled" to isNotificationSoundEnabled
         ).filterValues { it != null && it.toString().isNotEmpty() }
 
         userViewModel.updateUserData(data)
@@ -161,31 +175,22 @@ fun SettingsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Настройки") },
-                navigationIcon = {
-                    IconButton(onClick = { checkForUnsavedChanges() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icon_back),
-                            contentDescription = "Назад"
-                        )
-                    }
-                },
-                actions = {
-                    if (isLoading || isUploadingImage) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
-                    }
-                }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 6.dp)
+                    .padding(top = 40.dp, bottom = 20.dp)
+            ) {
+                Heading_Arrow("Настройки", navController)
+            }
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .background(Color.White),
             verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             item {
@@ -239,6 +244,10 @@ fun SettingsScreen(
                 }
             }
 
+            item {
+                Spacer(modifier = Modifier.height(spacing.large))
+            }
+
             listOf(
                 FieldData(name, "Имя", "Введите ваше имя") { name = it },
                 FieldData(username, "Ник в приложении", "Введите никнейм") { username = it },
@@ -266,6 +275,99 @@ fun SettingsScreen(
 
             item {
                 Spacer(modifier = Modifier.height(spacing.large))
+            }
+
+            item {
+                TermsSwitch(
+                    checked = isPrivateAccount,
+                    onCheckedChange = {
+                        isPrivateAccount = it
+                        hasUnsavedChanges = true
+                    },
+                    text = "Закрытый аккаунт",
+                    subtitle = "Только твои друзья могут просматривать твой профиль.",
+                    showDetailsLink = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                )
+            }
+
+            item {
+                TermsSwitch(
+                    checked = isNotificationsEnabled,
+                    onCheckedChange = {
+                        isNotificationsEnabled = it
+                        hasUnsavedChanges = true
+                    },
+                    text = "Уведомления",
+                    showDetailsLink = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                )
+            }
+
+            item {
+                TermsSwitch(
+                    checked = isNotificationSoundEnabled,
+                    onCheckedChange = {
+                        isNotificationSoundEnabled = it
+                        hasUnsavedChanges = true
+                    },
+                    text = "Звук уведомлений",
+                    showDetailsLink = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                )
+            }
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                        .clickable {
+                            navController.navigate("main")
+                        }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Связаться с нами",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Normal
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.icon_help_circle),
+                        contentDescription = "Помощь",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(spacing.large * 2))
             }
         }
     }
