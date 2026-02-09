@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.foundation)
 
     implementation("io.coil-kt:coil-compose:2.6.0")
 
@@ -80,4 +81,18 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation("com.google.code.gson:gson:2.10.1") // Добавляем Gson
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3") // Для Firebase await()
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Для работы с Яндекс.Облаком
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Для загрузки изображений
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }

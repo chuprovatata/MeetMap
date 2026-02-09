@@ -20,7 +20,10 @@ sealed class Screen(val route: String) {
     object CurFriend : Screen("cur_friend")
     object MyProfile: Screen("my_profile")
     object Settings: Screen("settings")
-
+    object ExcelImport : Screen("excel_import")
+    object PlacesAdmin : Screen("places_admin")
+    object CloudImages : Screen("cloud_images")
+    object TestCloud : Screen("test_cloud")
 
     fun withArgs(vararg args: String): String {
         return buildString {
@@ -30,4 +33,6 @@ sealed class Screen(val route: String) {
             }
         }
     }
+
+
 }
