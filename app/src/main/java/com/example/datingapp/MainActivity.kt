@@ -9,10 +9,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.datingapp.navigation.AppNavigation
 import com.example.datingapp.ui.theme.DatingAppTheme
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        FirebaseApp.initializeApp(this)
+
         setContent {
             DatingAppTheme {
                 Surface(

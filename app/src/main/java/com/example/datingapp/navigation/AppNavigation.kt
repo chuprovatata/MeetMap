@@ -16,9 +16,14 @@ import com.example.datingapp.screens.profile.ProfileSetupScreen
 import com.example.datingapp.screens.profile.TargetSelectionScreen
 import com.example.datingapp.viewmodels.ProfileSetupViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.datingapp.button_navigation.MainBottomMenuScreen
+import com.example.datingapp.screens.admin.CloudImagesScreen
+import com.example.datingapp.screens.admin.ExcelImportScreen
+import com.example.datingapp.screens.admin.PlacesAdminScreen
+import com.example.datingapp.screens.admin.TestCloudScreen
 import com.example.datingapp.screens.friends.Cur_Friend
 import com.example.datingapp.screens.onboarding.FinalTutorialScreen
 import com.example.datingapp.screens.places.PlaceLikedScreen
@@ -190,15 +195,28 @@ fun AppNavigation() {
 
         composable(
             route = "main_bottom_menu/{startTab}", arguments = listOf(
-            navArgument("startTab") {
-                type = NavType.StringType
-                defaultValue = "screen_2"
-            })) { backStackEntry ->
+                navArgument("startTab") {
+                    type = NavType.StringType
+                    defaultValue = "screen_2"
+                })) { backStackEntry ->
             val startTab = backStackEntry.arguments?.getString("startTab")
             MainBottomMenuScreen(
                 startTab = startTab ?: "screen_2",
 
                 )
+        }
+
+        composable(Screen.PlacesAdmin.route) {
+            PlacesAdminScreen(navController = navController)
+        }
+        composable(Screen.ExcelImport.route) {
+            ExcelImportScreen(navController = navController)
+        }
+        composable(Screen.CloudImages.route) {
+            CloudImagesScreen(navController = navController)
+        }
+        composable(Screen.TestCloud.route) {
+            TestCloudScreen(navController = navController)
         }
     }
 }
