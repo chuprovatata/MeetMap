@@ -14,17 +14,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import com.example.datingapp.R
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 
 @Composable
-fun GreetingScreen(onNextClicked: () -> Unit) {
-    LaunchedEffect(Unit) {
-        delay(2000L)
-        onNextClicked()
-    }
-
+fun GreetingScreen(
+    onNavigateToLogin: () -> Unit = {} // Делаем параметр необязательным
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background

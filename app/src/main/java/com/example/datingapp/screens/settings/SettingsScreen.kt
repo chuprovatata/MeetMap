@@ -15,15 +15,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.datingapp.components.forms.DatingTextField
 import com.example.datingapp.components.forms.TermsSwitch
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.R
+import com.example.datingapp.screens.auth.openPdfFile
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
@@ -67,11 +72,14 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val spacing = LocalDatingAppSpacing.current
+    val context = LocalContext.current
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        uri?.let { userViewModel.uploadProfileImage(it) }
+        uri?.let {
+            userViewModel.uploadProfileImage(it)
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -93,8 +101,9 @@ fun SettingsScreen(
     LaunchedEffect(uploadError) {
         uploadError?.let { error ->
             scope.launch {
-                snackbarHostState.showSnackbar("Ошибка: $error")
+                snackbarHostState.showSnackbar("Ошибка загрузки фото: $error")
             }
+            userViewModel.clearUploadError()
         }
     }
 
@@ -191,18 +200,18 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color.White),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium)
         ) {
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
                 ) {
-                    Box(modifier = Modifier.size(200.dp)) {
+                    Box(modifier = Modifier.size(110.dp)) {
                         if (isUploadingImage) {
                             Box(
                                 modifier = Modifier
-                                    .size(120.dp)
+                                    .size(110.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
@@ -210,20 +219,26 @@ fun SettingsScreen(
                                 CircularProgressIndicator()
                             }
                         } else {
-                            Image(
-                                painter = painterResource(id = R.mipmap.picture_defaullt_profile_foreground),
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(profileImageUrl ?: R.drawable.picture_defaullt_profile)
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = "Фото профиля",
                                 modifier = Modifier
-                                    .size(280.dp)
+                                    .size(110.dp)
                                     .clip(CircleShape)
-                                    .align(Alignment.CenterStart)
+                                    .align(Alignment.CenterStart),
+                                contentScale = ContentScale.Crop,
+                                error = painterResource(id = R.drawable.picture_defaullt_profile),
+                                placeholder = painterResource(id = R.drawable.picture_defaullt_profile)
                             )
                         }
 
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .offset(x = (-40).dp, y = (-30).dp)
+                                .offset(x = (-10).dp)
                                 .clip(CircleShape)
                                 .clickable {
                                     pickImageLauncher.launch(
@@ -232,7 +247,7 @@ fun SettingsScreen(
                                         )
                                     )
                                 }
-                                .padding(12.dp)
+                                .padding(4.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.icon_edit_photo),
@@ -245,9 +260,8 @@ fun SettingsScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(spacing.large))
+                Spacer(modifier = Modifier.height(spacing.medium))
             }
-
             listOf(
                 FieldData(name, "Имя", "Введите ваше имя") { name = it },
                 FieldData(username, "Ник в приложении", "Введите никнейм") { username = it },
@@ -271,10 +285,10 @@ fun SettingsScreen(
                             .padding(horizontal = spacing.large)
                     )
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(spacing.large))
+                item {
+                    Spacer(modifier = Modifier.height(spacing.medium))
+                }
             }
 
             item {
@@ -294,6 +308,10 @@ fun SettingsScreen(
             }
 
             item {
+                Spacer(modifier = Modifier.height(spacing.medium))
+            }
+
+            item {
                 TermsSwitch(
                     checked = isNotificationsEnabled,
                     onCheckedChange = {
@@ -306,6 +324,10 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = spacing.large)
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(spacing.medium))
             }
 
             item {
@@ -322,6 +344,11 @@ fun SettingsScreen(
                         .padding(horizontal = spacing.large)
                 )
             }
+
+            item {
+                Spacer(modifier = Modifier.height(spacing.medium))
+            }
+
             item {
                 Row(
                     modifier = Modifier
@@ -344,7 +371,6 @@ fun SettingsScreen(
                             ),
                             color = MaterialTheme.colorScheme.onSurface
                         )
-
                     }
 
                     Spacer(modifier = Modifier.width(10.dp))
@@ -352,11 +378,12 @@ fun SettingsScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.icon_help_circle),
                         contentDescription = "Помощь",
-                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
+            }
 
+            item {
                 Divider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -367,7 +394,58 @@ fun SettingsScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(spacing.large * 2))
+                Spacer(modifier = Modifier.height(spacing.small))
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large)
+                        .clickable {
+                            openPdfFile(
+                                context = context,
+                                pdfUrl = "https://docs.google.com/document/d/1ZdU4hvSO9TTyQIQ3GvCkoeHl0wH_uUKb/export?format=pdf"
+                            )
+                        }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Политика конфиденциальности",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Normal
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.icon_shield),
+                        contentDescription = "Политика конфиденциальности",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            item {
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.large),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(spacing.medium * 2))
             }
         }
     }

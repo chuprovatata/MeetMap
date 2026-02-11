@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.sp
 import com.example.datingapp.R
 
 @Composable
-fun StartScreen(onStartClicked: () -> Unit) {
+fun StartScreen(
+    onGetStarted: () -> Unit  // Изменено с onStartClicked на onGetStarted
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -28,7 +30,7 @@ fun StartScreen(onStartClicked: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             Button(
-                onClick = onStartClicked,
+                onClick = onGetStarted,  // Изменено здесь
                 modifier = Modifier
                     .fillMaxWidth(0.48f)
                     .fillMaxHeight(0.08f),

@@ -1,9 +1,11 @@
 package com.example.datingapp.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Start : Screen("start")
     object Greeting : Screen("greeting")
     object Registration : Screen("registration")
+    object Login : Screen("login")
     object ProfileSetup : Screen("profileSetup")
     object TargetSelection : Screen("targetSelection")
     object CategorySelection : Screen("categorySelection")

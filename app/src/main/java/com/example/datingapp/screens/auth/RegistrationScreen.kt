@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,13 +44,13 @@ import com.example.datingapp.components.progress.ProgressLine
 import com.example.datingapp.navigation.NavigationProgress
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.example.datingapp.viewmodels.AuthViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun RegistrationScreen(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -61,9 +60,6 @@ fun RegistrationScreen(
     var passwordError by remember { mutableStateOf(false) }
 
     var showVerificationScreen by rememberSaveable { mutableStateOf(false) }
-
-    var isLoading by remember { mutableStateOf(false) }
-
     var isContinueClicked by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -71,7 +67,9 @@ fun RegistrationScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
 
-    val auth = Firebase.auth
+    val isLoading by authViewModel.isLoading.collectAsState()
+    val errorMessage by authViewModel.errorMessage.collectAsState()
+    val successMessage by authViewModel.successMessage.collectAsState()
 
     val emailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
@@ -102,112 +100,66 @@ fun RegistrationScreen(
         passwordError = password.isNotEmpty() && !isValidPassword(password)
     }
 
-    // Функция регистрации через Firebase
-    fun registerWithFirebase() {
-        if (!validateForm(email, password)) return
-
-        isLoading = true
-        isContinueClicked = true
-
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                isLoading = false
-
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-
-                    user?.sendEmailVerification()
-                        ?.addOnCompleteListener { verificationTask ->
-                            if (verificationTask.isSuccessful) {
-                                showVerificationScreen = true
-
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        "Письмо с подтверждением отправлено на $email"
-                                    )
-                                }
-                            } else {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        "Ошибка отправки email"
-                                    )
-                                }
-                            }
-                        }
-                } else {
-                    isContinueClicked = false
-
-                    val errorMessage = when (task.exception?.message) {
-                        "The email address is already in use by another account." ->
-                            "Этот email уже используется"
-                        "The email address is badly formatted." ->
-                            "Некорректный формат email"
-                        "Password should be at least 6 characters" ->
-                            "Пароль должен содержать минимум 6 символов"
-                        else -> "Ошибка регистрации"
-                    }
-
-                    scope.launch {
-                        snackbarHostState.showSnackbar(errorMessage)
-                    }
-                }
-            }
-    }
-
-    // Функция проверки email верификации
-    fun checkEmailVerification() {
-        isLoading = true
-        val user = auth.currentUser
-
-        user?.reload()?.addOnCompleteListener { reloadTask ->
-            isLoading = false
-
-            if (reloadTask.isSuccessful) {
-                if (user.isEmailVerified) {
-                    navController.navigate("profileSetup") {
-                        // Очищаем стек навигации, чтобы нельзя было вернуться назад
-                        popUpTo("registration") { inclusive = true }
-                    }
-                } else {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            "Email еще не подтвержден. Проверьте вашу почту"
-                        )
-                    }
-                }
-            } else {
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        "Ошибка проверки email"
-                    )
-                }
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { error ->
+            scope.launch {
+                snackbarHostState.showSnackbar(error)
+                authViewModel.clearErrors()
             }
         }
     }
 
-    // Функция повторной отправки email верификации
-    fun resendVerificationEmail() {
-        isLoading = true
-        val user = auth.currentUser
-
-        user?.sendEmailVerification()
-            ?.addOnCompleteListener { task ->
-                isLoading = false
-
-                if (task.isSuccessful) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Новое письмо отправлено на $email")
-                    }
-                } else {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            "Ошибка отправки email"
-                        )
-                    }
-                }
+    LaunchedEffect(successMessage) {
+        successMessage?.let { message ->
+            scope.launch {
+                snackbarHostState.showSnackbar(message)
+                authViewModel.clearSuccessMessage()
             }
+            showVerificationScreen = true
+            isContinueClicked = true
+        }
     }
 
+    fun registerWithFirebase() {
+        if (!validateForm(email, password)) return
+
+        authViewModel.register(
+            email = email,
+            password = password,
+            onSuccess = {
+            },
+            onError = { error ->
+                isContinueClicked = false
+            }
+        )
+    }
+
+    fun checkEmailVerification() {
+        authViewModel.checkEmailVerification(
+            onVerified = {
+                navController.navigate("profileSetup") {
+                    popUpTo("registration") { inclusive = true }
+                }
+            },
+            onNotVerified = {
+                scope.launch {
+                    snackbarHostState.showSnackbar("Email еще не подтвержден. Проверьте вашу почту")
+                }
+            }
+        )
+    }
+
+    fun resendVerificationEmail() {
+        authViewModel.resendVerificationEmail(
+            onSuccess = {
+            },
+            onError = { error ->
+                scope.launch {
+                    snackbarHostState.showSnackbar("Ошибка отправки письма: $error")
+                }
+            }
+        )
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -273,7 +225,6 @@ fun RegistrationScreen(
 
             Spacer(modifier = Modifier.height(spacing.large))
 
-            // Первая часть: email и пароль
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -358,7 +309,6 @@ fun RegistrationScreen(
 
             Spacer(modifier = Modifier.height(spacing.large))
 
-            // Вторая часть: подтверждение email
             AnimatedVisibility(
                 visible = showVerificationScreen,
                 enter = fadeIn(),
@@ -370,7 +320,6 @@ fun RegistrationScreen(
                 ) {
                     Spacer(modifier = Modifier.height(spacing.medium))
 
-                    // Информационное сообщение
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -427,17 +376,14 @@ fun RegistrationScreen(
                                         number = 1,
                                         text = "Проверь почту"
                                     )
-
                                     NumberedItem(
                                         number = 2,
                                         text = "Найди письмо от МитМап"
                                     )
-
                                     NumberedItem(
                                         number = 3,
                                         text = "Нажми на ссылку в письме"
                                     )
-
                                     NumberedItem(
                                         number = 4,
                                         text = "Возвращайся в приложение"
@@ -605,7 +551,6 @@ fun openPdfFile(context: Context, pdfUrl: String) {
     }
 }
 
-// Функции валидации
 private fun isValidEmail(email: String): Boolean {
     return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }

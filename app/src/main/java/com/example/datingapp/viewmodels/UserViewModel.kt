@@ -130,4 +130,7 @@ class UserViewModel : ViewModel() {
             }
         }
     }
+    fun clearUploadError() {
+        _uploadError.value = null
+    }
 }
