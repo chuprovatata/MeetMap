@@ -13,6 +13,8 @@ import com.example.datingapp.screens.friends.Cur_Friend
 import com.example.datingapp.screens.friends.Main_Friends
 import com.example.datingapp.screens.friends.My_Friends
 import com.example.datingapp.screens.meets.MainMeets
+import com.example.datingapp.screens.meets.ReqFriend
+import com.example.datingapp.screens.meets.ReqMeet
 import com.example.datingapp.screens.myplaces.MyPlacesScreen
 import com.example.datingapp.screens.profile.MyProfile
 import com.example.datingapp.screens.settings.SettingsScreen
@@ -54,6 +56,14 @@ fun NavGraph(navHostController: NavHostController) {
 
         composable(Screen.CurFriend.route) {
             Cur_Friend(navHostController)
+        }
+
+        composable(Screen.ReqMeet.route) {
+            ReqMeet(navHostController)
+        }
+
+        composable(Screen.ReqFriend.route) {
+            ReqFriend(navHostController)
         }
 
         //Когда будет бд в таком стиле функции

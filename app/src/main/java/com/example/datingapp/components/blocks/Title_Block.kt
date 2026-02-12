@@ -47,10 +47,10 @@ import com.example.datingapp.ui.theme.GrayMedium2
 
 @Composable
 fun Title_Block(
-    navController: NavController? = null,
+    navController: NavController,
     title: String,
     subtitle: String,
-    iconId: Int,
+    iconId: Int = 0,
     clickable: Boolean = false
 ) {
     Box(
@@ -63,19 +63,19 @@ fun Title_Block(
                 if (clickable) {
 
 
-                    navController?.navigate(Screen.MyFriends.route)
+                    navController.navigate(Screen.MyFriends.route)
                 }
             },
     ) {
         Row(
             modifier = Modifier
-                .padding(start = 8.dp, top = 9.dp, bottom = 9.dp)
+                .padding(start = 8.dp, top = 9.dp, end=30.dp, bottom = 9.dp)
 
                 .fillMaxHeight()
         ) {
             Column(
                 modifier = Modifier
-                    .width(200.dp)
+                    .width(240.dp)
 
             ) {
                 Text(
@@ -84,24 +84,36 @@ fun Title_Block(
                     style = MaterialTheme.typography.headlineLarge,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier
+                        .width(190.dp)
 
-                Text(
+                ) {
+                    Text(
 
-                    text = subtitle,
+                        text = subtitle,
 
-                    style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall,
 
-                    )
+                        )
+                }
+
+
             }
-            Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+            if (iconId != 0) {
+                Box(modifier = Modifier.height(153.dp)
+                    .width(120.dp),
 
-                Icon(painter = painterResource(id = iconId), contentDescription = "person")
+
+                    contentAlignment = Alignment.Center) {
+
+                    Icon(painter = painterResource(id = iconId), contentDescription = "person", modifier = Modifier.size(120.dp))
+                }
             }
         }
     }
 
 }
-
 
 data class Place(
     val nick: String = "",

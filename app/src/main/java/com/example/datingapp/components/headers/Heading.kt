@@ -40,8 +40,7 @@ fun Heading_Arrow(heading: String, navController: NavController) {
     ) {
         IconButton(
             onClick = {
-                navController?.navigate(Screen.Main.route) {
-                }
+                navController.popBackStack()
             }
 
         ) {

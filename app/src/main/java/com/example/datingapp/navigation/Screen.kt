@@ -26,6 +26,10 @@ sealed class Screen(val route: String) {
     object PlacesAdmin : Screen("places_admin")
     object CloudImages : Screen("cloud_images")
     object TestCloud : Screen("test_cloud")
+    object  ReqMeet: Screen("req_meet")
+    object  ReqFriend: Screen("req_friend")
+
+
 
     fun withArgs(vararg args: String): String {
         return buildString {
