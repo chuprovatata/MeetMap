@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,18 +11,36 @@ plugins {
 
 android {
     namespace = "com.example.datingapp"
-    compileSdk = 36  // ← обновите до 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.datingapp"
         minSdk = 24
-        targetSdk = 36  // ← обновите до 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
 
+        val yandexAccessKey = localProperties.getProperty("yandex.access.key")
+            ?: System.getenv("YANDEX_ACCESS_KEY_ID")
+            ?: "default_dev_key"
+
+        val yandexSecretKey = localProperties.getProperty("yandex.secret.key")
+            ?: System.getenv("YANDEX_SECRET_ACCESS_KEY")
+            ?: "default_dev_secret"
+        val yandexOAuthToken = localProperties.getProperty("yandex.oauth.token")
+            ?: System.getenv("YANDEX_OAUTH_TOKEN")
+            ?: "default_oauth_token"
+        buildConfigField("String", "YANDEX_ACCESS_KEY_ID", "\"${yandexAccessKey}\"")
+        buildConfigField("String", "YANDEX_SECRET_ACCESS_KEY", "\"${yandexSecretKey}\"")
+        buildConfigField("String", "YANDEX_OAUTH_TOKEN", "\"${yandexOAuthToken}\"")
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -39,6 +59,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -74,6 +95,7 @@ dependencies {
 
     implementation ("com.google.dagger:hilt-android:2.48")
     kapt ("com.google.dagger:hilt-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -96,4 +118,7 @@ dependencies {
 
     // Для загрузки изображений
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    implementation("com.amazonaws:aws-android-sdk-s3:2.72.0")
+    implementation("com.amazonaws:aws-android-sdk-core:2.72.0")
 }

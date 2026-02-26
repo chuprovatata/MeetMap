@@ -20,7 +20,6 @@ import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.GrayBlock
 import com.example.datingapp.components.blocks.SimpleBlock
-import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.ui.theme.Pink
@@ -39,10 +38,57 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(vertical = 40.dp, horizontal = spacing.large)
             ) {
+                // Шапка с иконками уведомлений и профиля
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Привет!",
+                        style = MaterialTheme.typography.displayLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
 
-                Heading("Привет!", true, true, navController = navController)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable {
+                                    navController.navigate("notification")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icon_bell),
+                                contentDescription = "Уведомления",
+                                modifier = Modifier.size(35.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
 
-
+                        Box(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable {
+                                    navController.navigate("my_profile")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icon_person),
+                                contentDescription = "Профиль",
+                                modifier = Modifier.size(35.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
         },
         floatingActionButton = {
@@ -51,46 +97,6 @@ fun MainScreen(
                 modifier = Modifier.padding(bottom = 72.dp)
             ) {
                 Icon(Icons.Default.AdminPanelSettings, contentDescription = "Админка")
-            }
-        },
-        bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = spacing.large)
-                    .padding(bottom = 48.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable {
-                            navController?.navigate("notification")
-                        }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Уведомления (4)",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.surface
-                        )
-
-                        Image(
-                            painter = painterResource(id = R.drawable.icon_arrow_right),
-                            contentDescription = "Стрелка",
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                }
             }
         }
     ) { paddingValues ->
@@ -124,19 +130,15 @@ fun MainScreen(
                     title = "Мне нравится",
                     subtitle = "Отмечай любимое, а мы подберем людей с похожими местами!",
                     onClick = {
-
                         navController.navigate("main_bottom_menu/screen_2") {
-                            //тут я поставила запрет на возврат на главный экран c привет!
-                            //потом можно будет исправить
                             popUpTo(0) {
                                 inclusive = true
                             }
                             launchSingleTop = true
-
                         }
                     },
                     modifier = Modifier.weight(1f),
-                    height = 200.dp
+                    height = 220.dp
                 )
 
                 GrayBlock(
@@ -144,7 +146,7 @@ fun MainScreen(
                     subtitle = "Те места, куда ты когда-то хотел сходить.\n\nМожет быть самое время?",
                     onClick = { /* ... */ },
                     modifier = Modifier.weight(1f),
-                    height = 200.dp
+                    height = 220.dp
                 )
             }
 
@@ -156,19 +158,16 @@ fun MainScreen(
                 imageResId = null,
                 onClick = {
                     navController.navigate("main_bottom_menu/screen_1") {
-                        //тут я поставила запрет на возврат на главный экран c привет!
-                        //потом можно будет исправить
                         popUpTo(0) {
                             inclusive = true
                         }
                         launchSingleTop = true
-
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.large),
-                height = 140.dp,
+                height = 120.dp,
                 showImage = false,
                 containerColor = Pink
             )
@@ -197,7 +196,6 @@ fun MainScreen(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 titleColor = MaterialTheme.colorScheme.primary,
             )
-
         }
     }
 }

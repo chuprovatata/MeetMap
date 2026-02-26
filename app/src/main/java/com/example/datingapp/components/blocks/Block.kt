@@ -1,10 +1,8 @@
-// components/blocks/SimpleBlock.kt
 package com.example.datingapp.components.blocks
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,7 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.scale
 import com.example.datingapp.ui.theme.PurpleLight
 
@@ -58,23 +56,24 @@ fun SimpleBlock(
                     .padding(
                         start = 16.dp,
                         end = if (showImage && imageResId != null) 8.dp else 16.dp,
-                        top = 20.dp
+                        top = 16.dp, // Уменьшил верхний отступ с 20.dp до 16.dp
+                        bottom = 16.dp // Добавил нижний отступ
                     ),
                 verticalArrangement = Arrangement.Top
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineLarge.copy(
-                        color = titleColor
+                        color = titleColor,
                     )
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = subtitleColor
+                        color = subtitleColor,
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -85,7 +84,7 @@ fun SimpleBlock(
                     modifier = Modifier
                         .width(120.dp)
                         .fillMaxHeight()
-                        .padding(end = 16.dp),
+                        .padding(end = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -131,23 +130,23 @@ fun GrayBlock(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 20.dp),
+                .padding(horizontal = 12.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             )
         }

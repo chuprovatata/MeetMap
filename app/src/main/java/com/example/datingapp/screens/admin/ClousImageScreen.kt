@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/datingapp/screens/admin/CloudImagesScreen.kt
 package com.example.datingapp.screens.admin
 
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.datingapp.data.yandex.YandexCloudService
+import com.example.datingapp.utils.CloudImageUtils  // ← ИЗМЕНЕНО
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,7 +159,7 @@ private suspend fun loadCloudImages(
         debugInfo.appendLine("=== ПРОВЕРКА ИЗОБРАЖЕНИЙ В ОБЛАКЕ ===")
 
         // 1. Получаем список файлов
-        val files = YandexCloudService.listFiles()
+        val files = CloudImageUtils.listFiles()  // ← ИЗМЕНЕНО
         debugInfo.appendLine("Всего файлов в облаке: ${files.size}")
         debugInfo.appendLine("Файлы: $files")
 
@@ -176,7 +175,7 @@ private suspend fun loadCloudImages(
 
         // 3. Получаем публичные URL
         val images = imageFiles.map { fileName ->
-            YandexCloudService.getPublicUrl(fileName)
+            CloudImageUtils.getPublicUrl(fileName)  // ← ИЗМЕНЕНО
         }
 
         debugInfo.appendLine("=== ДОСТУПНО ИЗОБРАЖЕНИЙ: ${images.size} ===")

@@ -17,6 +17,7 @@ import com.example.datingapp.screens.admin.PlacesAdminScreen
 import com.example.datingapp.screens.admin.TestCloudScreen
 import com.example.datingapp.screens.auth.LoginScreen
 import com.example.datingapp.screens.auth.RegistrationScreen
+import com.example.datingapp.screens.feedback.FeedbackAfterPlacesOfDayScreen
 import com.example.datingapp.screens.friends.Cur_Friend
 import com.example.datingapp.screens.main.MainScreen
 import com.example.datingapp.screens.notification.NotificationScreen
@@ -271,6 +272,9 @@ fun AppNavigation() {
 
         composable(Screen.TestCloud.route) {
             TestCloudScreen(navController = navController)
+        }
+        composable(Screen.FeedbackAfterPlacesOfDay.route) {
+            FeedbackAfterPlacesOfDayScreen(navController = navController)
         }
     }
 }

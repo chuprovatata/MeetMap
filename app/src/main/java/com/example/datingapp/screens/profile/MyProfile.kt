@@ -2,6 +2,7 @@ package com.example.datingapp.screens.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,9 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -30,11 +35,11 @@ import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.FavPlace
 import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.MutPlaces
 import com.example.datingapp.components.blocks.Place
 import com.example.datingapp.components.blocks.UserInfo
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.progress.ProgressLine
+import com.example.datingapp.navigation.Screen
 import com.example.datingapp.screens.friends.User
 
 @Composable
@@ -42,15 +47,35 @@ fun MyProfile(navController: NavController) {
 
     Scaffold(
         topBar = {
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 6.dp)
-                    .padding(top = 40.dp, bottom = 20.dp)
+                    .padding(top = 40.dp)
             ) {
-                Heading_Arrow("Профиль", navController)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 9.dp, end = 19.dp)
+                ) {
+                    Heading_Arrow("Профиль", navController)
+
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.Settings.route)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.icon_settings),
+                            contentDescription = "Настройки",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                }
             }
         },
     ) { paddingValues ->
@@ -90,10 +115,8 @@ fun MyProfile(navController: NavController) {
                 )
             )
 
-
             UserInfo(user1)
             Spacer(modifier = Modifier.height(30.dp))
-
 
             Row(
                 modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
@@ -108,9 +131,7 @@ fun MyProfile(navController: NavController) {
                     text = "места отмечено",
                     style = MaterialTheme.typography.bodyLarge,
                     fontSize = 20.sp
-
                 )
-
             }
             Spacer(modifier = Modifier.height(21.dp))
             ProgressLine(0.6f, height = 12)
@@ -147,14 +168,9 @@ fun MyProfile(navController: NavController) {
 
             Spacer(modifier = Modifier.height(25.dp))
 
-
-
             FriendsHorizontal("Общие друзья", user1.mutFriends, navController)
 
-
             Spacer(modifier = Modifier.height(100.dp))
-
-
         }
     }
 }

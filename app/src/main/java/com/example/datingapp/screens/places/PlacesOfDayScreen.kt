@@ -53,6 +53,9 @@ fun PlacesOfDayScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // флаг для отслеживания, был ли уже показан экран обратной связи
+    val hasShownFeedback = remember { mutableStateOf(false) }
+
     // Загружаем места дня из Firestore
     LaunchedEffect(Unit) {
         loadPlacesOfDay(db) { loadedPlaces, error ->
@@ -77,22 +80,30 @@ fun PlacesOfDayScreen(
         placesOfDay.size // количество страниц
     }
 
-    // Функция для циклического перелистывания
+    //Функция для перелистывания вперед
     fun navigateToNextPage() {
         scope.launch {
-            val nextPage = (pagerState.currentPage + 1) % placesOfDay.size
-            pagerState.animateScrollToPage(nextPage)
+            // Если это последнее место
+            if (pagerState.currentPage == placesOfDay.size - 1) {
+                if (!hasShownFeedback.value) {
+                    hasShownFeedback.value = true
+                    // Переход на экран обратной связи
+                    navController.navigate(Screen.FeedbackAfterPlacesOfDay.route)
+                }
+            } else {
+                val nextPage = pagerState.currentPage + 1
+                pagerState.animateScrollToPage(nextPage)
+            }
         }
     }
 
+    // Функция для перелистывания назад (только назад, без циклического листания)
     fun navigateToPreviousPage() {
         scope.launch {
-            val prevPage = if (pagerState.currentPage - 1 < 0) {
-                placesOfDay.size - 1
-            } else {
-                pagerState.currentPage - 1
+            if (pagerState.currentPage > 0) {
+                val prevPage = pagerState.currentPage - 1
+                pagerState.animateScrollToPage(prevPage)
             }
-            pagerState.animateScrollToPage(prevPage)
         }
     }
 
@@ -191,7 +202,6 @@ fun PlacesOfDayScreen(
                 }
             } else {
                 // Горизонтальный пейджер для пролистывания
-                // В HorizontalPager исправляем:
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -236,17 +246,20 @@ fun PlacesOfDayScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    // Стрелка влево
+                    // Стрелка влево - enabled только если не первое место
                     IconButton(
                         onClick = { navigateToPreviousPage() },
                         modifier = Modifier.size(48.dp),
-                        enabled = placesOfDay.isNotEmpty()
+                        enabled = pagerState.currentPage > 0
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.icon_chevron_left),
                             contentDescription = "Предыдущее место",
                             modifier = Modifier.size(24.dp),
-                            tint = if (placesOfDay.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.Gray
+                            tint = if (pagerState.currentPage > 0)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                Color.Gray
                         )
                     }
 
@@ -269,17 +282,17 @@ fun PlacesOfDayScreen(
                         }
                     }
 
-                    // Стрелка вправо
+                    // Стрелка вправо - всегда активна
                     IconButton(
                         onClick = { navigateToNextPage() },
                         modifier = Modifier.size(48.dp),
-                        enabled = placesOfDay.isNotEmpty()
+                        enabled = true
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.icon_chevron_right),
                             contentDescription = "Следующее место",
                             modifier = Modifier.size(24.dp),
-                            tint = if (placesOfDay.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.Gray
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

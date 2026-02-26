@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -42,7 +43,8 @@ fun DatingTextField(
     maxCharacters: Int = Int.MAX_VALUE,
     showCharacterCounter: Boolean = false,
     focusRequester: FocusRequester? = null,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
+    enabled: Boolean = true
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val view = LocalView.current
@@ -50,40 +52,39 @@ fun DatingTextField(
     val screenWidth = configuration.screenWidthDp
 
     val adaptiveLabelSize = when {
-        screenWidth < 360 -> 12.sp    // Маленькие экраны
-        screenWidth < 480 -> 13.sp    // Средние экраны
-        else -> 14.sp                 // Большие экраны
+        screenWidth < 360 -> 12.sp
+        screenWidth < 480 -> 13.sp
+        else -> 14.sp
     }
 
     val adaptiveTextSize = when {
-        screenWidth < 360 -> 14.sp    // Маленькие экраны
-        screenWidth < 480 -> 15.sp    // Средние экраны
-        else -> 16.sp                 // Большие экраны
+        screenWidth < 360 -> 14.sp
+        screenWidth < 480 -> 15.sp
+        else -> 16.sp
     }
 
     val adaptivePlaceholderSize = when {
-        screenWidth < 360 -> 13.sp    // Маленькие экраны
-        screenWidth < 480 -> 14.sp    // Средние экраны
-        else -> 15.sp                 // Большие экраны
+        screenWidth < 360 -> 13.sp
+        screenWidth < 480 -> 14.sp
+        else -> 15.sp
     }
 
     val adaptiveCounterSize = when {
-        screenWidth < 360 -> 10.sp    // Маленькие экраны
-        screenWidth < 480 -> 11.sp    // Средние экраны
-        else -> 12.sp                 // Большие экраны
+        screenWidth < 360 -> 10.sp
+        screenWidth < 480 -> 11.sp
+        else -> 12.sp
     }
 
     val adaptiveErrorSize = when {
-        screenWidth < 360 -> 11.sp    // Маленькие экраны
-        screenWidth < 480 -> 12.sp    // Средние экраны
-        else -> 13.sp                 // Большие экраны
+        screenWidth < 360 -> 11.sp
+        screenWidth < 480 -> 12.sp
+        else -> 13.sp
     }
 
-    // Адаптивные отступы
     val adaptiveLabelPadding = when {
-        screenWidth < 360 -> 4.dp     // Маленькие экраны
-        screenWidth < 480 -> 6.dp     // Средние экраны
-        else -> 8.dp                  // Большие экраны
+        screenWidth < 360 -> 4.dp
+        screenWidth < 480 -> 6.dp
+        else -> 8.dp
     }
 
     val adaptiveFieldPadding = when {
@@ -93,27 +94,26 @@ fun DatingTextField(
     }
 
     val adaptiveErrorPadding = when {
-        screenWidth < 360 -> 2.dp     // Маленькие экраны
-        screenWidth < 480 -> 3.dp     // Средние экраны
-        else -> 4.dp                  // Большие экраны
+        screenWidth < 360 -> 2.dp
+        screenWidth < 480 -> 3.dp
+        else -> 4.dp
     }
 
     val adaptiveSpacing = when {
-        screenWidth < 360 -> 6.dp     // Маленькие экраны
-        screenWidth < 480 -> 8.dp     // Средние экраны
-        else -> 10.dp                 // Большие экраны
+        screenWidth < 360 -> 6.dp
+        screenWidth < 480 -> 8.dp
+        else -> 10.dp
     }
 
     val handleValueChange = { newValue: String ->
-        if (newValue.length <= maxCharacters) {
+        if (enabled && newValue.length <= maxCharacters) {
             onValueChange(newValue)
-        } else {
+        } else if (enabled) {
             onValueChange(newValue.take(maxCharacters))
         }
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Лейбл
         Text(
             text = label,
             style = MaterialTheme.typography.titleSmall.copy(
@@ -123,16 +123,19 @@ fun DatingTextField(
             modifier = Modifier.padding(bottom = adaptiveLabelPadding)
         )
 
-        // Контейнер для поля ввода
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
                     width = if (screenWidth < 360) 0.8.dp else 1.dp,
-                    color = if (isError) MaterialTheme.colorScheme.error else GrayLight,
+                    color = if (isError) MaterialTheme.colorScheme.error
+                    else GrayLight,
                     shape = RoundedCornerShape(if (screenWidth < 360) 6.dp else 8.dp)
                 )
-                .background(White, RoundedCornerShape(if (screenWidth < 360) 6.dp else 8.dp))
+                .background(
+                    White,
+                    RoundedCornerShape(if (screenWidth < 360) 6.dp else 8.dp)
+                )
                 .padding(adaptiveFieldPadding)
         ) {
             Column(
@@ -143,7 +146,6 @@ fun DatingTextField(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Текстовое поле
                     Box(
                         modifier = Modifier.weight(1f)
                     ) {
@@ -154,14 +156,17 @@ fun DatingTextField(
                                 .fillMaxWidth()
                                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                                 .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
+                                    if (enabled && focusState.isFocused) {
                                         view.postDelayed({
                                             keyboardController?.show()
                                         }, 100)
                                     }
                                 },
                             textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = if (enabled)
+                                    MaterialTheme.colorScheme.onSurface
+                                else
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                                 fontSize = adaptiveTextSize
                             ),
                             visualTransformation = visualTransformation,
@@ -169,18 +174,22 @@ fun DatingTextField(
                             keyboardActions = keyboardActions,
                             singleLine = singleLine,
                             maxLines = maxLines,
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                            cursorBrush = if (enabled) SolidColor(MaterialTheme.colorScheme.primary)
+                            else SolidColor(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)),
+                            enabled = enabled,
                             decorationBox = { innerTextField ->
                                 Box(
                                     contentAlignment = Alignment.TopStart,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    // Плейсхолдер
                                     if (value.isEmpty()) {
                                         Text(
                                             text = placeholder,
                                             style = MaterialTheme.typography.bodyMedium.copy(
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                                color = if (enabled)
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                                else
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                                 fontSize = adaptivePlaceholderSize
                                             )
                                         )
@@ -193,12 +202,15 @@ fun DatingTextField(
 
                     if (trailingIcon != null) {
                         Spacer(modifier = Modifier.width(adaptiveSpacing))
-                        trailingIcon()
+                        Box(
+                            modifier = if (!enabled) Modifier.alpha(0.4f) else Modifier
+                        ) {
+                            trailingIcon()
+                        }
                     }
                 }
 
-                // Счетчик символов
-                if (showCharacterCounter && maxCharacters != Int.MAX_VALUE) {
+                if (enabled && showCharacterCounter && maxCharacters != Int.MAX_VALUE) {
                     Spacer(modifier = Modifier.height(if (screenWidth < 360) 2.dp else 4.dp))
                     Text(
                         text = "${value.length}/$maxCharacters",
@@ -223,7 +235,8 @@ fun DatingTextField(
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = adaptiveErrorSize
                 ),
-                color = MaterialTheme.colorScheme.error,
+                color = if (enabled) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.error.copy(alpha = 0.4f),
                 modifier = Modifier.padding(start = if (screenWidth < 360) 2.dp else 4.dp)
             )
         }

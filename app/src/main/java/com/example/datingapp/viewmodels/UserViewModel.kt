@@ -1,22 +1,23 @@
 package com.example.datingapp.viewmodels
 
+import android.content.ContentResolver
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import com.example.datingapp.data.repository.UserRepository
+import com.example.datingapp.utils.CloudImageUtils
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class UserViewModel : ViewModel() {
-
-    private val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+@HiltViewModel
+class UserViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _isUploadingImage = MutableStateFlow(false)
     val isUploadingImage: StateFlow<Boolean> = _isUploadingImage.asStateFlow()
@@ -30,72 +31,55 @@ class UserViewModel : ViewModel() {
     private val _userData = MutableStateFlow<Map<String, Any>?>(null)
     val userData: StateFlow<Map<String, Any>?> = _userData.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _dataLoadError = MutableStateFlow<String?>(null)
+    val dataLoadError: StateFlow<String?> = _dataLoadError.asStateFlow()
+
+    init {
+        loadUserData()
+    }
 
     fun loadUserData() {
         _isLoading.value = true
+        _dataLoadError.value = null
+
         viewModelScope.launch {
             try {
-                val currentUser = auth.currentUser
-                if (currentUser != null) {
-                    val document = firestore.collection("users")
-                        .document(currentUser.uid)
-                        .get()
-                        .await()
+                val data = userRepository.getUserData()
+                _userData.value = data
 
-                    if (document.exists()) {
-                        val data = document.data ?: emptyMap()
-                        _userData.value = data
+                val imageUrl = userRepository.getUserProfileImageUrl()
+                _profileImageUrl.value = imageUrl
 
-                        val imageUrl = data["profileImageUrl"] as? String
-                        _profileImageUrl.value = imageUrl
-                    }
-                }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("UserViewModel", "Error loading user data", e)
+                _dataLoadError.value = e.message ?: "Ошибка загрузки данных"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun uploadProfileImage(uri: Uri) {
+    fun uploadProfileImage(uri: Uri, contentResolver: ContentResolver) {
         _isUploadingImage.value = true
         _uploadError.value = null
 
         viewModelScope.launch {
             try {
-                val currentUser = auth.currentUser
-                if (currentUser == null) {
-                    _uploadError.value = "Пользователь не авторизован"
-                    return@launch
-                }
-
-                val userId = currentUser.uid
-
-                val storageRef = storage.reference.child("profile_images/$userId.jpg")
-                val uploadTask = storageRef.putFile(uri).await()
-
-                val downloadUrl = uploadTask.metadata?.reference?.downloadUrl?.await()
-                    ?: throw Exception("Не удалось получить URL изображения")
-
-                val imageUrl = downloadUrl.toString()
-
-                firestore.collection("users")
-                    .document(userId)
-                    .update("profileImageUrl", imageUrl)
-                    .await()
+                val imageUrl = userRepository.uploadProfileImage(uri, contentResolver)
 
                 _profileImageUrl.value = imageUrl
 
+                // Обновляем данные пользователя
                 val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
                 currentData["profileImageUrl"] = imageUrl
                 _userData.value = currentData
 
             } catch (e: Exception) {
-                _uploadError.value = e.message ?: "Неизвестная ошибка"
-                e.printStackTrace()
+                Log.e("UserViewModel", "Upload error", e)
+                _uploadError.value = e.message ?: "Неизвестная ошибка при загрузке фото"
             } finally {
                 _isUploadingImage.value = false
             }
@@ -104,33 +88,43 @@ class UserViewModel : ViewModel() {
 
     fun updateUserData(data: Map<String, Any?>) {
         _isLoading.value = true
+
         viewModelScope.launch {
             try {
-                val currentUser = auth.currentUser
-                if (currentUser == null) {
-                    return@launch
-                }
-
                 val firestoreData = data.filterValues { it != null }
                     .mapValues { (_, value) -> value!! }
 
-                firestore.collection("users")
-                    .document(currentUser.uid)
-                    .update(firestoreData)
-                    .await()
+                userRepository.updateUserData(firestoreData)
 
                 val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
                 firestoreData.forEach { (key, value) -> currentData[key] = value }
                 _userData.value = currentData
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("UserViewModel", "Error updating user data", e)
+                _dataLoadError.value = e.message ?: "Ошибка обновления данных"
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
+    /**
+     * Получить обработанный URL изображения для отображения
+     */
+    suspend fun getProcessedImageUrl(originalUrl: String?): Any {
+        return CloudImageUtils.getFixedImageUrl(originalUrl)
+    }
+
     fun clearUploadError() {
         _uploadError.value = null
+    }
+
+    fun clearDataLoadError() {
+        _dataLoadError.value = null
+    }
+
+    fun refreshUserData() {
+        loadUserData()
     }
 }

@@ -28,6 +28,7 @@ sealed class Screen(val route: String) {
     object TestCloud : Screen("test_cloud")
     object  ReqMeet: Screen("req_meet")
     object  ReqFriend: Screen("req_friend")
+    object FeedbackAfterPlacesOfDay: Screen("feedback_after_places_of_day")
 
 
 
