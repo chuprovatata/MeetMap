@@ -22,7 +22,8 @@ import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 
 @Composable
 fun FeedbackAfterPlacesOfDayScreen(
-    navController: NavController
+    navController: NavController,
+    onContinue: () -> Unit = { navController.popBackStack() }
 ) {
     var rating by remember { mutableStateOf(0) }
 

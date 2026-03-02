@@ -22,14 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.example.datingapp.R
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.data.models.PlaceInfo
 import com.example.datingapp.navigation.Screen
-import com.example.datingapp.utils.CloudImageUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -42,6 +38,7 @@ import androidx.compose.foundation.background
 @Composable
 fun PlacesOfDayScreen(
     navController: NavController,
+    isFirstEntry: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -80,15 +77,15 @@ fun PlacesOfDayScreen(
         placesOfDay.size // количество страниц
     }
 
-    //Функция для перелистывания вперед
+    // Функция для перелистывания вперед
     fun navigateToNextPage() {
         scope.launch {
             // Если это последнее место
             if (pagerState.currentPage == placesOfDay.size - 1) {
                 if (!hasShownFeedback.value) {
                     hasShownFeedback.value = true
-                    // Переход на экран обратной связи
-                    navController.navigate(Screen.FeedbackAfterPlacesOfDay.route)
+                    // Переход на экран обратной связи с параметром isFirstEntry
+                    navController.navigate("feedback_after_places_of_day/${isFirstEntry}")
                 }
             } else {
                 val nextPage = pagerState.currentPage + 1
@@ -97,7 +94,6 @@ fun PlacesOfDayScreen(
         }
     }
 
-    // Функция для перелистывания назад (только назад, без циклического листания)
     fun navigateToPreviousPage() {
         scope.launch {
             if (pagerState.currentPage > 0) {

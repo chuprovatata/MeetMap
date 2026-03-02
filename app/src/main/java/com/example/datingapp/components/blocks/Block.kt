@@ -16,7 +16,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.scale
+import com.example.datingapp.ui.theme.PurpleCard
 import com.example.datingapp.ui.theme.PurpleLight
+import com.example.datingapp.ui.theme.PurpleMedium
 
 @Composable
 fun SimpleBlock(
@@ -28,7 +30,7 @@ fun SimpleBlock(
     height: Dp = 160.dp,
     imageScale: Float = 1.1f,
     showImage: Boolean = true,
-    containerColor: Color = PurpleLight,
+    containerColor: Color = PurpleMedium,
     titleColor: Color = MaterialTheme.colorScheme.onSurface,
     subtitleColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
 ) {
@@ -49,6 +51,7 @@ fun SimpleBlock(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Текстовый блок - занимает весь доступный вес
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -56,8 +59,8 @@ fun SimpleBlock(
                     .padding(
                         start = 16.dp,
                         end = if (showImage && imageResId != null) 8.dp else 16.dp,
-                        top = 16.dp, // Уменьшил верхний отступ с 20.dp до 16.dp
-                        bottom = 16.dp // Добавил нижний отступ
+                        top = 16.dp,
+                        bottom = 16.dp
                     ),
                 verticalArrangement = Arrangement.Top
             ) {
@@ -79,6 +82,7 @@ fun SimpleBlock(
                 )
             }
 
+            // Фото показываем только если есть и showImage = true
             if (showImage && imageResId != null) {
                 Box(
                     modifier = Modifier
@@ -103,52 +107,6 @@ fun SimpleBlock(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun GrayBlock(
-    title: String,
-    subtitle: String,
-    onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
-    height: Dp = 180.dp,
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            )
         }
     }
 }

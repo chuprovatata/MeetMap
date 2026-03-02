@@ -47,6 +47,7 @@ fun ProfileSetupScreen(
     var bio by rememberSaveable { mutableStateOf("") }
     var selectedGender by rememberSaveable { mutableStateOf<Gender?>(null) }
     var selectedYear by rememberSaveable { mutableStateOf<Int?>(null) }
+    var telegram by rememberSaveable { mutableStateOf("") }
 
     var showYearDropdown by rememberSaveable { mutableStateOf(false) }
     var showGenderError by rememberSaveable { mutableStateOf(false) }
@@ -55,9 +56,11 @@ fun ProfileSetupScreen(
     var nameError by remember { mutableStateOf(false) }
     var usernameError by remember { mutableStateOf(false) }
     var universityError by remember { mutableStateOf(false) }
+    var telegramError by remember { mutableStateOf(false) } // Добавлено
     var nameErrorMessage by remember { mutableStateOf("") }
     var usernameErrorMessage by remember { mutableStateOf("") }
     var universityErrorMessage by remember { mutableStateOf("") }
+    var telegramErrorMessage by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -67,6 +70,7 @@ fun ProfileSetupScreen(
     val nameFocusRequester = remember { FocusRequester() }
     val usernameFocusRequester = remember { FocusRequester() }
     val universityFocusRequester = remember { FocusRequester() }
+    val telegramFocusRequester = remember { FocusRequester() } // Добавлено
     val bioFocusRequester = remember { FocusRequester() }
 
     val progress = NavigationProgress.getProgress(Screen.ProfileSetup)
@@ -85,7 +89,8 @@ fun ProfileSetupScreen(
                 selectedYear != null &&
                 !nameError &&
                 !usernameError &&
-                !universityError
+                !universityError &&
+                !telegramError
     }
 
     LaunchedEffect(name) {
@@ -121,6 +126,17 @@ fun ProfileSetupScreen(
         }
     }
 
+    LaunchedEffect(telegram) {
+        if (telegram.isNotEmpty()) {
+            val (isValid, message) = validateTelegram(telegram)
+            telegramError = !isValid
+            telegramErrorMessage = message
+        } else {
+            telegramError = false
+            telegramErrorMessage = ""
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -137,6 +153,9 @@ fun ProfileSetupScreen(
                     }
                 }
                 is ProfileSetupViewModel.SetupEvent.NavigateToMain -> {
+                }
+                is ProfileSetupViewModel.SetupEvent.RegistrationStarted -> {
+                    println("Registration started in ProfileSetupScreen")
                 }
                 is ProfileSetupViewModel.SetupEvent.ShowError -> {
                     scope.launch {
@@ -172,7 +191,8 @@ fun ProfileSetupScreen(
             "bio" to bio.trim().takeIf { it.isNotBlank() },
             "gender" to selectedGender!!.value,
             "birthYear" to selectedYear,
-            "age" to age
+            "age" to age,
+            "telegram" to telegram.trim()
         )
 
         viewModel.saveUserProfileWithCallback(
@@ -239,7 +259,6 @@ fun ProfileSetupScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Убираем Spacer сверху
             Text(
                 text = "Заполни профиль",
                 style = MaterialTheme.typography.headlineLarge,
@@ -260,7 +279,6 @@ fun ProfileSetupScreen(
 
             Spacer(modifier = Modifier.height(spacing.large))
 
-            // Основной контент с весом
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -327,12 +345,37 @@ fun ProfileSetupScreen(
                             imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
-                            onNext = { bioFocusRequester.requestFocus() }
+                            onNext = { telegramFocusRequester.requestFocus() }
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(universityFocusRequester)
                     )
+
+                    Spacer(modifier = Modifier.height(spacing.medium))
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        DatingTextField(
+                            value = telegram,
+                            onValueChange = { telegram = it },
+                            label = "Социальная сеть для общения",
+                            placeholder = "Укажи, где тебе будет удобно общаться",
+                            isError = telegramError,
+                            errorMessage = if (telegramError) telegramErrorMessage else null,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { bioFocusRequester.requestFocus() }
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(telegramFocusRequester)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(spacing.medium))
 
@@ -516,7 +559,7 @@ fun ProfileSetupScreen(
                     CircularProgressIndicator(modifier = Modifier.size(30.dp))
                 } else {
                     PrimaryButton(
-                        text = "Зарегистрироваться", // ← ИЗМЕНИТЕ ТЕКСТ
+                        text = "Зарегистрироваться",
                         textSize = 20.sp,
                         onClick = {
                             keyboardController?.hide()
@@ -597,6 +640,15 @@ private fun validateUniversity(university: String): Pair<Boolean, String> {
         university.length > 100 -> Pair(false, "Название вуза должно быть не более 100 символов")
         university.contains(Regex("[<>{}]")) ->
             Pair(false, "Название содержит недопустимые символы")
+        else -> Pair(true, "")
+    }
+}
+
+private fun validateTelegram(telegram: String): Pair<Boolean, String> {
+    return when {
+        telegram.length > 50 -> Pair(false, "Слишком длинное название")
+        telegram.contains(Regex("[<>{}]")) ->
+            Pair(false, "Содержит недопустимые символы")
         else -> Pair(true, "")
     }
 }

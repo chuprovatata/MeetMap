@@ -28,6 +28,7 @@ class ProfileSetupViewModel : ViewModel() {
 
         object NavigateToTutorial : SetupEvent()
         object NavigateToMain : SetupEvent()
+        object RegistrationStarted : SetupEvent()
 
         data class ShowError(val message: String) : SetupEvent()
         object ShowSuccessMessage : SetupEvent()
@@ -181,7 +182,7 @@ class ProfileSetupViewModel : ViewModel() {
                     .await()
 
                 println("DEBUG: Категории успешно сохранены, переход на главный экран")
-                emitEvent(SetupEvent.NavigateToMain)
+                emitEvent(SetupEvent.NavigateToTutorial)
 
             } catch (e: Exception) {
                 println("DEBUG: Ошибка при сохранении категорий: ${e.message}")
@@ -248,10 +249,15 @@ class ProfileSetupViewModel : ViewModel() {
                 userProfile["birthYear"]?.let { userData["birthYear"] = it }
                 userProfile["age"]?.let { userData["age"] = it }
 
+                userProfile["telegram"]?.takeIf { it.toString().isNotBlank() }?.let {
+                    userData["telegram"] = it
+                }
+
                 firestore.collection("users")
                     .document(userId)
                     .set(userData, SetOptions.merge())
                     .await()
+                emitEvent(SetupEvent.RegistrationStarted)
 
                 onSuccess()
 

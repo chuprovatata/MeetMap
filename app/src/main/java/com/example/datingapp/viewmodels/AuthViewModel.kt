@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,10 +50,42 @@ class AuthViewModel : ViewModel() {
     }
 
     private fun checkCurrentUser() {
-        val user = auth.currentUser
-        _currentUser.value = user
-        updateAuthState(user)
-        Log.d("AuthViewModel", "Initial auth check: ${user?.email}")
+        viewModelScope.launch {
+            val user = auth.currentUser
+            if (user != null) {
+                // Проверяем, действительно ли пользователь существует в Firebase
+                val isValid = checkIfUserExists(user)
+                if (isValid) {
+                    _currentUser.value = user
+                    updateAuthState(user)
+                } else {
+                    // Пользователь был удален, выходим
+                    forceSignOut()
+                }
+            } else {
+                _currentUser.value = null
+                updateAuthState(null)
+            }
+            Log.d("AuthViewModel", "Initial auth check: ${user?.email}")
+        }
+    }
+
+    private suspend fun checkIfUserExists(user: FirebaseUser): Boolean {
+        return try {
+            // Пытаемся получить данные пользователя
+            // Если пользователь удален, это вызовет исключение
+            user.getIdToken(true).await()
+            true
+        } catch (e: FirebaseAuthInvalidUserException) {
+            // Пользователь удален или отключен
+            Log.e("AuthViewModel", "User no longer exists: ${e.message}")
+            false
+        } catch (e: Exception) {
+            // Другие ошибки (например, нет интернета)
+            // В этом случае оставляем пользователя, но логируем ошибку
+            Log.e("AuthViewModel", "Error checking user existence: ${e.message}")
+            true // Предполагаем, что пользователь существует
+        }
     }
 
     private fun updateAuthState(user: FirebaseUser?) {
@@ -130,6 +163,66 @@ class AuthViewModel : ViewModel() {
 
     fun logout() {
         auth.signOut()
+        // Дополнительно очищаем любые локальные данные
+        clearLocalData()
+    }
+
+    /**
+     * Принудительный выход без проверок
+     */
+    fun forceSignOut() {
+        auth.signOut()
+        clearLocalData()
+        _authState.value = AuthState.Unauthenticated
+        _currentUser.value = null
+        Log.d("AuthViewModel", "Force sign out executed")
+    }
+
+    /**
+     * Очистка локальных данных (если есть)
+     */
+    private fun clearLocalData() {
+        // Очистить SharedPreferences, кэш и т.д.
+        // Если используете DataStore или другие хранилища
+    }
+
+    /**
+     * Проверка валидности текущей сессии
+     */
+    suspend fun checkSessionValidity(): Boolean {
+        val user = auth.currentUser ?: return false
+
+        return try {
+            // Пытаемся обновить токен, если пользователь удален - будет исключение
+            user.getIdToken(true).await()
+            true
+        } catch (e: FirebaseAuthInvalidUserException) {
+            // Пользователь удален
+            forceSignOut()
+            false
+        } catch (e: Exception) {
+            // Другие ошибки (например, нет сети)
+            // В этом случае оставляем текущее состояние
+            true
+        }
+    }
+
+    /**
+     * Получить валидного пользователя или null
+     */
+    suspend fun getValidCurrentUser(): FirebaseUser? {
+        val user = auth.currentUser ?: return null
+
+        return try {
+            user.getIdToken(true).await()
+            user
+        } catch (e: FirebaseAuthInvalidUserException) {
+            forceSignOut()
+            null
+        } catch (e: Exception) {
+            // Если ошибка не связана с удалением пользователя, возвращаем пользователя
+            user
+        }
     }
 
     fun sendPasswordResetEmail(email: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {

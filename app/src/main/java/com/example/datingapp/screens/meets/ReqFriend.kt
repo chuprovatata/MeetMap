@@ -32,7 +32,6 @@ import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.FavPlace
 import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.GrayBlock
 import com.example.datingapp.components.blocks.MutPlaces
 import com.example.datingapp.components.blocks.Place
 import com.example.datingapp.components.blocks.Sub_Block

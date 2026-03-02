@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -31,6 +33,7 @@ import com.example.datingapp.screens.profile.TargetSelectionScreen
 import com.example.datingapp.screens.settings.SettingsScreen
 import com.example.datingapp.viewmodels.AuthState
 import com.example.datingapp.viewmodels.AuthViewModel
+import com.example.datingapp.viewmodels.OnboardingViewModel
 import com.example.datingapp.viewmodels.ProfileSetupViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -40,6 +43,9 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
+    val onboardingViewModel: OnboardingViewModel = viewModel()
+    val isFirstLaunch by onboardingViewModel.isFirstLaunch.collectAsState()
+
 
     val startDestination = when (authState) {
         AuthState.Loading -> Screen.Splash.route
@@ -112,6 +118,9 @@ fun AppNavigation() {
                         ProfileSetupViewModel.SetupEvent.NavigateToTargets -> {
                             navController.navigate(Screen.TargetSelection.route)
                         }
+                        ProfileSetupViewModel.SetupEvent.RegistrationStarted -> {
+                            println("Регистрация началась! isFirstLaunch true")
+                        }
                         is ProfileSetupViewModel.SetupEvent.ShowError -> {}
                         else -> {}
                     }
@@ -150,8 +159,13 @@ fun AppNavigation() {
             LaunchedEffect(Unit) {
                 viewModel.events.collectLatest { event ->
                     when (event) {
-                        is ProfileSetupViewModel.SetupEvent.NavigateToMain -> {
+                        ProfileSetupViewModel.SetupEvent.NavigateToTutorial -> {
                             navController.navigate(Screen.PlacesTutorial.route) {
+                                popUpTo(0) { inclusive = false }
+                            }
+                        }
+                        ProfileSetupViewModel.SetupEvent.NavigateToMain -> {
+                            navController.navigate(Screen.Main.route) {
                                 popUpTo(0)
                             }
                         }
@@ -168,17 +182,16 @@ fun AppNavigation() {
 
         composable(Screen.PlacesTutorial.route) {
             PlacesTutorialScreen(
+                navController = navController,
                 onSkipClick = {
                     navController.navigate(Screen.PlacesOfDay.route) {
-                        popUpTo(0)
+                        popUpTo(Screen.PlacesTutorial.route) { inclusive = true }
                     }
+                },
+                onReadyClick = {
+                    navController.navigate(Screen.PlacesTutorial2.route)
                 }
             )
-
-            LaunchedEffect(Unit) {
-                delay(4000)
-                navController.navigate(Screen.PlacesTutorial2.route)
-            }
         }
 
         composable(Screen.PlacesTutorial2.route) {
@@ -186,12 +199,41 @@ fun AppNavigation() {
                 navController = navController,
                 onSkipClick = {
                     navController.navigate(Screen.PlacesOfDay.route) {
-                        popUpTo(0)
+                        popUpTo(Screen.PlacesTutorial2.route) { inclusive = true }
                     }
                 },
                 onReadyClick = {
-                    navController.navigate(Screen.FinalTutorial.route) {
-                        popUpTo(0)
+                    navController.navigate(Screen.PlacesOfDay.route)
+                }
+            )
+        }
+
+        composable(Screen.PlacesOfDay.route) {
+            PlacesOfDayScreen(
+                navController = navController,
+                isFirstEntry = isFirstLaunch
+            )
+        }
+
+        composable(
+            route = "feedback_after_places_of_day/{isFirstEntry}",
+            arguments = listOf(navArgument("isFirstEntry") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            val isFirstEntry = backStackEntry.arguments?.getBoolean("isFirstEntry") ?: false
+
+            FeedbackAfterPlacesOfDayScreen(
+                navController = navController,
+                onContinue = {
+                    if (isFirstEntry) {
+                        println("DEBUG: First entry - going to FinalTutorial")
+                        navController.navigate(Screen.FinalTutorial.route) {
+                            popUpTo("feedback_after_places_of_day/${isFirstEntry}") { inclusive = true }
+                        }
+                    } else {
+                        println("DEBUG: Not first entry - going to Main")
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(0)
+                        }
                     }
                 }
             )
@@ -201,12 +243,16 @@ fun AppNavigation() {
             FinalTutorialScreen(
                 navController = navController,
                 onSkipClick = {
-                    navController.navigate(Screen.PlacesOfDay.route) {
+                    println("DEBUG: FinalTutorial skipped - completing onboarding")
+                    onboardingViewModel.setFirstLaunchComplete()
+                    navController.navigate(Screen.Main.route) {
                         popUpTo(0)
                     }
                 },
                 onReadyClick = {
-                    navController.navigate(Screen.PlacesOfDay.route) {
+                    println("DEBUG: FinalTutorial completed - completing onboarding")
+                    onboardingViewModel.setFirstLaunchComplete()
+                    navController.navigate(Screen.Main.route) {
                         popUpTo(0)
                     }
                 }
@@ -215,10 +261,6 @@ fun AppNavigation() {
 
         composable(Screen.Main.route) {
             MainScreen(navController = navController)
-        }
-
-        composable(Screen.PlacesOfDay.route) {
-            PlacesOfDayScreen(navController = navController)
         }
 
         composable(Screen.PlaceLiked.route) {
@@ -272,9 +314,6 @@ fun AppNavigation() {
 
         composable(Screen.TestCloud.route) {
             TestCloudScreen(navController = navController)
-        }
-        composable(Screen.FeedbackAfterPlacesOfDay.route) {
-            FeedbackAfterPlacesOfDayScreen(navController = navController)
         }
     }
 }

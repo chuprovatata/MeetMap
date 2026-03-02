@@ -37,6 +37,15 @@ class UserViewModel @Inject constructor(
     private val _dataLoadError = MutableStateFlow<String?>(null)
     val dataLoadError: StateFlow<String?> = _dataLoadError.asStateFlow()
 
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
+    private val _saveError = MutableStateFlow<String?>(null)
+    val saveError: StateFlow<String?> = _saveError.asStateFlow()
+
+    private val _saveSuccess = MutableStateFlow(false)
+    val saveSuccess: StateFlow<Boolean> = _saveSuccess.asStateFlow()
+
     init {
         loadUserData()
     }
@@ -44,6 +53,7 @@ class UserViewModel @Inject constructor(
     fun loadUserData() {
         _isLoading.value = true
         _dataLoadError.value = null
+        _saveSuccess.value = false
 
         viewModelScope.launch {
             try {
@@ -72,10 +82,11 @@ class UserViewModel @Inject constructor(
 
                 _profileImageUrl.value = imageUrl
 
-                // Обновляем данные пользователя
                 val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
                 currentData["profileImageUrl"] = imageUrl
                 _userData.value = currentData
+
+                _saveSuccess.value = true
 
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Upload error", e)
@@ -87,26 +98,46 @@ class UserViewModel @Inject constructor(
     }
 
     fun updateUserData(data: Map<String, Any?>) {
-        _isLoading.value = true
+        val firestoreData = data.filterValues { it != null }
+            .mapValues { (_, value) -> value!! }
+
+        if (firestoreData.isEmpty()) {
+            Log.d("UserViewModel", "No data to update")
+            return
+        }
+
+        _isSaving.value = true
+        _saveError.value = null
+        _saveSuccess.value = false
 
         viewModelScope.launch {
             try {
-                val firestoreData = data.filterValues { it != null }
-                    .mapValues { (_, value) -> value!! }
-
                 userRepository.updateUserData(firestoreData)
 
                 val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
                 firestoreData.forEach { (key, value) -> currentData[key] = value }
                 _userData.value = currentData
 
+                _saveSuccess.value = true
+
+                Log.d("UserViewModel", "User data updated successfully: $firestoreData")
+
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error updating user data", e)
-                _dataLoadError.value = e.message ?: "Ошибка обновления данных"
+                _saveError.value = e.message ?: "Ошибка обновления данных"
             } finally {
-                _isLoading.value = false
+                _isSaving.value = false
             }
         }
+    }
+
+    /**
+     * Обновить одно поле пользователя
+     */
+    fun updateUserField(field: String, value: Any?) {
+        if (value == null) return
+
+        updateUserData(mapOf(field to value))
     }
 
     /**
@@ -124,7 +155,29 @@ class UserViewModel @Inject constructor(
         _dataLoadError.value = null
     }
 
+    fun clearSaveError() {
+        _saveError.value = null
+    }
+
+    fun clearSaveSuccess() {
+        _saveSuccess.value = false
+    }
+
     fun refreshUserData() {
         loadUserData()
+    }
+
+    /**
+     * Проверить, есть ли несохраненные изменения
+     */
+    fun hasUnsavedChanges(currentData: Map<String, Any?>): Boolean {
+        val originalData = _userData.value ?: return false
+
+        return currentData.any { (key, value) ->
+            when (val originalValue = originalData[key]) {
+                is Long -> value?.toString()?.toLongOrNull() != originalValue
+                else -> value != originalValue
+            }
+        }
     }
 }

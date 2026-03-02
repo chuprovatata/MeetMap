@@ -31,6 +31,9 @@ import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.activity.compose.BackHandler // Добавить импорт
+import androidx.compose.ui.unit.sp
+import com.example.datingapp.ui.theme.boundedFamily
 
 data class FieldData(
     val value: String,
@@ -53,6 +56,9 @@ fun SettingsScreen(
     val userData by userViewModel.userData.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
     val uploadError by userViewModel.uploadError.collectAsState()
+    val isSaving by userViewModel.isSaving.collectAsState()
+    val saveError by userViewModel.saveError.collectAsState()
+    val saveSuccess by userViewModel.saveSuccess.collectAsState()
 
     var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -84,6 +90,36 @@ fun SettingsScreen(
             userViewModel.uploadProfileImage(it, context.contentResolver)
         }
     }
+    @Composable
+    fun SettingsHeadingArrow(
+        heading: String,
+        onBackClick: () -> Unit
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp)
+        ) {
+            IconButton(
+                onClick = onBackClick
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.arrow_left),
+                    contentDescription = "arrow_left",
+                    tint = Color.Black
+                )
+            }
+
+            Text(
+                text = heading,
+                fontSize = 35.sp,
+                fontFamily = boundedFamily,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+    }
+
 
     LaunchedEffect(Unit) {
         userViewModel.loadUserData()
@@ -103,6 +139,7 @@ fun SettingsScreen(
             isNotificationSoundEnabled = data["notificationSoundEnabled"] as? Boolean ?: true
 
             isDataLoaded.value = true
+            hasUnsavedChanges = false
         }
     }
 
@@ -112,6 +149,25 @@ fun SettingsScreen(
                 snackbarHostState.showSnackbar("Ошибка загрузки фото: $error")
             }
             userViewModel.clearUploadError()
+        }
+    }
+
+    LaunchedEffect(saveError) {
+        saveError?.let { error ->
+            scope.launch {
+                snackbarHostState.showSnackbar("Ошибка сохранения: $error")
+            }
+            userViewModel.clearSaveError()
+        }
+    }
+
+    LaunchedEffect(saveSuccess) {
+        if (saveSuccess) {
+            scope.launch {
+                snackbarHostState.showSnackbar("Изменения успешно сохранены")
+            }
+            userViewModel.clearSaveSuccess()
+            hasUnsavedChanges = false
         }
     }
 
@@ -139,7 +195,7 @@ fun SettingsScreen(
     }
 
     fun saveChanges() {
-        val data = mapOf(
+        val data = mutableMapOf<String, Any?>(
             "name" to name,
             "username" to username,
             "telegram" to telegram,
@@ -149,13 +205,14 @@ fun SettingsScreen(
             "isPrivateAccount" to isPrivateAccount,
             "notificationsEnabled" to isNotificationsEnabled,
             "notificationSoundEnabled" to isNotificationSoundEnabled
-        ).filterValues { it != null && it.toString().isNotEmpty() }
+        )
 
-        userViewModel.updateUserData(data)
-        hasUnsavedChanges = false
+        val changedData = data.filterValues { it != null }
+            .mapValues { (_, value) -> value!! }
 
-        scope.launch {
-            snackbarHostState.showSnackbar("Данные сохранены")
+        if (changedData.isNotEmpty()) {
+            userViewModel.updateUserData(changedData)
+            hasUnsavedChanges = false
         }
     }
 
@@ -163,6 +220,9 @@ fun SettingsScreen(
         checkForUnsavedChanges {
             navController.popBackStack()
         }
+    }
+    BackHandler(enabled = true) {
+        handleBackPressed()
     }
 
     if (showExitDialog) {
@@ -172,25 +232,37 @@ fun SettingsScreen(
                 pendingNavigation = false
             },
             title = { Text("Сохранить изменения?") },
-            text = { Text("У вас есть несохраненные изменения. Сохранить перед выходом?") },
+            text = { Text("У тебя есть несохраненные изменения. Хочешь сохранить их перед выходом?") },
             confirmButton = {
                 TextButton(
                     onClick = {
+                        if (isSaving) {
+                            return@TextButton
+                        }
                         saveChanges()
                         showExitDialog = false
                         if (pendingNavigation) {
                             navController.popBackStack()
                             pendingNavigation = false
                         }
-                    }
+                    },
+                    enabled = !isSaving
                 ) {
-                    Text("Сохранить")
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Text("Сохранить")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
                         showExitDialog = false
+                        hasUnsavedChanges = false
                         if (pendingNavigation) {
                             navController.popBackStack()
                             pendingNavigation = false
@@ -203,6 +275,14 @@ fun SettingsScreen(
         )
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            if (hasUnsavedChanges) {
+                saveChanges()
+            }
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -213,9 +293,10 @@ fun SettingsScreen(
                     .padding(horizontal = 6.dp)
                     .padding(top = 40.dp, bottom = 20.dp)
             ) {
-                Heading_Arrow(
+                SettingsHeadingArrow(
                     heading = "Настройки",
-                    navController = navController)
+                    onBackClick = { handleBackPressed() }
+                )
             }
         }
     ) { paddingValues ->
@@ -270,10 +351,6 @@ fun SettingsScreen(
                             } else {
                                 val imageModel = remember(profileImageUrl) {
                                     profileImageUrl?.let {
-                                        runCatching {
-                                            scope.launch {
-                                            }
-                                        }
                                         it.substringBefore("?X-Amz-")
                                     } ?: R.drawable.picture_defaullt_profile
                                 }
@@ -324,23 +401,36 @@ fun SettingsScreen(
                 }
 
                 listOf(
-                    FieldData(name, "Имя", "Введите ваше имя", { name = it }, true),
-                    FieldData(username, "Ник в приложении", "Введите никнейм", { username = it }, true),
-                    FieldData(telegram, "Ник в Telegram", "@username", { telegram = it }, true),
+                    FieldData(name, "Имя", "Введи свое имя", {
+                        name = it
+                        hasUnsavedChanges = true
+                    }, true),
+                    FieldData(username, "Ник в приложении", "Введи никнейм", {
+                        username = it
+                        hasUnsavedChanges = true
+                    }, true),
+                    FieldData(telegram, "Ник в Telegram", "@username", {
+                        telegram = it
+                        hasUnsavedChanges = true
+                    }, true),
                     FieldData(email, "Электронная почта", "pochta@gmail.com", { }, false),
-                    FieldData(age, "Возраст", "Ваш возраст", { age = it }, true),
-                    FieldData(university, "ВУЗ", "Название учебного заведения", { university = it }, true),
-                    FieldData(favoritePlace, "Любимое место", "Ваше любимое место в городе", { favoritePlace = it }, true)
+                    FieldData(age, "Возраст", "Твой возраст", {
+                        age = it
+                        hasUnsavedChanges = true
+                    }, true),
+                    FieldData(university, "ВУЗ", "Название учебного заведения", {
+                        university = it
+                        hasUnsavedChanges = true
+                    }, true),
+                    FieldData(favoritePlace, "Любимое место", "Твое любимое место в городе", {
+                        favoritePlace = it
+                        hasUnsavedChanges = true
+                    }, true)
                 ).forEach { fieldData ->
                     item {
                         DatingTextField(
                             value = fieldData.value,
-                            onValueChange = {
-                                if (fieldData.isEditable) {
-                                    fieldData.onValueChange(it)
-                                    hasUnsavedChanges = true
-                                }
-                            },
+                            onValueChange = fieldData.onValueChange,
                             label = fieldData.label,
                             placeholder = fieldData.placeholder,
                             enabled = fieldData.isEditable,

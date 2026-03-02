@@ -1,12 +1,10 @@
 package com.example.datingapp.screens.onboarding
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,27 +18,22 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.buttons.TextButtonWithUnderline
+import com.example.datingapp.components.buttons.WhiteButton
 import com.example.datingapp.components.progress.ProgressLine
 import com.example.datingapp.navigation.NavigationProgress
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.ui.theme.Typography
-import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacesTutorialScreen(
     navController: NavController? = null,
     onSkipClick: () -> Unit,
+    onReadyClick: () -> Unit,
     progress: Float = NavigationProgress.getProgress(Screen.PlacesTutorial)
 ) {
     val spacing = LocalDatingAppSpacing.current
-    var showSecondImage by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        delay(2000)
-        showSecondImage = true
-    }
 
     Scaffold(
         topBar = {
@@ -78,12 +71,14 @@ fun PlacesTutorialScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(Color.White)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(horizontal = 24.dp)
+                    .padding(top = 16.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -113,7 +108,7 @@ fun PlacesTutorialScreen(
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                 ) {
-                                    append(" — архив мест, которые ты посетил. Приложение определяет места по твоей геолокации. Ты сможешь добавить их на свою карту, если захочешь.")
+                                    append(" — раздел, в котором будут храниться все места, добавленные тобой.")
                                 }
                             },
                             lineHeight = Typography.bodyLarge.lineHeight
@@ -127,8 +122,66 @@ fun PlacesTutorialScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.picture_map_pin),
+                            painter = painterResource(id = R.drawable.map),
                             contentDescription = "Иконка мест",
+                            modifier = Modifier.size(79.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(horizontal = 24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(
+                                    style = SpanStyle(
+                                        fontFamily = Typography.bodyLarge.fontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = Typography.bodyLarge.fontSize,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                ) {
+                                    append("Знакомства")
+                                }
+                                withStyle(
+                                    style = SpanStyle(
+                                        fontFamily = Typography.bodyLarge.fontFamily,
+                                        fontWeight = Typography.bodyLarge.fontWeight,
+                                        fontSize = Typography.bodyLarge.fontSize,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                ) {
+                                    append(" — раздел, где находятся друзья и заявки от людей, которым нравятся те же места, что и тебе.")
+                                }
+                            },
+                            lineHeight = Typography.bodyLarge.lineHeight
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Box(
+                        modifier = Modifier.size(79.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.meet),
+                            contentDescription = "Иконка знакомств",
                             modifier = Modifier.size(79.dp)
                         )
                     }
@@ -140,39 +193,7 @@ fun PlacesTutorialScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.15f)
-            ) {
-                this@Column.AnimatedVisibility(
-                    visible = showSecondImage,
-                    enter = fadeIn(
-                        animationSpec = tween(
-                            durationMillis = 2000,
-                            easing = FastOutSlowInEasing
-                        )
-                    ) + scaleIn(
-                        animationSpec = tween(2000),
-                        initialScale = 0.8f
-                    ),
-                    exit = fadeOut() + scaleOut(),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 40.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.picture_tutorial_2),
-                        contentDescription = "Вторая иллюстрация обучения",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.7f)
+                    .weight(0.5f)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.picture_tutorial),
@@ -180,6 +201,22 @@ fun PlacesTutorialScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds
                 )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 48.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    WhiteButton(
+                        text = "Продолжить",
+                        onClick = onReadyClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(57.dp)
+                            .padding(horizontal = 24.dp),
+                    )
+                }
             }
         }
     }
