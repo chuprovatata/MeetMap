@@ -3,6 +3,8 @@ package com.example.datingapp.screens.admin
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.datingapp.data.firebase.ExcelToFirestoreService
+import com.example.datingapp.data.firebase.ImportStatistics
 import kotlinx.coroutines.launch
 
 @Composable
@@ -25,7 +28,8 @@ fun ExcelImportScreen(
     var progress by remember { mutableStateOf(0f) }
     var totalItems by remember { mutableStateOf(0) }
     var currentItem by remember { mutableStateOf(0) }
-    var resultMessage by remember { mutableStateOf<String?>(null) }
+    var showStatistics by remember { mutableStateOf(false) }
+    var statistics by remember { mutableStateOf<ImportStatistics?>(null) }
 
     val excelImportService = remember {
         ExcelToFirestoreService(context)
@@ -38,7 +42,8 @@ fun ExcelImportScreen(
             scope.launch {
                 importInProgress = true
                 progress = 0f
-                resultMessage = null
+                showStatistics = false
+                statistics = null
 
                 try {
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -49,9 +54,10 @@ fun ExcelImportScreen(
                                 totalItems = total
                                 progress = if (total > 0) current.toFloat() / total else 0f
                             },
-                            onComplete = { success, message ->
+                            onComplete = { success, message, stats ->
                                 importInProgress = false
-                                resultMessage = message
+                                statistics = stats
+                                showStatistics = true
 
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
@@ -62,11 +68,15 @@ fun ExcelImportScreen(
                         )
                     } ?: run {
                         importInProgress = false
-                        resultMessage = "Не удалось открыть файл"
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Не удалось открыть файл")
+                        }
                     }
                 } catch (e: Exception) {
                     importInProgress = false
-                    resultMessage = "Ошибка: ${e.message}"
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Ошибка: ${e.message}")
+                    }
                 }
             }
         }
@@ -80,20 +90,19 @@ fun ExcelImportScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Импорт мест из CSV",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             if (importInProgress) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     LinearProgressIndicator(
                         progress = progress,
@@ -135,34 +144,122 @@ fun ExcelImportScreen(
                             text = "Формат CSV:",
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Text("• Колонка B: Название места")
-                        Text("• Колонка C: Адрес")
-                        Text("• Колонка D: Категории (через запятую)")
-                        Text("• Колонка E: Редкость (Базовое/Среднее/Редкое/Эпическое/Уникальное)")
-                        Text("• Колонка F: Широта")
-                        Text("• Колонка G: Долгота")
+                        Text("• Колонка A: ID (для существующих мест)")
+                        Text("• Колонка C: Название места")
+                        Text("• Колонка D: Адрес")
+                        Text("• Колонка E: Категория")
+                        Text("• Колонка F: Редкость")
+                        Text("• Колонка G: Широта")
+                        Text("• Колонка H: Долгота")
+                        Text("• Колонка I: Описание")
+                        Text("• Колонка L: Ближайшее метро")
+                        Text("• Колонка M: Расстояние")
+                        Text("• Колонка N: Линия метро")
                     }
                 }
-            }
 
-            resultMessage?.let { message ->
                 Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (message.contains("Успешно"))
-                            MaterialTheme.colorScheme.tertiaryContainer
-                        else
-                            MaterialTheme.colorScheme.errorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+
+                if (showStatistics && statistics != null) {
+                    StatisticsCard(statistics = statistics!!)
                 }
             }
         }
+    }
+}
+
+@Composable
+fun StatisticsCard(statistics: ImportStatistics) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (statistics.added > 0 || statistics.updated > 0)
+                MaterialTheme.colorScheme.tertiaryContainer
+            else
+                MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Результаты импорта",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            // Основная статистика
+            StatisticRow("Всего в Firebase:", statistics.totalInFirebase.toString())
+            StatisticRow("Найдено в файле:", statistics.totalInFile.toString())
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            StatisticRow("✅ Добавлено:", statistics.added.toString(), color = MaterialTheme.colorScheme.primary)
+            StatisticRow("✏️ Обновлено:", statistics.updated.toString(), color = MaterialTheme.colorScheme.primary)
+            StatisticRow("⏭️ Пропущено:", statistics.skipped.size.toString(), color = MaterialTheme.colorScheme.error)
+
+            // Список пропущенных мест
+            if (statistics.skipped.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Пропущенные места:",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(statistics.skipped) { skipped ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                            ) {
+                                Text(
+                                    text = "Строка ${skipped.rowNumber}: ${skipped.placeName}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Text(
+                                    text = skipped.reason,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatisticRow(label: String, value: String, color: androidx.compose.ui.graphics.Color? = null) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color ?: MaterialTheme.colorScheme.onSurface
+        )
     }
 }

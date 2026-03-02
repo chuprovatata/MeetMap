@@ -1,189 +1,346 @@
 package com.example.datingapp.screens.myplaces
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.datingapp.R
 import com.example.datingapp.components.headers.Heading
-import com.example.datingapp.components.places.PlaceGridItem
-import com.example.datingapp.navigation.Screen
-
-// Модель данных для сетки мест
-data class GridPlace(
-    val id: Int,
-    val name: String,
-    val imageRes: Int,
-    val likes: Int,
-    val hasFireIcon: Boolean = false
-)
+import com.example.datingapp.data.models.PlaceInfo
+import com.example.datingapp.navigation.GlobalNavController
+import com.example.datingapp.viewmodels.MyPlacesViewModel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyPlacesScreen(
-    navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MyPlacesViewModel = hiltViewModel()
 ) {
-    // Состояние для выбранной вкладки
-    var selectedTab by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Данные для вкладок
-    val tabs = listOf("Нравится", "В планах")
+    val combinedPlaces by viewModel.combinedPlaces.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    // Тестовые данные
-    val gridPlaces = listOf(
-        GridPlace(1, "Artplay", R.drawable.picture_museum_background, 156, hasFireIcon = true),
-        GridPlace(2, "Strelka", R.drawable.picture_bar_background, 89),
-        GridPlace(3, "Винзавод", R.drawable.picture_creativity_background, 203),
-        GridPlace(4, "Парк Горького", R.drawable.picture_park_background, 142),
-        GridPlace(5, "ГЭС-2", R.drawable.picture_sport_background, 67),
-        GridPlace(6, "Музей", R.drawable.picture_entertaiment_background, 94, hasFireIcon = true),
-        GridPlace(7, "Флакон", R.drawable.picture_shop_background, 178),
-        GridPlace(8, "Красный Октябрь", R.drawable.picture_museum_background, 121)
-    )
+    var searchText by remember { mutableStateOf("") }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                //TODO : поправьте отступы
-                title = {
-                    Heading("Мои места",  true, true, navController= navController)
-                },
+    val filteredPlaces = if (searchText.isBlank()) {
+        combinedPlaces
+    } else {
+        combinedPlaces.filter { (_, placeInfo) ->
+            placeInfo?.name?.contains(searchText, ignoreCase = true) == true ||
+                    placeInfo?.address?.contains(searchText, ignoreCase = true) == true
+        }
+    }
 
-            )
-        },
+    // Обновляем данные при возврате на экран
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refresh()
+        }
+    }
 
-        floatingActionButton = {
-            // Кнопка добавления (фиолетовый круг с плюсом)
-            FloatingActionButton(
-                onClick = {
-                    // Добавить новое место
-                },
-                containerColor = Color(0xFFA75CC6),
-                contentColor = Color.White,
-                modifier = Modifier
-                    .size(56.dp)
-                    .padding(bottom = 72.dp) // Поднимаем над нижним меню
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+
+    PullToRefresh(
+        isRefreshing = isLoading,
+        onRefresh = { viewModel.refresh() }
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Transparent)
+                        .padding(top = 40.dp) // Добавлен отступ сверху как было
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 9.dp, end = 19.dp)
+                    ) {
+                        Heading(
+                            heading = "Мои места",
+                            settings = true,
+                            profile = true,
+                            navController = GlobalNavController.navController
+                        )
+                    }
+                }
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { },
+                    containerColor = Color(0xFFA75CC6),
+                    contentColor = Color.White,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .padding(bottom = 72.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.icon_plus),
+                        contentDescription = "Добавить место",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.icon_plus),
-                    contentDescription = "Добавить место",
-                    modifier = Modifier.size(24.dp)
-                )
+                // Поисковая строка
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    BasicTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp),
+                        decorationBox = { innerTextField ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFFF0E3F6), RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Поиск",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = Color(0xFF888888)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (searchText.isEmpty()) {
+                                        Text(
+                                            text = "Поиск мест...",
+                                            color = Color(0xFF888888),
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        }
+                    )
+                }
+
+                if (isLoading && combinedPlaces.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else if (filteredPlaces.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icon_location),
+                                contentDescription = "Нет мест",
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = if (searchText.isNotBlank()) "Ничего не найдено" else "У вас пока нет сохраненных мест",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            if (searchText.isBlank()) {
+                                Text(
+                                    text = "Нажмите 'Мне нравится' на местах, чтобы они появились здесь",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 32.dp)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredPlaces) { (userPlace, placeInfo) ->
+                            if (placeInfo != null) {
+                                MyPlaceGridItem(
+                                    placeInfo = placeInfo,
+                                    onClick = {
+                                        GlobalNavController.navigateToPlaceDetail(placeInfo.id)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Поисковая строка (овал, бледно-фиолетовый)
-            var searchText by remember { mutableStateOf("") }
+    }
+}
+
+@Composable
+fun MyPlaceGridItem(
+    placeInfo: PlaceInfo,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(placeInfo.photoUrl.ifEmpty { null })
+                    .crossfade(true)
+                    .build(),
+                contentDescription = placeInfo.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.picture_museum_background),
+                placeholder = painterResource(id = R.drawable.picture_museum_background)
+            )
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                TextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp),
-                    placeholder = { Text("") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Поиск",
-                            tint = Color(0xFF888888)
+                    .height(60.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            )
                         )
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(20.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF0E3F6),
-                        unfocusedContainerColor = Color(0xFFF0E3F6),
-                        disabledContainerColor = Color(0xFFF0E3F6),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent
                     )
+            )
+
+            Text(
+                text = placeInfo.name,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(12.dp)
+            )
+
+            // Количество лайков
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFA75CC6))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.icon_star),
+                    contentDescription = "Лайки",
+                    modifier = Modifier.size(12.dp),
+                    tint = Color.White
+                )
+                Text(
+                    text = placeInfo.likesCount.toString(),
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // Вкладки "Нравится" / "В планах"
-            TabRow(
-                selectedTabIndex = selectedTab,
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = Color.Transparent,
-                contentColor = Color(0xFFA75CC6),
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        height = 3.dp,
-                        color = Color(0xFFA75CC6)
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontSize = 16.sp,
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium
-                                )
-                            )
-                        }
-                    )
-                }
+            // Иконка огня (если есть)
+            if (placeInfo.hasFireIcon) {
+                Icon(
+                    painter = painterResource(id = R.drawable.icon_fire),
+                    contentDescription = "Популярное",
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                        .size(20.dp),
+                    tint = Color(0xFFFF5722)
+                )
             }
+        }
+    }
+}
 
-            // Сетка мест (2 столбца)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+@Composable
+fun PullToRefresh(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        content()
+        if (isRefreshing) {
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .background(Color.White.copy(alpha = 0.5f))
+                    .clickable(enabled = false) { },
+                contentAlignment = Alignment.TopCenter
             ) {
-                items(gridPlaces) { place ->
-                    PlaceGridItem(
-                        placeName = place.name,
-                        imageRes = place.imageRes,
-                        likesCount = place.likes,
-                        onClick = {
-                            // Навигация к деталям места
-                        }
-                    )
-                }
+                CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
             }
         }
     }

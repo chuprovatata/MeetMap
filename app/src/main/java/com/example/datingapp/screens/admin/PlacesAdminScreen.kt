@@ -143,7 +143,7 @@ fun PlacesAdminScreen(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = places.count { it.isPlaceOfDay }.toString(),
+                            text = places.count { it.place_ofday }.toString(),
                             style = MaterialTheme.typography.headlineMedium
                         )
                         Text("Места дня", style = MaterialTheme.typography.bodySmall)
@@ -178,11 +178,11 @@ fun PlacesAdminScreen(
                     items(filteredPlaces) { place ->
                         PlaceAdminCard(
                             place = place,
-                            onTogglePlaceOfDay = { isPlaceOfDay ->
+                            onTogglePlaceOfDay = { place_ofday ->
                                 scope.launch {
                                     updatePlaceOfDay(
                                         place.id,
-                                        isPlaceOfDay,
+                                        place_ofday,
                                         db,
                                         snackbarHostState
                                     ) {
@@ -303,10 +303,10 @@ fun PlaceAdminCard(
             ) {
                 // Место дня
                 FilterChip(
-                    selected = place.isPlaceOfDay,
-                    onClick = { onTogglePlaceOfDay(!place.isPlaceOfDay) },
+                    selected = place.place_ofday,
+                    onClick = { onTogglePlaceOfDay(!place.place_ofday) },
                     label = { Text("Место дня") },
-                    leadingIcon = if (place.isPlaceOfDay) {
+                    leadingIcon = if (place.place_ofday) {
                         { Icon(Icons.Default.Star, contentDescription = null) }
                     } else null
                 )
@@ -375,7 +375,7 @@ private suspend fun loadPlaces(
                     categories = (data["categories"] as? List<String>) ?: emptyList(),
                     likesCount = ((data["likes_count"] as? Number)?.toInt()) ?: 0,
                     hasFireIcon = (data["fire_icon"] as? Boolean) ?: false,
-                    isPlaceOfDay = (data["place_ofday"] as? Boolean) ?: false,
+                    place_ofday = (data["place_ofday"] as? Boolean) ?: false,
                     uniqueId = (data["unique_id"] as? String) ?: "",
                     rarity = (data["rarity"] as? String) ?: "common",
                     createdAt = data["created_at"] as? com.google.firebase.Timestamp,
@@ -408,7 +408,7 @@ private suspend fun loadPlaces(
 
 private suspend fun updatePlaceOfDay(
     placeId: String,
-    isPlaceOfDay: Boolean,
+    place_ofday: Boolean,
     db: FirebaseFirestore,
     snackbarHostState: SnackbarHostState,
     onSuccess: () -> Unit
@@ -416,11 +416,11 @@ private suspend fun updatePlaceOfDay(
     try {
         db.collection("places_info")
             .document(placeId)
-            .update("place_ofday", isPlaceOfDay)
+            .update("place_ofday", place_ofday)
             .await()
 
         snackbarHostState.showSnackbar(
-            if (isPlaceOfDay) "Добавлено в места дня" else "Убрано из мест дня"
+            if (place_ofday) "Добавлено в места дня" else "Убрано из мест дня"
         )
 
         onSuccess()

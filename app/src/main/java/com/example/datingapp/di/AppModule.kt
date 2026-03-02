@@ -1,5 +1,6 @@
 package com.example.datingapp.di
 
+import com.example.datingapp.data.repository.UserPlacesRepository
 import com.example.datingapp.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -44,4 +45,12 @@ object AppModule {
         firestore: FirebaseFirestore,
         okHttpClient: OkHttpClient
     ): UserRepository = UserRepository(auth, firestore, okHttpClient)
+
+    // Добавляем провайдер для UserPlacesRepository
+    @Provides
+    @Singleton
+    fun provideUserPlacesRepository(
+        auth: FirebaseAuth,
+        firestore: FirebaseFirestore
+    ): UserPlacesRepository = UserPlacesRepository(auth, firestore)
 }
