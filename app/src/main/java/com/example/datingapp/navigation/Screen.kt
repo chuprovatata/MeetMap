@@ -17,6 +17,9 @@ sealed class Screen(val route: String) {
     object PlacesOfDay : Screen("placesOfDay")
     object PlaceLiked : Screen("placeLiked")
     object MyPlaces : Screen("myPlaces")
+    object MyPlaceDetail : Screen("myPlaceDetail/{placeId}") {
+        fun passPlaceId(placeId: String): String = "myPlaceDetail/$placeId"
+    }
     object MainFriends : Screen("main_friends")
     object MyFriends : Screen("my_friends")
     object CurFriend : Screen("cur_friend")
@@ -40,6 +43,4 @@ sealed class Screen(val route: String) {
             }
         }
     }
-
-
 }

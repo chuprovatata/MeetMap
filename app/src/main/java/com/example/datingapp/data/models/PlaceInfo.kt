@@ -11,8 +11,13 @@ data class PlaceInfo(
     val address: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
+    @PropertyName("metro_station")
     val metroStation: String = "",
-    @PropertyName("photo_url")
+    @PropertyName("metro_line")
+    val metroLine: String = "",
+    @PropertyName("distance_to_metro")
+    val distanceToMetro: Double = 0.0,
+    @PropertyName("photoUrl")
     val photoUrl: String = "",
     val categories: List<String> = emptyList(),
     @PropertyName("likes_count")
@@ -20,9 +25,11 @@ data class PlaceInfo(
     @PropertyName("fire_icon")
     val hasFireIcon: Boolean = false,
     @PropertyName("place_ofday")
-    val isPlaceOfDay: Boolean = false,
+    val place_ofday: Boolean = false,
     @PropertyName("unique_id")
     val uniqueId: String = "",
+    @PropertyName("description")
+    val description: String = "",
     @PropertyName("rarity")
     val rarity: String = "common",
     @ServerTimestamp

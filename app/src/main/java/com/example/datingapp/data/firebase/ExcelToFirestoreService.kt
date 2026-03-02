@@ -3,10 +3,22 @@ package com.example.datingapp.data.firebase
 
 import android.content.Context
 import com.example.datingapp.data.csv.CsvImportService
+import com.example.datingapp.data.csv.CsvParseResult
+import com.example.datingapp.data.csv.SkippedRowInfo
 import com.example.datingapp.data.models.PlaceInfo
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.io.InputStream
+
+data class ImportStatistics(
+    val totalInFirebase: Int,
+    val totalInFile: Int,
+    val added: Int,
+    val updated: Int,
+    val skipped: List<SkippedRowInfo>
+)
 
 class ExcelToFirestoreService(
     private val context: Context,
@@ -15,75 +27,182 @@ class ExcelToFirestoreService(
 
     private val csvImportService = CsvImportService(context)
 
-    // ИЗМЕНЕНО: функция теперь публичная
     suspend fun importCsvToFirestore(
         inputStream: InputStream,
         onProgress: (Int, Int) -> Unit = { _, _ -> },
-        onComplete: (Boolean, String?) -> Unit
+        onComplete: (Boolean, String?, ImportStatistics?) -> Unit
     ) {
         try {
-            // 1. Читаем данные из CSV
-            val places = csvImportService.importPlacesFromCsv(inputStream)
+            // 1. Получаем общее количество мест в Firebase
+            val totalInFirebase = getTotalPlacesCount()
 
-            if (places.isEmpty()) {
-                onComplete(false, "CSV файл пустой или неверного формата")
+            // 2. Читаем данные из CSV
+            val parseResult = csvImportService.importPlacesFromCsv(inputStream)
+            val placesFromFile = parseResult.places
+
+            if (placesFromFile.isEmpty()) {
+                val stats = ImportStatistics(
+                    totalInFirebase = totalInFirebase,
+                    totalInFile = 0,
+                    added = 0,
+                    updated = 0,
+                    skipped = parseResult.skippedRows
+                )
+                onComplete(false, "CSV файл не содержит валидных мест для импорта", stats)
                 return
             }
 
-            // 2. Загружаем в Firestore
-            var successCount = 0
-            var errorCount = 0
+            // 3. Загружаем в Firestore
+            var addedCount = 0
+            var updatedCount = 0
+            val processedIds = mutableSetOf<String>()
 
-            for ((index, place) in places.withIndex()) {
+            for ((index, placeFromFile) in placesFromFile.withIndex()) {
                 try {
-                    // Генерируем уникальный ID
-                    val uniqueId = place.generateUniqueId()
+                    val existingPlace = findExistingPlace(placeFromFile)
 
-                    // Проверяем, существует ли уже такое место
-                    val existingPlace = firestore.collection("places_info")
-                        .whereEqualTo("unique_id", uniqueId)
-                        .get()
-                        .await()
-
-                    if (existingPlace.isEmpty) {
-                        // Создаем новое место
-                        val placeWithUniqueId = place.copy(uniqueId = uniqueId)
-                        firestore.collection("places_info")
-                            .add(placeWithUniqueId)
-                            .await()
-                        successCount++
+                    if (existingPlace == null) {
+                        // Место не существует - создаем новое
+                        addNewPlace(placeFromFile)
+                        addedCount++
                     } else {
-                        // Место уже существует - можно обновить
-                        val docId = existingPlace.documents[0].id
-                        firestore.collection("places_info")
-                            .document(docId)
-                            .set(place.copy(id = docId, uniqueId = uniqueId))
-                            .await()
-                        successCount++
+                        // Место существует - проверяем и обновляем при необходимости
+                        if (shouldUpdatePlace(existingPlace, placeFromFile)) {
+                            updateExistingPlace(existingPlace.id, placeFromFile)
+                            updatedCount++
+                        }
                     }
 
-                    // Обновляем прогресс
-                    onProgress(index + 1, places.size)
+                    processedIds.add(placeFromFile.uniqueId)
+                    onProgress(index + 1, placesFromFile.size)
 
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    errorCount++
                 }
             }
 
-            val message = when {
-                successCount == places.size -> "Успешно загружено $successCount мест"
-                successCount > 0 -> "Загружено $successCount мест, ошибок: $errorCount"
-                else -> "Не удалось загрузить ни одного места"
-            }
+            val statistics = ImportStatistics(
+                totalInFirebase = totalInFirebase,
+                totalInFile = placesFromFile.size,
+                added = addedCount,
+                updated = updatedCount,
+                skipped = parseResult.skippedRows
+            )
 
-            onComplete(successCount > 0, message)
+            val message = buildResultMessage(statistics)
+            onComplete(true, message, statistics)
 
         } catch (e: Exception) {
             e.printStackTrace()
-            onComplete(false, "Ошибка при обработке файла: ${e.message}")
+            onComplete(false, "Ошибка при обработке файла: ${e.message}", null)
         }
     }
 
-    // Остальные методы могут остаться private
+    private suspend fun getTotalPlacesCount(): Int {
+        return try {
+            val snapshot = firestore.collection("places_info")
+                .get()
+                .await()
+            snapshot.size()
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    private suspend fun findExistingPlace(placeFromFile: PlaceInfo): PlaceInfo? {
+        // Поиск по ID из файла (если есть)
+        if (placeFromFile.id.isNotEmpty()) {
+            try {
+                val docSnapshot = firestore.collection("places_info")
+                    .document(placeFromFile.id)
+                    .get()
+                    .await()
+
+                if (docSnapshot.exists()) {
+                    return docSnapshot.toObject(PlaceInfo::class.java)
+                }
+            } catch (e: Exception) {
+                // Игнорируем ошибку, пробуем искать по unique_id
+            }
+        }
+
+        // Поиск по unique_id
+        val querySnapshot = firestore.collection("places_info")
+            .whereEqualTo("unique_id", placeFromFile.uniqueId)
+            .limit(1)
+            .get()
+            .await()
+
+        return if (!querySnapshot.isEmpty) {
+            querySnapshot.documents[0].toObject(PlaceInfo::class.java)
+        } else {
+            null
+        }
+    }
+
+    private fun shouldUpdatePlace(existing: PlaceInfo, new: PlaceInfo): Boolean {
+        // Проверяем description
+        if (existing.description != new.description) {
+            return true
+        }
+
+        // Проверяем photoUrl (используем правильное имя поля из модели)
+        if (existing.photoUrl != new.photoUrl) {
+            return true
+        }
+
+        return false
+    }
+
+    private suspend fun addNewPlace(place: PlaceInfo) {
+        // Создаем новый документ
+        val documentRef = firestore.collection("places_info")
+            .add(place)
+            .await()
+
+        // Обновляем ID документа
+        documentRef.update("id", documentRef.id).await()
+    }
+
+    private suspend fun updateExistingPlace(docId: String, updatedPlace: PlaceInfo) {
+        val updates = mutableMapOf<String, Any>()
+
+        // Обновляем description если есть
+        if (updatedPlace.description.isNotEmpty()) {
+            updates["description"] = updatedPlace.description
+        }
+
+        // ВАЖНО: Используем "photoUrl" как в модели данных
+        updates["photoUrl"] = updatedPlace.photoUrl
+
+        // Удаляем старое поле photo_url
+        updates["photo_url"] = FieldValue.delete()
+
+        // Используем текущее время для updatedAt, если updatedPlace.updatedAt == null
+        val timestamp = updatedPlace.updatedAt ?: Timestamp.now()
+        updates["updatedAt"] = timestamp
+
+        firestore.collection("places_info")
+            .document(docId)
+            .update(updates)
+            .await()
+    }
+
+    private fun buildResultMessage(stats: ImportStatistics): String {
+        return buildString {
+            appendLine("Результаты импорта:")
+            appendLine("• Всего в Firebase: ${stats.totalInFirebase}")
+            appendLine("• Найдено в файле: ${stats.totalInFile}")
+            appendLine("• Добавлено: ${stats.added}")
+            appendLine("• Обновлено: ${stats.updated}")
+            appendLine("• Пропущено: ${stats.skipped.size}")
+
+            if (stats.skipped.isNotEmpty()) {
+                appendLine("\nПропущенные места:")
+                stats.skipped.forEach {
+                    appendLine("  • Строка ${it.rowNumber}: ${it.placeName} - ${it.reason}")
+                }
+            }
+        }
+    }
 }

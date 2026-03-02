@@ -27,7 +27,7 @@ fun NavGraph(navHostController: NavHostController) {
             ButtonNavigation(navController = navHostController)
         }
         composable("screen_2") {
-            MyPlacesScreen(navHostController)
+            MyPlacesScreen()
         }
 
 

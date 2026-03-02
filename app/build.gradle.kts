@@ -92,8 +92,10 @@ dependencies {
     implementation(libs.androidx.foundation)
 
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-svg:2.6.0")
 
     implementation ("com.google.dagger:hilt-android:2.48")
+    implementation(libs.foundation)
     kapt ("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
@@ -111,7 +113,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3") // Для Firebase await()
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
-    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Для работы с Яндекс.Облаком
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -121,4 +122,5 @@ dependencies {
 
     implementation("com.amazonaws:aws-android-sdk-s3:2.72.0")
     implementation("com.amazonaws:aws-android-sdk-core:2.72.0")
+    implementation("io.coil-kt:coil-svg:2.4.0")
 }

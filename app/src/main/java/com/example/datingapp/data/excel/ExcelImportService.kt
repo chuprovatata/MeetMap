@@ -31,7 +31,7 @@ class ExcelImportService(private val context: Context) {
                         photoUrl = "https://storage.yandexcloud.net/meetmap/NO%20Picture.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=YCAJEwyujEU34SnldwmEhCSvI%2F20260208%2Fru-central1%2Fs3%2Faws4_request&X-Amz-Date=20260208T230012Z&X-Amz-Expires=60&X-Amz-Signature=8870e2af9d160cc4754a93cdbdb99b8a4531f6dbe7f884da01aacddf18dcf60c&X-Amz-SignedHeaders=host",
                         likesCount = 0,
                         hasFireIcon = false,
-                        isPlaceOfDay = false,
+                        place_ofday = false,
                         uniqueId = "",
                         rarity = parseRarity(rowData[4].toString()),
                         createdAt = Timestamp.now(),

@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,9 +23,10 @@ import com.example.datingapp.screens.auth.RegistrationScreen
 import com.example.datingapp.screens.feedback.FeedbackAfterPlacesOfDayScreen
 import com.example.datingapp.screens.friends.Cur_Friend
 import com.example.datingapp.screens.main.MainScreen
+import com.example.datingapp.screens.myplaces.MyPlaceDetailScreen
+import com.example.datingapp.screens.myplaces.MyPlacesScreen
 import com.example.datingapp.screens.notification.NotificationScreen
 import com.example.datingapp.screens.onboarding.*
-import com.example.datingapp.screens.places.PlaceLikedScreen
 import com.example.datingapp.screens.places.PlacesOfDayScreen
 import com.example.datingapp.screens.profile.CategorySelectionScreen
 import com.example.datingapp.screens.profile.MyProfile
@@ -41,6 +43,11 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    LaunchedEffect(Unit) {
+        GlobalNavController.init(navController)
+    }
+
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
     val onboardingViewModel: OnboardingViewModel = viewModel()
@@ -262,15 +269,34 @@ fun AppNavigation() {
         composable(Screen.Main.route) {
             MainScreen(navController = navController)
         }
-
-        composable(Screen.PlaceLiked.route) {
-            PlaceLikedScreen(
-                onBackClick = { navController.popBackStack() },
-                onVisitedClick = { navController.popBackStack() },
-                onPlannedClick = { navController.popBackStack() }
+        composable(Screen.FeedbackAfterPlacesOfDay.route) {
+            FeedbackAfterPlacesOfDayScreen(
+                navController = navController,
+                onContinue = {
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(0)
+                    }
+                }
             )
         }
 
+        composable(
+            route = Screen.MyPlaceDetail.route,
+            arguments = listOf(navArgument("placeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
+            MyPlaceDetailScreen(
+                placeId = placeId,
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.MyPlaces.route) {
+            MyPlacesScreen()
+        }
+
+        // ОБЩИЕ ЭКРАНЫ
         composable(Screen.Notification.route) {
             NotificationScreen(navController = navController)
         }
