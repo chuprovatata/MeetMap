@@ -67,6 +67,8 @@ dependencies {
     // Firebase BOM (актуальная версия)
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+
     // Firebase зависимости БЕЗ версий (берутся из BOM)
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx")

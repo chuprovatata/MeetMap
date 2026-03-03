@@ -56,7 +56,7 @@ fun ProfileSetupScreen(
     var nameError by remember { mutableStateOf(false) }
     var usernameError by remember { mutableStateOf(false) }
     var universityError by remember { mutableStateOf(false) }
-    var telegramError by remember { mutableStateOf(false) } // Добавлено
+    var telegramError by remember { mutableStateOf(false) }
     var nameErrorMessage by remember { mutableStateOf("") }
     var usernameErrorMessage by remember { mutableStateOf("") }
     var universityErrorMessage by remember { mutableStateOf("") }
@@ -70,7 +70,7 @@ fun ProfileSetupScreen(
     val nameFocusRequester = remember { FocusRequester() }
     val usernameFocusRequester = remember { FocusRequester() }
     val universityFocusRequester = remember { FocusRequester() }
-    val telegramFocusRequester = remember { FocusRequester() } // Добавлено
+    val telegramFocusRequester = remember { FocusRequester() }
     val bioFocusRequester = remember { FocusRequester() }
 
     val progress = NavigationProgress.getProgress(Screen.ProfileSetup)

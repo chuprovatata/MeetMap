@@ -59,7 +59,7 @@ class AuthViewModel : ViewModel() {
                     _currentUser.value = user
                     updateAuthState(user)
                 } else {
-                    // Пользователь был удален, выходим
+                    // Пользователь был удален - выходим
                     forceSignOut()
                 }
             } else {
@@ -72,8 +72,6 @@ class AuthViewModel : ViewModel() {
 
     private suspend fun checkIfUserExists(user: FirebaseUser): Boolean {
         return try {
-            // Пытаемся получить данные пользователя
-            // Если пользователь удален, это вызовет исключение
             user.getIdToken(true).await()
             true
         } catch (e: FirebaseAuthInvalidUserException) {
@@ -81,8 +79,7 @@ class AuthViewModel : ViewModel() {
             Log.e("AuthViewModel", "User no longer exists: ${e.message}")
             false
         } catch (e: Exception) {
-            // Другие ошибки (например, нет интернета)
-            // В этом случае оставляем пользователя, но логируем ошибку
+            // Другие ошибки - в этом случае оставляем пользователя, но логируем ошибку
             Log.e("AuthViewModel", "Error checking user existence: ${e.message}")
             true // Предполагаем, что пользователь существует
         }
@@ -179,11 +176,9 @@ class AuthViewModel : ViewModel() {
     }
 
     /**
-     * Очистка локальных данных (если есть)
+     * Очистка локальных данных
      */
     private fun clearLocalData() {
-        // Очистить SharedPreferences, кэш и т.д.
-        // Если используете DataStore или другие хранилища
     }
 
     /**
@@ -201,8 +196,7 @@ class AuthViewModel : ViewModel() {
             forceSignOut()
             false
         } catch (e: Exception) {
-            // Другие ошибки (например, нет сети)
-            // В этом случае оставляем текущее состояние
+            // Другие ошибки - в этом случае оставляем текущее состояние
             true
         }
     }
@@ -220,7 +214,6 @@ class AuthViewModel : ViewModel() {
             forceSignOut()
             null
         } catch (e: Exception) {
-            // Если ошибка не связана с удалением пользователя, возвращаем пользователя
             user
         }
     }

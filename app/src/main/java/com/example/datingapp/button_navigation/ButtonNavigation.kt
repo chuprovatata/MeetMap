@@ -25,9 +25,10 @@ fun ButtonNavigation(
     navController: NavController
 ) {
     val listItems = listOf(
-        BottomItem.Screen1,
         BottomItem.Screen2,
-        BottomItem.Screen3,
+        BottomItem.Screen1,
+
+
 
         )
     NavigationBar(
@@ -51,7 +52,7 @@ fun ButtonNavigation(
 
                 },
                 label = {
-                    Text(text = item.title, fontSize = 16.sp,  fontFamily =montserratFamily,
+                    Text(text = item.title, fontSize = 14.sp,  fontFamily =montserratFamily,
                         fontWeight = if (currentRoute == item.route){
                             FontWeight.SemiBold
                         }

@@ -35,9 +35,10 @@ fun CustomTabsComponent(
     title2: String,
     icon1: Int = 0,
     icon2: Int = 0,
+    selectedTab: Int=0,
     onTabSelected: (Int) -> Unit = {}
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+
 
 
 
@@ -64,7 +65,7 @@ fun CustomTabsComponent(
 
 
                     .clickable {
-                        selectedTab = 0
+
                         onTabSelected(0)
                     }
 
@@ -125,7 +126,7 @@ fun CustomTabsComponent(
 
 
                     .clickable {
-                        selectedTab = 1
+
                         onTabSelected(1)
                     }
 

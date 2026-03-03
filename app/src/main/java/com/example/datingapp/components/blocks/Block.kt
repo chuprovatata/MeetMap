@@ -51,7 +51,6 @@ fun SimpleBlock(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Текстовый блок - занимает весь доступный вес
             Column(
                 modifier = Modifier
                     .weight(1f)

@@ -17,9 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +33,8 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +44,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +57,9 @@ import com.example.datingapp.R
 import com.example.datingapp.components.blocks.Title_Block
 import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.components.segmentedButton.CustomTabsComponent
+import com.example.datingapp.data.repository.FriendStatus
+import com.example.datingapp.data.repository.MyUser
+import com.example.datingapp.navigation.GlobalNavController
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.screens.friends.User
 import com.example.datingapp.screens.friends.UserItem
@@ -55,153 +67,28 @@ import com.example.datingapp.ui.theme.GrayMedium
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.ui.theme.PurpleCard
 import com.example.datingapp.ui.theme.montserratFamily
+import com.example.datingapp.viewmodels.UserViewModel
+import org.w3c.dom.Text
 
-
-val friends = listOf(
-    User(
-        name = "Александр Ляля",
-        username = "@alex_tech",
-        icon = R.drawable.profile_male,
-        age = "25",
-        university = "МГТУ",
-        mutFriends = listOf(),
-
-        mutPlaces = listOf()
-    ),
-
-    User(
-        name = "Екатерина",
-        username = "@katya_design",
-        icon = R.drawable.profile_female,
-        age = "22",
-        university = "ВШЭ",
-        mutFriends = listOf(),
-        mutPlaces =
-            listOf(),
-    ),
-
-    User(
-        name = "Михаил",
-        username = "@mike_sports",
-        icon = R.drawable.profile_male,
-        age = "24",
-        university = "РГУФК",
-        mutFriends = listOf(),
-        mutPlaces =
-            listOf()
-    ),
-
-    User(
-        name = "Анна",
-        username = "@anna_science",
-        icon = R.drawable.profile_female,
-        age = "23",
-        university = "МГУ",
-        mutFriends = listOf(),
-        mutPlaces =
-            listOf()
-    ),
-
-    User(
-        name = "Дмитрий",
-        username = "@dima_music",
-        icon = R.drawable.profile_male,
-        age = "21",
-        university = "Консерватория",
-        mutFriends = listOf(),
-        mutPlaces =
-            listOf()
-    ),
-
-    User(
-        name = "Ольга",
-        username = "@olga_foodie",
-        icon = R.drawable.profile_female,
-        age = "26",
-        university = "РЭУ",
-        mutFriends = listOf(),
-        mutPlaces =
-            listOf()
-    ),
-
-    User(
-        name = "Артем",
-        username = "@artem_gamedev",
-        icon = R.drawable.profile_male,
-        age = "24",
-        university = "МИРЭА",
-        mutFriends = listOf(),
-        mutPlaces =
-            listOf()
-    ),
-
-    User(
-        name = "София",
-        username = "@sofia_books",
-        icon = R.drawable.profile_female,
-        age = "20",
-        university = "МПГУ",
-        mutFriends = listOf(),
-        mutPlaces = listOf()
-    ),
-
-    User(
-        name = "Иван",
-        username = "@ivan_travel",
-        icon = R.drawable.profile_male,
-        age = "27",
-        university = "МГИМО",
-        mutFriends = listOf(),
-        mutPlaces = listOf()
-    ),
-
-    User(
-        name = "Мария",
-        username = "@maria_art",
-        icon = R.drawable.profile_female,
-        age = "22",
-        university = "Строгановка",
-        mutFriends = listOf(),
-        mutPlaces = listOf()
-    ),
-
-    User(
-        name = "Кирилл",
-        username = "@kirill_it",
-        icon = R.drawable.profile_male,
-        age = "25",
-        university = "МФТИ",
-        mutFriends = listOf(),
-        mutPlaces = listOf()
-    ),
-
-    User(
-        name = "Полина",
-        username = "@polina_dance",
-        icon = R.drawable.profile_female,
-        age = "21",
-        university = "ГИТИС",
-        mutFriends = listOf(),
-        mutPlaces = listOf()
-    ),
-
-    User(
-        "Паулина ИВанован Саыаываывввввввввввввввввввввввввввввввввво",
-        "@anna",
-        R.drawable.profile_female,
-        "20",
-        "ВШЭ",
-        listOf(),
-        mutPlaces = listOf()
-
-    )
-
-)
 
 @Composable
-fun MainMeets(navController: NavController) {
+fun MainMeets(navController: NavController, viewModel: UserViewModel) {
     val spacing = LocalDatingAppSpacing.current
     var selectedTab by remember { mutableStateOf(0) }
+
+    val friendsList by viewModel.friendsList.collectAsState()
+    val incomingRequests by viewModel.incomingRequests.collectAsState()
+    val deniedList by viewModel.deniedList.collectAsState()
+    val outgoingRequests by viewModel.outgoingRequests.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    val myUser by viewModel.myUser.collectAsState()
+    val curId = myUser?.uid ?: ""
+
+
+    LaunchedEffect(Unit) {
+        viewModel.loadAllFriendData()
+    }
 
     Scaffold(
         topBar = {
@@ -210,10 +97,6 @@ fun MainMeets(navController: NavController) {
                     .fillMaxWidth()
                     .padding(top = 40.dp)
 
-                //ТАК КАК ОТСТУПЫ В ХЕНДИНГЕ НЕ ТАКИЕ КАК В ОСТАЛЬНОМ ПРИЛОЖЕНИИ
-                //НАЛИПАЕТ
-                //ИЗМЕНИТЬ ГОРИЗОНТАЛЬНЫЙ СПЕЙСИНГ?
-
 
             ) {
                 Row(
@@ -221,7 +104,18 @@ fun MainMeets(navController: NavController) {
                         .fillMaxWidth()
                         .padding(start = 9.dp, end = 19.dp)
                 ) {
-                    Heading("Знакомства", true, true, navController = navController)
+                    Heading(
+                        heading = "Знакомства",
+                        showBackButton = true,
+                        showSettings = false,
+                        showProfile = true,
+                        onBackClick = {
+                            GlobalNavController.navController?.navigate(Screen.Main.route) {
+                                popUpTo(0)
+                            }
+                        },
+                        navController = navController
+                    )
                 }
 
                 Row(
@@ -230,9 +124,10 @@ fun MainMeets(navController: NavController) {
                         .padding(top = 25.dp)
                 ) {
                     CustomTabsComponent(
-                        "Рекомендации",
                         "Заявки в друзья",
+                        "Мои друзья",
                         0, 0,
+                        selectedTab = selectedTab,
                         onTabSelected = { tabIndex -> selectedTab = tabIndex }
                     )
                 }
@@ -241,83 +136,281 @@ fun MainMeets(navController: NavController) {
             }
         },
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp)
-                .padding(top = 30.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
 
-            when (selectedTab) {
-                0 -> {
-                    // Экран для вкладки "Рекомендации"
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize(),
 
-                        contentPadding = PaddingValues(bottom = 80.dp)
-                    ) {
-                        item {
-                            Title_Block(
-                                navController,
-                                "У вас схожие интересы",
-                                "Вы часто посещаете одни и те же места, может быть это знак?",
-                                0,
-                                false
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 30.dp)
+            ) {
 
-                            )
+                when (selectedTab) {
+
+                    0 -> {
+                        viewModel.loadAllFriendData()
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
+                            item {
+                                Title_Block(
+                                    navController,
+                                    "С тобой хотят познакомиться",
+                                    "Посмотри, может быть ваши пути сойдутся?",
+                                    R.drawable.person_on_board,
+                                    false
+                                )
+                            }
+
+
+                            if (isLoading) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(200.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            } else {
+
+                                if (incomingRequests.isEmpty() &&
+                                    outgoingRequests.isEmpty() &&
+                                    deniedList.isEmpty()
+                                ) {
+
+                                    item {
+                                        EmptyNotFriend()
+                                    }
+                                } else {
+
+                                    if (incomingRequests.isNotEmpty()) {
+
+                                        items(incomingRequests) { user ->
+                                            ItemMeets(
+                                                user,
+                                                navController,
+                                                status = FriendStatus.REQUEST,
+
+                                                onClickButton = {
+
+                                                    viewModel.updateFriendshipStatus(
+                                                        curId,
+                                                        user.uid,
+                                                        FriendStatus.FRIEND,
+                                                        FriendStatus.FRIEND
+                                                    )
+
+                                                },
+                                            )
+                                        }
+                                    }
+                                    if (deniedList.isNotEmpty()) {
+
+                                        items(deniedList) { user ->
+                                            ItemMeets(
+                                                user,
+                                                navController,
+                                                status = FriendStatus.DENY,
+                                                onClickButton = {
+                                                    viewModel.loadAllFriendData()
+
+                                                })
+                                        }
+
+
+                                    }
+
+                                    // Исходящие заявки
+                                    if (outgoingRequests.isNotEmpty()) {
+
+                                        items(outgoingRequests) { user ->
+                                            ItemMeets(
+                                                user,
+                                                navController,
+                                                status = FriendStatus.MY_APPLICATION,
+                                                onClickButton = {
+                                                    viewModel.loadAllFriendData()
+
+                                                })
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        item {
-                            Spacer(modifier = Modifier.height(20.dp))
-                        }
-                        items(friends.size) { index ->
-                            ItemMeets(friends[index], navController,"meet")
-                        }
-
                     }
 
+                    1 -> {
+                        viewModel.loadAllFriendData()
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
+                            item {
+                                Title_Block(
+                                    navController,
+                                    "Список друзей",
+                                    "Посмотри, может быть ты кому-то давно не писал?",
+                                    R.drawable.person_on_board,
+                                    false
+                                )
+                            }
+
+
+                            if (isLoading) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(200.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            } else if (friendsList.isEmpty()) {
+                                item {
+                                    EmptyFriend()
+
+                                }
+                            } else {
+                                item { Spacer(modifier = Modifier.height(20.dp)) }
+                                items(friendsList) { user ->
+                                    ItemMeetsFriend(user, navController, "notmeet")
+                                }
+                            }
+                        }
+                    }
                 }
+            }
 
-                1 -> {
+            if (selectedTab == 0 || friendsList.isEmpty()) {
 
-                    // Экран для вкладки "познакомиться"
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                Box(
+                    modifier = Modifier
 
-                        contentPadding = PaddingValues(bottom = 80.dp)
-                    ) {
-                        item {
-                            Title_Block(
-                                navController,
-                                "С тобой хотят познакомиться",
-                                "Посмотри, может быть ваши пути сойдутся?",
-                                R.drawable.person_on_board,
-                                false
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 100.dp)
 
-                            )
-                        }
-                        item {
-                            Spacer(modifier = Modifier.height(20.dp))
-                        }
-                        items(friends.size) { index ->
-                            ItemMeets(friends[index], navController, "notmeet")
-                        }
+                        .background(shape = RoundedCornerShape(12.dp), color = PurpleCard)
+                        .clickable {
+                            if (friendsList.isEmpty() && selectedTab == 1 ) {
+                                selectedTab = 0
+                            } else {
 
-                    }
+                                navController.navigate(Screen.PeopleOfDay.route)
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (incomingRequests.isEmpty() &&
+                            outgoingRequests.isEmpty() &&
+                            deniedList.isEmpty() && selectedTab == 0
+                        ) {
+                            "рекомендации"
+                        } else if (friendsList.isEmpty() && selectedTab == 1) {
+                            "к заявкам"
 
+                        } else {
+                            "искать ещё"
+                        },
+                        style = MaterialTheme.typography.displayMedium,
+                        fontSize = 24.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 50.dp)
+                    )
                 }
             }
 
 
         }
-
-
     }
-
-
 }
 
 
+@Composable
+fun EmptyFriend() {
 
+    Box(
+        modifier = Modifier
+
+            .fillMaxSize()
+
+    ) {
+        Column(
+            modifier = Modifier
+
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(R.drawable.cloud),
+                contentDescription = "",
+                modifier = Modifier.size(200.dp)
+            )
+            Text(
+                text = "У тебя пока нет друзей(",
+                color = Color.Gray
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Переходи в ")
+                    withStyle(style = SpanStyle(color = PurpleCard, fontWeight = FontWeight.Bold)) {
+                        append("Знакомства")
+                    }
+                    append(" и находи \nновых людей!")
+                },
+                color = Color.Gray, textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+
+@Composable
+fun EmptyNotFriend() {
+    Box(
+        modifier = Modifier
+
+            .fillMaxSize()
+
+    ) {
+        Column(
+            modifier = Modifier
+
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(R.drawable.cloud),
+                contentDescription = "",
+                modifier = Modifier.size(200.dp)
+            )
+            Text(
+                text = "У тебя пока нет заявок(",
+                color = Color.Gray
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Переходи в ")
+                    withStyle(style = SpanStyle(color = PurpleCard, fontWeight = FontWeight.Bold)) {
+                        append("Рекомендации")
+                    }
+                    append(", чтобы посмотреть, кто посещает те же места, что и ты!")
+                },
+                color = Color.Gray, textAlign = TextAlign.Center
+            )
+        }
+    }
+}

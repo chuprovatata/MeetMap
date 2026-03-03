@@ -19,7 +19,7 @@ import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun GreetingScreen(
-    onNavigateToLogin: () -> Unit = {} // Делаем параметр необязательным
+    onNavigateToLogin: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),

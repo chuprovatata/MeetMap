@@ -1,6 +1,5 @@
 package com.example.datingapp.screens.meets
 
-import android.R.attr.spacing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.stylusHoverIcon
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -33,10 +31,7 @@ import com.example.datingapp.components.blocks.FavPlace
 import com.example.datingapp.components.blocks.FriendsHorizontal
 import com.example.datingapp.components.blocks.MutPlaces
 import com.example.datingapp.components.blocks.Place
-import com.example.datingapp.components.blocks.Sub_Block
-import com.example.datingapp.components.blocks.Title_Block
 import com.example.datingapp.components.blocks.UserInfo
-import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.progress.ProgressLine
 import com.example.datingapp.screens.friends.User
@@ -94,7 +89,7 @@ fun ReqMeet(navController: NavController) {
                 )
 
 
-                UserInfo(user1)
+                //UserInfo(user1)
                 Spacer(modifier = Modifier.height(30.dp))
                 ProgressLine(0.6f, height = 12)
                 Spacer(modifier = Modifier.height(15.dp))
@@ -122,7 +117,7 @@ fun ReqMeet(navController: NavController) {
 
                 MutPlaces(user1.mutPlaces)
                 Spacer(modifier = Modifier.height(25.dp))
-                FriendsHorizontal("Общие друзья", user1.mutFriends, navController)
+                //FriendsHorizontal("Общие друзья", user1.mutFriends, navController)
 
 
 

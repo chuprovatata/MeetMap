@@ -65,27 +65,50 @@ fun Heading_Arrow(heading: String, navController: NavController) {
 @Composable
 fun Heading(
     heading: String,
-    settings: Boolean = true,
-    profile: Boolean = true,
+    showBackButton: Boolean = false,
+    showSettings: Boolean = true,
+    showProfile: Boolean = true,
+    onBackClick: (() -> Unit)? = null,
     navController: NavController
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (showBackButton) {
+            IconButton(
+                onClick = {
+                    if (onBackClick != null) {
+                        onBackClick()
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.arrow_left),
+                    contentDescription = "Назад",
+                    tint = Color.Black
+                )
+            }
+        } else {
+            Box(modifier = Modifier.size(48.dp))
+        }
+
         Text(
             text = heading,
             style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp)
         ) {
-            if (settings) {
+            if (showSettings) {
                 Box(
                     modifier = Modifier
                         .size(35.dp)
@@ -102,7 +125,7 @@ fun Heading(
                     )
                 }
             }
-            if (profile) {
+            if (showProfile) {
                 Box(
                     modifier = Modifier
                         .size(35.dp)
@@ -120,7 +143,5 @@ fun Heading(
                 }
             }
         }
-
-
     }
 }

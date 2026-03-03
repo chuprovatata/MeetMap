@@ -4,9 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -23,6 +20,8 @@ import com.example.datingapp.screens.auth.RegistrationScreen
 import com.example.datingapp.screens.feedback.FeedbackAfterPlacesOfDayScreen
 import com.example.datingapp.screens.friends.Cur_Friend
 import com.example.datingapp.screens.main.MainScreen
+import com.example.datingapp.screens.meets.MainMeets
+import com.example.datingapp.screens.meets.ReqFriend
 import com.example.datingapp.screens.myplaces.MyPlaceDetailScreen
 import com.example.datingapp.screens.myplaces.MyPlacesScreen
 import com.example.datingapp.screens.notification.NotificationScreen
@@ -32,11 +31,13 @@ import com.example.datingapp.screens.profile.CategorySelectionScreen
 import com.example.datingapp.screens.profile.MyProfile
 import com.example.datingapp.screens.profile.ProfileSetupScreen
 import com.example.datingapp.screens.profile.TargetSelectionScreen
+import com.example.datingapp.screens.recommendation.PeopleOfDay
 import com.example.datingapp.screens.settings.SettingsScreen
 import com.example.datingapp.viewmodels.AuthState
 import com.example.datingapp.viewmodels.AuthViewModel
 import com.example.datingapp.viewmodels.OnboardingViewModel
 import com.example.datingapp.viewmodels.ProfileSetupViewModel
+import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
@@ -52,7 +53,7 @@ fun AppNavigation() {
     val authState by authViewModel.authState.collectAsState()
     val onboardingViewModel: OnboardingViewModel = viewModel()
     val isFirstLaunch by onboardingViewModel.isFirstLaunch.collectAsState()
-
+    val userViewModel: UserViewModel = viewModel()
 
     val startDestination = when (authState) {
         AuthState.Loading -> Screen.Splash.route
@@ -269,6 +270,7 @@ fun AppNavigation() {
         composable(Screen.Main.route) {
             MainScreen(navController = navController)
         }
+
         composable(Screen.FeedbackAfterPlacesOfDay.route) {
             FeedbackAfterPlacesOfDayScreen(
                 navController = navController,
@@ -293,10 +295,36 @@ fun AppNavigation() {
         }
 
         composable(Screen.MyPlaces.route) {
-            MyPlacesScreen()
+            MyPlacesScreen(navController = navController)
         }
 
-        // ОБЩИЕ ЭКРАНЫ
+        composable(Screen.PeopleOfDay.route) {
+            PeopleOfDay(navController = navController, viewModel = userViewModel)
+        }
+
+        composable(Screen.MainMeets.route) {
+            MainMeets(navController = navController, viewModel = userViewModel)
+        }
+
+        composable(
+            route = "req_friend/{friendId}/{pageTitle}",
+            arguments = listOf(
+                navArgument("friendId") { type = NavType.StringType },
+                navArgument("pageTitle") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+            val pageTitle = backStackEntry.arguments?.getString("pageTitle") ?: ""
+
+            ReqFriend(
+                navController = navController,
+                viewModel = userViewModel,
+                friendId = friendId,
+                pageTitle = pageTitle
+            )
+        }
+
+        // Common screens
         composable(Screen.Notification.route) {
             NotificationScreen(navController = navController)
         }
@@ -306,11 +334,16 @@ fun AppNavigation() {
         }
 
         composable(Screen.MyProfile.route) {
-            MyProfile(navController = navController)
+            MyProfile(navController = navController, userViewModel)
         }
 
-        composable(Screen.CurFriend.route) {
-            Cur_Friend(navController = navController)
+        composable(Screen.CurFriend.route) { backStackEntry ->
+            val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+            Cur_Friend(
+                navController = navController,
+                friendId = friendId,
+                userViewModel
+            )
         }
 
         composable(
@@ -340,6 +373,9 @@ fun AppNavigation() {
 
         composable(Screen.TestCloud.route) {
             TestCloudScreen(navController = navController)
+        }
+        composable(Screen.Main.route) {
+            MainScreen(navController = navController)
         }
     }
 }

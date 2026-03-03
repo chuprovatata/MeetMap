@@ -20,11 +20,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -35,15 +40,24 @@ import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.FavPlace
 import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.Place
 import com.example.datingapp.components.blocks.UserInfo
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.progress.ProgressLine
+import com.example.datingapp.data.repository.FriendStatus
+import com.example.datingapp.data.repository.MyUser
 import com.example.datingapp.navigation.Screen
-import com.example.datingapp.screens.friends.User
+
+import com.example.datingapp.viewmodels.UserViewModel
 
 @Composable
-fun MyProfile(navController: NavController) {
+fun MyProfile(navController: NavController, viewModel: UserViewModel) {
+
+    val name = viewModel.userData.value?.get("name") as? String ?: ""
+
+
+    val age = viewModel.userData.value?.get("age") as? Long ?: 0
+    val gender = viewModel.userData.value?.get("gender") as? String ?: ""
+    val telegram = viewModel.userData.value?.get("telegram") as? String ?: ""
 
     Scaffold(
         topBar = {
@@ -88,34 +102,12 @@ fun MyProfile(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 25.dp)
         ) {
-            val user1 = User(
-                name = "Кирилл",
-                username = "kirill_it",
-                icon = R.drawable.profile_male,
-                age = "25",
-                university = "МФТИ",
-                mutFriends = listOf(
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase")
-                ),
-                mutPlaces = listOf(
-                    Place(placeName = "Парк Зарядье"),
-                    Place(placeName = "Парк Зарядье"),
-                    Place(placeName = "Парк Зарядье")
-                )
-            )
+            val user by viewModel.myUser.collectAsState()
 
-            UserInfo(user1)
+
+
+
+            UserInfo(user)
             Spacer(modifier = Modifier.height(30.dp))
 
             Row(
@@ -164,11 +156,18 @@ fun MyProfile(navController: NavController) {
                 )
             }
             Spacer(modifier = Modifier.height(40.dp))
-            FavPlace(user1.favPlace)
+            //FavPlace(user1.favPlace) когда в бд будут места
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            FriendsHorizontal("Общие друзья", user1.mutFriends, navController)
+            var curFriends by remember { mutableStateOf<List<MyUser>>(emptyList()) }
+
+            LaunchedEffect(Unit) {
+                curFriends = viewModel.getUsersByFriendStatus(FriendStatus.FRIEND)
+
+            }
+
+            FriendsHorizontal("Мои друзья",  curFriends , navController)
 
             Spacer(modifier = Modifier.height(100.dp))
         }

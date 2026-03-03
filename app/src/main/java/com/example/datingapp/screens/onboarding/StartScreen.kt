@@ -19,7 +19,7 @@ import com.example.datingapp.R
 
 @Composable
 fun StartScreen(
-    onGetStarted: () -> Unit  // Изменено с onStartClicked на onGetStarted
+    onGetStarted: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -30,7 +30,7 @@ fun StartScreen(
             contentAlignment = Alignment.Center
         ) {
             Button(
-                onClick = onGetStarted,  // Изменено здесь
+                onClick = onGetStarted,
                 modifier = Modifier
                     .fillMaxWidth(0.48f)
                     .fillMaxHeight(0.08f),

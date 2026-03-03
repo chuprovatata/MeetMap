@@ -46,7 +46,6 @@ object AppModule {
         okHttpClient: OkHttpClient
     ): UserRepository = UserRepository(auth, firestore, okHttpClient)
 
-    // Добавляем провайдер для UserPlacesRepository
     @Provides
     @Singleton
     fun provideUserPlacesRepository(

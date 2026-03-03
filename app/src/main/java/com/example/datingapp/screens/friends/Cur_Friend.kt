@@ -15,9 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.stylusHoverIcon
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -26,16 +28,27 @@ import com.example.datingapp.components.blocks.FavPlace
 import com.example.datingapp.components.blocks.FriendsHorizontal
 import com.example.datingapp.components.blocks.MutPlaces
 import com.example.datingapp.components.blocks.Place
-import com.example.datingapp.components.blocks.Sub_Block
-import com.example.datingapp.components.blocks.Title_Block
 import com.example.datingapp.components.blocks.UserInfo
-import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.progress.ProgressLine
+import com.example.datingapp.data.repository.MyUser
+import com.example.datingapp.viewmodels.UserViewModel
 
 @Composable
-fun Cur_Friend(navController: NavController) {
+fun Cur_Friend(navController: NavController, friendId: String,  viewModel: UserViewModel) {
+    val otherUser by viewModel.otherUser.collectAsState()
 
+
+    val mutualFriends by viewModel.mutualFriends.collectAsState()
+
+
+    LaunchedEffect(friendId) {
+        viewModel.loadMutualFriends(friendId)
+    }
+
+    LaunchedEffect(friendId) {
+        viewModel.loadUserById(friendId)
+    }
     Scaffold(
         topBar = {
 
@@ -59,26 +72,10 @@ fun Cur_Friend(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 25.dp)
         ) {
-            val user1 = User(
-                name = "Кирилл",
-                username = "kirill_it",
-                icon = R.drawable.profile_male,
-                age = "25",
-                university = "МФТИ",
-                mutFriends = listOf(
-                    User(username = "@Nase"),
-                    User(username = "@Nase"),
-                    User(username = "@Nase")
-                ),
-                mutPlaces = listOf(
-                    Place(placeName = "Парк Зарядье"),
-                    Place(placeName = "Парк Зарядье"),
-                    Place(placeName = "Парк Зарядье")
-                )
-            )
 
 
-            UserInfo(user1)
+
+            UserInfo(otherUser)
             Spacer(modifier = Modifier.height(30.dp))
             ProgressLine(0.6f, height = 12)
             Spacer(modifier = Modifier.height(15.dp))
@@ -100,13 +97,13 @@ fun Cur_Friend(navController: NavController) {
             }
             Spacer(modifier = Modifier.height(24.dp))
 
-            FavPlace(user1.favPlace)
+            //FavPlace(user1.favPlace)
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            MutPlaces(user1.mutPlaces)
+            //MutPlaces(user1.mutPlaces)
             Spacer(modifier = Modifier.height(25.dp))
-            FriendsHorizontal("Общие друзья", user1.mutFriends,navController)
+            FriendsHorizontal("Общие друзья",mutualFriends,navController)
 
 
             Spacer(modifier = Modifier.height(100.dp))

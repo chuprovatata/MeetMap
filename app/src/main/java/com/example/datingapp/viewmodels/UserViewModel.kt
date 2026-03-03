@@ -5,6 +5,8 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.datingapp.data.repository.FriendStatus
+import com.example.datingapp.data.repository.MyUser
 import com.example.datingapp.data.repository.UserRepository
 import com.example.datingapp.utils.CloudImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,8 +48,30 @@ class UserViewModel @Inject constructor(
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess.asStateFlow()
 
+    private val _myUser = MutableStateFlow<MyUser?>(null)
+    val myUser: StateFlow<MyUser?> = _myUser.asStateFlow()
+
+    private val _otherUser = MutableStateFlow<MyUser?>(null)
+    val otherUser: StateFlow<MyUser?> = _otherUser.asStateFlow()
+
+    private val _friendsList = MutableStateFlow<List<MyUser>>(emptyList())
+    val friendsList: StateFlow<List<MyUser>> = _friendsList.asStateFlow()
+
+    private val _incomingRequests = MutableStateFlow<List<MyUser>>(emptyList())
+    val incomingRequests: StateFlow<List<MyUser>> = _incomingRequests.asStateFlow()
+
+    private val _deniedList = MutableStateFlow<List<MyUser>>(emptyList())
+    val deniedList: StateFlow<List<MyUser>> = _deniedList.asStateFlow()
+
+    private val _outgoingRequests = MutableStateFlow<List<MyUser>>(emptyList())
+    val outgoingRequests: StateFlow<List<MyUser>> = _outgoingRequests.asStateFlow()
+
+    private val _mutualFriends = MutableStateFlow<List<MyUser>>(emptyList())
+    val mutualFriends: StateFlow<List<MyUser>> = _mutualFriends.asStateFlow()
+
     init {
         loadUserData()
+        loadMyUser()
     }
 
     fun loadUserData() {
@@ -118,6 +142,12 @@ class UserViewModel @Inject constructor(
                 firestoreData.forEach { (key, value) -> currentData[key] = value }
                 _userData.value = currentData
 
+                // Если обновляем данные текущего пользователя, обновляем и myUser
+                if (firestoreData.containsKey("name") || firestoreData.containsKey("username") ||
+                    firestoreData.containsKey("telegram") || firestoreData.containsKey("bio")) {
+                    loadMyUser()
+                }
+
                 _saveSuccess.value = true
 
                 Log.d("UserViewModel", "User data updated successfully: $firestoreData")
@@ -131,18 +161,11 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Обновить одно поле пользователя
-     */
     fun updateUserField(field: String, value: Any?) {
         if (value == null) return
-
         updateUserData(mapOf(field to value))
     }
 
-    /**
-     * Получить обработанный URL изображения для отображения
-     */
     suspend fun getProcessedImageUrl(originalUrl: String?): Any {
         return CloudImageUtils.getFixedImageUrl(originalUrl)
     }
@@ -165,11 +188,9 @@ class UserViewModel @Inject constructor(
 
     fun refreshUserData() {
         loadUserData()
+        loadMyUser()
     }
 
-    /**
-     * Проверить, есть ли несохраненные изменения
-     */
     fun hasUnsavedChanges(currentData: Map<String, Any?>): Boolean {
         val originalData = _userData.value ?: return false
 
@@ -179,5 +200,194 @@ class UserViewModel @Inject constructor(
                 else -> value != originalValue
             }
         }
+    }
+
+    fun loadMyUser() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _dataLoadError.value = null
+
+            try {
+                Log.d("UserViewModel", "Loading my user...")
+                val user = userRepository.getCurrentUser()
+                Log.d("UserViewModel", "Loaded user: $user")
+
+                _myUser.value = user
+
+                if (user == null) {
+                    _dataLoadError.value = "Пользователь не найден в базе"
+                } else {
+                    // Обновляем старые данные для совместимости
+                    _userData.value = mapOf(
+                        "uid" to user.uid,
+                        "name" to user.name,
+                        "username" to user.username,
+                        "email" to user.email,
+                        "telegram" to user.telegram,
+                        "age" to user.age,
+                        "birthYear" to user.birthYear,
+                        "bio" to user.bio,
+                        "gender" to user.gender,
+                        "university" to user.university,
+                        "profileComplete" to user.profileComplete,
+                        "targets" to user.targets,
+                        "categories" to user.categories,
+                        "friends" to user.friends
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading my user", e)
+                _dataLoadError.value = e.message ?: "Ошибка загрузки"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadUserById(userId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _dataLoadError.value = null
+
+            try {
+                Log.d("UserViewModel", "Loading user by ID: $userId")
+                val user = userRepository.getUserById(userId)
+                _otherUser.value = user
+
+                if (user == null) {
+                    _dataLoadError.value = "Пользователь не найден"
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading user by id", e)
+                _dataLoadError.value = e.message ?: "Ошибка загрузки пользователя"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun clearOtherUser() {
+        _otherUser.value = null
+    }
+
+    suspend fun getUsersByFriendStatus(status: FriendStatus): List<MyUser> {
+        val currentUser = _myUser.value ?: return emptyList()
+
+        val friendIds = currentUser.friends
+            .filter { it.value.status == status.value }
+            .keys
+            .toList()
+
+        if (friendIds.isEmpty()) return emptyList()
+
+        val friendsList = mutableListOf<MyUser>()
+        for (friendId in friendIds) {
+            val friend = userRepository.getUserById(friendId)
+            if (friend != null) {
+                friendsList.add(friend)
+            }
+        }
+
+        return friendsList
+    }
+
+    fun loadAllFriendData() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val freshUser = userRepository.getCurrentUser()
+                _myUser.value = freshUser
+
+                _friendsList.value = getUsersByFriendStatus(FriendStatus.FRIEND)
+                _incomingRequests.value = getUsersByFriendStatus(FriendStatus.REQUEST)
+                _deniedList.value = getUsersByFriendStatus(FriendStatus.DENY)
+                _outgoingRequests.value = getUsersByFriendStatus(FriendStatus.MY_APPLICATION)
+
+                Log.d("UserViewModel", "Все данные загружены: друзей=${_friendsList.value.size}, заявок=${_incomingRequests.value.size}")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Ошибка загрузки данных", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun refreshFriendData() {
+        loadAllFriendData()
+    }
+
+    fun updateUserById(userId: String, data: Map<String, Any?>) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val firestoreData = data.filterValues { it != null }
+                    .mapValues { (_, value) -> value!! }
+
+                userRepository.updateUserById(userId, firestoreData)
+
+                // Если обновляем текущего пользователя - обновляем и локальные данные
+                if (userId == _myUser.value?.uid) {
+                    loadMyUser()
+                }
+
+                // Если обновляем того, кого смотрим на экране
+                if (userId == _otherUser.value?.uid) {
+                    loadUserById(userId)
+                }
+
+                Log.d("UserViewModel", "User $userId updated")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error updating user $userId", e)
+                _dataLoadError.value = e.message ?: "Ошибка обновления"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateFriendshipStatus(
+        myId: String,
+        friendId: String,
+        newStatusForMe: FriendStatus,
+        newStatusForFriend: FriendStatus
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                Log.d("UserViewModel", "Updating friendship: me=$myId, friend=$friendId")
+
+                userRepository.updateFriendStatusForUser(myId, friendId, newStatusForMe.value)
+                userRepository.updateFriendStatusForUser(friendId, myId, newStatusForFriend.value)
+
+                loadAllFriendData()
+
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error updating friendship", e)
+                _dataLoadError.value = e.message ?: "Ошибка обновления статуса"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadMutualFriends(otherUserId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                Log.d("UserViewModel", "Loading mutual friends for user: $otherUserId")
+                val friends = userRepository.getMutualFriends(otherUserId)
+                _mutualFriends.value = friends
+                Log.d("UserViewModel", "Found ${friends.size} mutual friends")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading mutual friends", e)
+                _dataLoadError.value = e.message ?: "Ошибка загрузки общих друзей"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun clearMutualFriends() {
+        _mutualFriends.value = emptyList()
     }
 }

@@ -33,7 +33,6 @@ import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-// Модель для целей
 data class Category(
     val id: Int,
     val title: String,

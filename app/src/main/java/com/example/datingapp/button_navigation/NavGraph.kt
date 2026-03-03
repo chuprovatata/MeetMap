@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.screens.friends.Cur_Friend
+
 import com.example.datingapp.screens.friends.Main_Friends
 import com.example.datingapp.screens.friends.My_Friends
 import com.example.datingapp.screens.meets.MainMeets
@@ -17,17 +18,19 @@ import com.example.datingapp.screens.meets.ReqFriend
 import com.example.datingapp.screens.meets.ReqMeet
 import com.example.datingapp.screens.myplaces.MyPlacesScreen
 import com.example.datingapp.screens.profile.MyProfile
+import com.example.datingapp.screens.recommendation.PeopleOfDay
 import com.example.datingapp.screens.settings.SettingsScreen
+import com.example.datingapp.viewmodels.UserViewModel
 
 
 @Composable
-fun NavGraph(navHostController: NavHostController) {
+fun NavGraph(navHostController: NavHostController, viewModel: UserViewModel) {
     NavHost(navController = navHostController, startDestination = "screen_2") {
         val bottomNav = @Composable {
             ButtonNavigation(navController = navHostController)
         }
         composable("screen_2") {
-            MyPlacesScreen()
+            MyPlacesScreen(navHostController)
         }
 
 
@@ -37,7 +40,7 @@ fun NavGraph(navHostController: NavHostController) {
 
         }
         composable("screen_1") {
-            MainMeets(navHostController)
+            MainMeets(navHostController, viewModel)
 
 
         }
@@ -49,33 +52,44 @@ fun NavGraph(navHostController: NavHostController) {
             SettingsScreen(navHostController)
         }
         composable(Screen.MyProfile.route) {
-            MyProfile(navHostController)
+            MyProfile(navHostController, viewModel)
         }
 
 
 
-        composable(Screen.CurFriend.route) {
-            Cur_Friend(navHostController)
+        composable(Screen.CurFriend.route) { backStackEntry ->
+            val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+            Cur_Friend(
+                navController = navHostController,
+                friendId = friendId,
+                viewModel
+            )
         }
+        composable(Screen.PeopleOfDay.route) {
 
-        composable(Screen.ReqMeet.route) {
-            ReqMeet(navHostController)
+            PeopleOfDay(navHostController, viewModel)
         }
-
-        composable(Screen.ReqFriend.route) {
-            ReqFriend(navHostController)
-        }
-
-        //Когда будет бд в таком стиле функции
-        /*
 
         composable(
-            route = "cur_friend/{username}",
-            arguments = listOf(navArgument("username") { type = NavType.StringType })
+            route = "req_friend/{friendId}/{pageTitle}",  // Два параметра в路由
+            arguments = listOf(
+                navArgument("friendId") { type = NavType.StringType },
+                navArgument("pageTitle") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            val username = backStackEntry.arguments?.getString("username")
-            Cur_Friend(username = username,navHostController)
-        }*/
+            val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+            val pageTitle = backStackEntry.arguments?.getString("pageTitle") ?: ""
+
+            ReqFriend(
+                navController = navHostController,
+                viewModel = viewModel,
+                friendId = friendId,
+                pageTitle = pageTitle
+            )
+        }
+
+
+
 
     }
 

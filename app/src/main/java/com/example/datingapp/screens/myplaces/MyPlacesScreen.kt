@@ -27,12 +27,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.datingapp.R
 import com.example.datingapp.components.headers.Heading
 import com.example.datingapp.data.models.PlaceInfo
 import com.example.datingapp.navigation.GlobalNavController
+import com.example.datingapp.navigation.Screen
 import com.example.datingapp.viewmodels.MyPlacesViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
@@ -40,6 +42,7 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyPlacesScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: MyPlacesViewModel = hiltViewModel()
 ) {
@@ -63,7 +66,6 @@ fun MyPlacesScreen(
         }
     }
 
-    // Обновляем данные при возврате на экран
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.refresh()
@@ -88,7 +90,7 @@ fun MyPlacesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.Transparent)
-                        .padding(top = 40.dp) // Добавлен отступ сверху как было
+                        .padding(top = 40.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -97,9 +99,14 @@ fun MyPlacesScreen(
                     ) {
                         Heading(
                             heading = "Мои места",
-                            settings = true,
-                            profile = true,
-                            navController = GlobalNavController.navController
+                            showBackButton = true,
+                            showSettings = true,
+                            showProfile = true,
+                            onBackClick = {GlobalNavController.navController?.navigate(Screen.Main.route) {
+                                popUpTo(0)
+                                }
+                            },
+                            navController = navController
                         )
                     }
                 }
@@ -126,7 +133,6 @@ fun MyPlacesScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // Поисковая строка
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -221,7 +227,7 @@ fun MyPlacesScreen(
                                 MyPlaceGridItem(
                                     placeInfo = placeInfo,
                                     onClick = {
-                                        GlobalNavController.navigateToPlaceDetail(placeInfo.id)
+                                        navController.navigate("my_place_detail/${placeInfo.id}")
                                     }
                                 )
                             }
@@ -283,7 +289,6 @@ fun MyPlaceGridItem(
                     .padding(12.dp)
             )
 
-            // Количество лайков
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -308,7 +313,6 @@ fun MyPlaceGridItem(
                 )
             }
 
-            // Иконка огня (если есть)
             if (placeInfo.hasFireIcon) {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_fire),
