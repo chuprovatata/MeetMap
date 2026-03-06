@@ -111,7 +111,12 @@ fun ReqMeet(navController: NavController) {
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
-                FavPlace(user1.favPlace)
+                if (user1.favPlace != null) {
+                    FavPlace(
+                        placeName = user1.favPlace.placeName,
+                        photoUrl = null
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(25.dp))
 

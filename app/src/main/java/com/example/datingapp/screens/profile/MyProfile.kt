@@ -1,17 +1,8 @@
 package com.example.datingapp.screens.profile
 
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -19,21 +10,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -42,23 +25,42 @@ import com.example.datingapp.components.blocks.FavPlace
 import com.example.datingapp.components.blocks.FriendsHorizontal
 import com.example.datingapp.components.blocks.UserInfo
 import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.components.progress.ProgressLine
+import com.example.datingapp.data.models.PlaceInfo
 import com.example.datingapp.data.repository.FriendStatus
 import com.example.datingapp.data.repository.MyUser
 import com.example.datingapp.navigation.Screen
-
 import com.example.datingapp.viewmodels.UserViewModel
+import androidx.compose.runtime.collectAsState
+
 
 @Composable
 fun MyProfile(navController: NavController, viewModel: UserViewModel) {
+    val isUploadingImage by viewModel.isUploadingImage.collectAsState()
+    val context = LocalContext.current
+    val user by viewModel.myUser.collectAsState()
+    val profileImageUrl by viewModel.profileImageUrl.collectAsState()
+
+    var profileImageState by remember { mutableStateOf<Any?>(null) }
+
+    LaunchedEffect(profileImageUrl) {
+        profileImageState = viewModel.getProfileImageUrl(profileImageUrl)
+    }
 
     val name = viewModel.userData.value?.get("name") as? String ?: ""
-
-
     val age = viewModel.userData.value?.get("age") as? Long ?: 0
     val gender = viewModel.userData.value?.get("gender") as? String ?: ""
     val telegram = viewModel.userData.value?.get("telegram") as? String ?: ""
+    val username = viewModel.userData.value?.get("username") as? String ?: ""
+    val favoritePlaceName = (user?.favoritePlace ?: viewModel.userData.value?.get("favoritePlace") as? String) ?: ""
+    val favoritePlacePhoto = (user?.favoritePlacePhoto ?: viewModel.userData.value?.get("favoritePlacePhoto") as? String) ?: ""
 
+    LaunchedEffect(user, viewModel.userData) {
+        val data = viewModel.userData.value
+        Log.d("MyProfile", "favoritePlaceName: $favoritePlaceName")
+        Log.d("MyProfile", "favoritePlacePhoto: $favoritePlacePhoto")
+        Log.d("MyProfile", "user: $user")
+        Log.d("MyProfile", "userData: $data")
+    }
     Scaffold(
         topBar = {
             Column(
@@ -72,7 +74,10 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                         .fillMaxWidth()
                         .padding(start = 9.dp, end = 19.dp)
                 ) {
-                    Heading_Arrow("Профиль", navController)
+                    Heading_Arrow(
+                        heading = if (username.isNotBlank()) "@$username" else "Профиль",
+                        navController = navController
+                    )
 
                     IconButton(
                         onClick = {
@@ -93,7 +98,6 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
             }
         },
     ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,16 +106,17 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 25.dp)
         ) {
-            val user by viewModel.myUser.collectAsState()
-
-
-
-
-            UserInfo(user)
+            UserInfo(
+                user = user,
+                profileImageUrl = profileImageUrl,
+                isUploadingImage = isUploadingImage,
+                showTelegram = false
+            )
             Spacer(modifier = Modifier.height(30.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "24",
@@ -125,49 +130,21 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     fontSize = 20.sp
                 )
             }
-            Spacer(modifier = Modifier.height(21.dp))
-            ProgressLine(0.6f, height = 12)
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("15 ")
-                        }
-                        append("посещённые")
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontSize = 17.sp
-                )
-
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("9 ")
-                        }
-                        append("хочу посетить")
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontSize = 17.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(40.dp))
-            //FavPlace(user1.favPlace) когда в бд будут места
-
+            FavPlace(
+                placeName = favoritePlaceName,
+                photoUrl = favoritePlacePhoto
+            )
             Spacer(modifier = Modifier.height(25.dp))
 
             var curFriends by remember { mutableStateOf<List<MyUser>>(emptyList()) }
 
             LaunchedEffect(Unit) {
                 curFriends = viewModel.getUsersByFriendStatus(FriendStatus.FRIEND)
-
             }
 
-            FriendsHorizontal("Мои друзья",  curFriends , navController)
+            FriendsHorizontal("Мои друзья", curFriends, navController)
 
             Spacer(modifier = Modifier.height(100.dp))
         }

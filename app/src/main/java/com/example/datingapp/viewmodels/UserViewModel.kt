@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.datingapp.R
 import com.example.datingapp.data.repository.FriendStatus
 import com.example.datingapp.data.repository.MyUser
 import com.example.datingapp.data.repository.UserRepository
@@ -68,10 +69,80 @@ class UserViewModel @Inject constructor(
 
     private val _mutualFriends = MutableStateFlow<List<MyUser>>(emptyList())
     val mutualFriends: StateFlow<List<MyUser>> = _mutualFriends.asStateFlow()
+    val PROFILE_PLACEHOLDER = R.drawable.picture_defaullt_profile
 
     init {
         loadUserData()
         loadMyUser()
+    }
+    private val _isUploadingFavoritePlace = MutableStateFlow(false)
+    val isUploadingFavoritePlace: StateFlow<Boolean> = _isUploadingFavoritePlace.asStateFlow()
+
+    private val _favoritePlacePhotoUrl = MutableStateFlow<String?>(null)
+    val favoritePlacePhotoUrl: StateFlow<String?> = _favoritePlacePhotoUrl.asStateFlow()
+
+    fun uploadFavoritePlacePhoto(uri: Uri, contentResolver: ContentResolver) {
+        _isUploadingFavoritePlace.value = true
+        _uploadError.value = null
+
+        viewModelScope.launch {
+            try {
+                val imageUrl = userRepository.uploadFavoritePlaceImage(uri, contentResolver)
+
+                _favoritePlacePhotoUrl.value = imageUrl
+
+                updateUserField("favoritePlacePhoto", imageUrl)
+
+                _saveSuccess.value = true
+                Log.d("UserViewModel", "Favorite place photo uploaded: $imageUrl")
+
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error uploading favorite place photo", e)
+                _uploadError.value = e.message ?: "Ошибка загрузки фото места"
+            } finally {
+                _isUploadingFavoritePlace.value = false
+            }
+        }
+    }
+    fun deleteFavoritePlacePhoto() {
+        viewModelScope.launch {
+            _isUploadingFavoritePlace.value = true
+            _uploadError.value = null
+
+            try {
+                // Удаляем поле из Firebase
+                userRepository.updateUserData(mapOf("favoritePlacePhoto" to com.google.firebase.firestore.FieldValue.delete()))
+
+                // Обновляем локальные данные
+                _favoritePlacePhotoUrl.value = null
+
+                // Обновляем _userData
+                val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
+                currentData.remove("favoritePlacePhoto")
+                _userData.value = currentData
+
+                _saveSuccess.value = true
+                Log.d("UserViewModel", "Favorite place photo deleted")
+
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error deleting favorite place photo", e)
+                _uploadError.value = e.message ?: "Ошибка удаления фото места"
+            } finally {
+                _isUploadingFavoritePlace.value = false
+            }
+        }
+    }
+    suspend fun getFavoritePlaceImageUrl(imageUrl: String?): Any {
+        return if (imageUrl.isNullOrBlank() || imageUrl == CloudImageUtils.NO_PICTURE_URL) {
+            Log.d("UserViewModel", "No favorite place image, using placeholder")
+            R.drawable.picture_museum_background
+        } else {
+            Log.d("UserViewModel", "Processing favorite place URL: $imageUrl")
+            imageUrl
+        }
+    }
+    fun getCurrentUserId(): String? {
+        return _myUser.value?.uid
     }
 
     fun loadUserData() {
@@ -86,6 +157,9 @@ class UserViewModel @Inject constructor(
 
                 val imageUrl = userRepository.getUserProfileImageUrl()
                 _profileImageUrl.value = imageUrl
+
+                val favoritePhoto = data["favoritePlacePhoto"] as? String
+                _favoritePlacePhotoUrl.value = favoritePhoto
 
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error loading user data", e)
@@ -120,12 +194,55 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+    fun deleteProfilePhoto() {
+        viewModelScope.launch {
+            _isUploadingImage.value = true
+            _uploadError.value = null
+
+            try {
+                val noPhotoUrl = CloudImageUtils.NO_PICTURE_URL
+
+                userRepository.updateUserData(mapOf("profileImageUrl" to noPhotoUrl))
+
+                _profileImageUrl.value = noPhotoUrl
+                val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
+                currentData["profileImageUrl"] = noPhotoUrl
+                _userData.value = currentData
+
+                _saveSuccess.value = true
+
+                Log.d("UserViewModel", "Profile photo deleted successfully")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error deleting profile photo", e)
+                _uploadError.value = e.message ?: "Ошибка удаления фото"
+            } finally {
+                _isUploadingImage.value = false
+            }
+        }
+    }
+    suspend fun getProfileImageUrl(imageUrl: String?): Any {
+        return if (imageUrl.isNullOrBlank() || imageUrl == CloudImageUtils.NO_PICTURE_URL) {
+            Log.d("UserViewModel", "No profile image, using profile placeholder")
+            PROFILE_PLACEHOLDER
+        } else {
+            Log.d("UserViewModel", "Processing profile URL: $imageUrl")
+            imageUrl
+        }
+    }
 
     fun updateUserData(data: Map<String, Any?>) {
-        val firestoreData = data.filterValues { it != null }
-            .mapValues { (_, value) -> value!! }
+        val updateData = mutableMapOf<String, Any>()
+        val deleteFields = mutableListOf<String>()
 
-        if (firestoreData.isEmpty()) {
+        data.forEach { (key, value) ->
+            if (value != null) {
+                updateData[key] = value
+            } else {
+                deleteFields.add(key)
+            }
+        }
+
+        if (updateData.isEmpty() && deleteFields.isEmpty()) {
             Log.d("UserViewModel", "No data to update")
             return
         }
@@ -136,21 +253,28 @@ class UserViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                userRepository.updateUserData(firestoreData)
+                if (updateData.isNotEmpty()) {
+                    userRepository.updateUserData(updateData)
+                }
+
+                for (field in deleteFields) {
+                    userRepository.updateUserData(mapOf(field to com.google.firebase.firestore.FieldValue.delete()))
+                }
 
                 val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
-                firestoreData.forEach { (key, value) -> currentData[key] = value }
+                updateData.forEach { (key, value) -> currentData[key] = value }
+                deleteFields.forEach { currentData.remove(it) }
                 _userData.value = currentData
 
-                // Если обновляем данные текущего пользователя, обновляем и myUser
-                if (firestoreData.containsKey("name") || firestoreData.containsKey("username") ||
-                    firestoreData.containsKey("telegram") || firestoreData.containsKey("bio")) {
+                if (updateData.containsKey("name") || updateData.containsKey("username") ||
+                    updateData.containsKey("telegram") || updateData.containsKey("bio") ||
+                    deleteFields.isNotEmpty()) {
                     loadMyUser()
                 }
 
                 _saveSuccess.value = true
 
-                Log.d("UserViewModel", "User data updated successfully: $firestoreData")
+                Log.d("UserViewModel", "User data updated successfully. Updated: $updateData, Deleted: $deleteFields")
 
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error updating user data", e)
@@ -159,6 +283,9 @@ class UserViewModel @Inject constructor(
                 _isSaving.value = false
             }
         }
+    }
+    fun deleteField(field: String) {
+        updateUserData(mapOf(field to null))
     }
 
     fun updateUserField(field: String, value: Any?) {
@@ -217,7 +344,6 @@ class UserViewModel @Inject constructor(
                 if (user == null) {
                     _dataLoadError.value = "Пользователь не найден в базе"
                 } else {
-                    // Обновляем старые данные для совместимости
                     _userData.value = mapOf(
                         "uid" to user.uid,
                         "name" to user.name,
@@ -389,5 +515,38 @@ class UserViewModel @Inject constructor(
 
     fun clearMutualFriends() {
         _mutualFriends.value = emptyList()
+    }
+    fun logout() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _myUser.value = null
+                _userData.value = null
+                _profileImageUrl.value = null
+                _favoritePlacePhotoUrl.value = null
+                _friendsList.value = emptyList()
+                _incomingRequests.value = emptyList()
+                _outgoingRequests.value = emptyList()
+                _deniedList.value = emptyList()
+                _mutualFriends.value = emptyList()
+                _otherUser.value = null
+
+                _isLoading.value = false
+                _isSaving.value = false
+                _saveSuccess.value = false
+                _saveError.value = null
+                _uploadError.value = null
+                _dataLoadError.value = null
+
+                userRepository.logout()
+
+                Log.d("UserViewModel", "User logged out successfully")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error during logout", e)
+                _dataLoadError.value = e.message ?: "Ошибка при выходе"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 }

@@ -184,6 +184,12 @@ fun ProfileSetupScreen(
 
         val age = currentYear - selectedYear!!
 
+        val cleanTelegram = if (telegram.isNotBlank()) {
+            cleanTelegramUsername(telegram)
+        } else {
+            ""
+        }
+
         val userProfile = mapOf(
             "name" to name.trim(),
             "username" to username.trim(),
@@ -192,7 +198,7 @@ fun ProfileSetupScreen(
             "gender" to selectedGender!!.value,
             "birthYear" to selectedYear,
             "age" to age,
-            "telegram" to telegram.trim()
+            "telegram" to cleanTelegram
         )
 
         viewModel.saveUserProfileWithCallback(
@@ -238,7 +244,6 @@ fun ProfileSetupScreen(
                     TextButtonWithUnderline(
                         text = "Пропустить",
                         onClick = {
-                            // Пропускаем к выбору целей
                             navController.navigate("targetSelection") {
                                 popUpTo("profileSetup") { inclusive = false }
                             }
@@ -360,8 +365,8 @@ fun ProfileSetupScreen(
                         DatingTextField(
                             value = telegram,
                             onValueChange = { telegram = it },
-                            label = "Социальная сеть для общения",
-                            placeholder = "Укажи, где тебе будет удобно общаться",
+                            label = "Ник в Telegram",
+                            placeholder = "Укажи свой ник для общения с друзьями",
                             isError = telegramError,
                             errorMessage = if (telegramError) telegramErrorMessage else null,
                             keyboardOptions = KeyboardOptions(
@@ -644,11 +649,30 @@ private fun validateUniversity(university: String): Pair<Boolean, String> {
     }
 }
 
+fun cleanTelegramUsername(input: String): String {
+    return input
+        .trim()
+        .removePrefix("@")
+        .removePrefix("https://t.me/")
+        .removePrefix("http://t.me/")
+        .removePrefix("t.me/")
+        .removePrefix("telegram.me/")
+        .split("/")
+        .first()
+        .split("?")
+        .first()
+        .trim()
+}
+
 private fun validateTelegram(telegram: String): Pair<Boolean, String> {
+    if (telegram.isBlank()) return Pair(true, "")
+    val cleaned = cleanTelegramUsername(telegram)
     return when {
-        telegram.length > 50 -> Pair(false, "Слишком длинное название")
-        telegram.contains(Regex("[<>{}]")) ->
+        cleaned.length > 50 -> Pair(false, "Слишком длинное название")
+        cleaned.contains(Regex("[<>{}]")) ->
             Pair(false, "Содержит недопустимые символы")
+        cleaned.contains(Regex("[^a-zA-Zа-яА-ЯёЁ0-9_.]")) ->
+            Pair(false, "Можно использовать только буквы, цифры, _ и .")
         else -> Pair(true, "")
     }
 }

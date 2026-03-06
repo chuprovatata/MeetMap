@@ -1,6 +1,7 @@
 package com.example.datingapp.screens.friends
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -35,23 +38,18 @@ import com.example.datingapp.data.repository.MyUser
 import com.example.datingapp.viewmodels.UserViewModel
 
 @Composable
-fun Cur_Friend(navController: NavController, friendId: String,  viewModel: UserViewModel) {
+fun Cur_Friend(navController: NavController, friendId: String, viewModel: UserViewModel) {
     val otherUser by viewModel.otherUser.collectAsState()
-
-
     val mutualFriends by viewModel.mutualFriends.collectAsState()
-
+    val username = otherUser?.username ?: ""
 
     LaunchedEffect(friendId) {
         viewModel.loadMutualFriends(friendId)
-    }
-
-    LaunchedEffect(friendId) {
         viewModel.loadUserById(friendId)
     }
+
     Scaffold(
         topBar = {
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -59,56 +57,78 @@ fun Cur_Friend(navController: NavController, friendId: String,  viewModel: UserV
                     .padding(horizontal = 6.dp)
                     .padding(top = 40.dp, bottom = 20.dp)
             ) {
-                Heading_Arrow("Мои друзья", navController)
+                Heading_Arrow(
+                    heading = if (username.isNotBlank()) "@$username" else "Профиль",
+                    navController = navController
+                )
             }
         },
     ) { paddingValues ->
-
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 25.dp)
         ) {
+            if (otherUser == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 25.dp)
+                ) {
+                    otherUser?.let { user ->
+                        UserInfo(
+                            user = user,
+                            profileImageUrl = null,
+                            isUploadingImage = false,
+                            showTelegram = true
+                        )
+
+                        Spacer(modifier = Modifier.height(30.dp))
+
+                        ProgressLine(0.6f, height = 12)
+                        Spacer(modifier = Modifier.height(15.dp))
+
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "60" + "%",
+                                style = MaterialTheme.typography.displayLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text(
+                                text = "ваших мест совпадают!\nэто больше, чем в среднем",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontSize = 15.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        FavPlace(
+                            placeName = user.favoritePlace,
+                            photoUrl = user.favoritePlacePhoto
+                        )
+
+                        Spacer(modifier = Modifier.height(25.dp))
+
+                        //MutPlaces(user1.mutPlaces)
+                        Spacer(modifier = Modifier.height(25.dp))
+                        FriendsHorizontal("Общие друзья", mutualFriends, navController)
 
 
-
-            UserInfo(otherUser)
-            Spacer(modifier = Modifier.height(30.dp))
-            ProgressLine(0.6f, height = 12)
-            Spacer(modifier = Modifier.height(15.dp))
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "60" + "%",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(20.dp))
-                Text(
-                    text = "ваших мест совпадают!\nэто больше, чем в среднем",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontSize = 15.sp
-
-                )
-
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-
-            //FavPlace(user1.favPlace)
-
-            Spacer(modifier = Modifier.height(25.dp))
-
-            //MutPlaces(user1.mutPlaces)
-            Spacer(modifier = Modifier.height(25.dp))
-            FriendsHorizontal("Общие друзья",mutualFriends,navController)
-
-
-            Spacer(modifier = Modifier.height(100.dp))
-
-
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
+                }
+                }
         }
     }
 }

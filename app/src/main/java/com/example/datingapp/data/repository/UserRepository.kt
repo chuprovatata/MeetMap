@@ -63,6 +63,44 @@ class UserRepository @Inject constructor(
             file?.delete()
         }
     }
+    suspend fun uploadFavoritePlaceImage(uri: Uri, contentResolver: ContentResolver): String = withContext(Dispatchers.IO) {
+        val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
+        val userId = currentUser.uid
+
+        var file: File? = null
+
+        try {
+            file = uriToFile(uri, contentResolver)
+                ?: throw Exception("Не удалось обработать изображение")
+
+            val extension = getFileExtension(uri, contentResolver) ?: "jpg"
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "favoriteplace/$userId-$timestamp.$extension"
+
+            val imageUrl = CloudImageUtils.uploadFile(
+                file = file,
+                fileName = fileName,
+                accessKey = BuildConfig.YANDEX_ACCESS_KEY_ID,
+                secretKey = BuildConfig.YANDEX_SECRET_ACCESS_KEY
+            )
+
+            withContext(Dispatchers.Main) {
+                firestore.collection("users")
+                    .document(userId)
+                    .update("favoritePlacePhoto", imageUrl)
+                    .await()
+            }
+
+            Log.d("UserRepository", "Favorite place photo uploaded successfully: $imageUrl")
+            return@withContext imageUrl
+
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error uploading favorite place photo", e)
+            throw Exception("Ошибка загрузки фото места: ${e.message}")
+        } finally {
+            file?.delete()
+        }
+    }
 
     suspend fun getUserData(): Map<String, Any> {
         val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
@@ -310,5 +348,14 @@ class UserRepository @Inject constructor(
                 path.substringAfterLast(".", "").takeIf { it.isNotEmpty() }
             }
         }?.lowercase()
+    }
+    fun logout() {
+        try {
+            auth.signOut()
+            Log.d("UserRepository", "User signed out successfully")
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error during sign out", e)
+            throw Exception("Ошибка при выходе: ${e.message}")
+        }
     }
 }

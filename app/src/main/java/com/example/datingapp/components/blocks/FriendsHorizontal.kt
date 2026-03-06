@@ -102,9 +102,7 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
 @Composable
 fun ItemFriendsHorizontal(user: MyUser, navController: NavController) {
     Column(modifier = Modifier.clickable {
-
-        navController.navigate(Screen.CurFriend.route)
-
+        navController.navigate(Screen.CurFriend.passFriendId(user.uid))
     }, horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
             painter = painterResource(id = R.drawable.profile_male),

@@ -21,6 +21,8 @@ data class MyUser(
     val targets: List<Int> = emptyList(),
     val categories: List<Int> = emptyList(),
     val friends: Map<String, FriendInfo> = emptyMap(),
+    val favoritePlace: String = "",
+    val favoritePlacePhoto: String = "",
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp

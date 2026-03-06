@@ -1,5 +1,7 @@
 package com.example.datingapp.screens.settings
 
+import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,16 +26,51 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.datingapp.components.forms.DatingTextField
 import com.example.datingapp.components.forms.TermsSwitch
-import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.R
 import com.example.datingapp.screens.auth.openPdfFile
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.activity.compose.BackHandler // Добавить импорт
+import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
+import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.boundedFamily
+
+@Composable
+fun SettingsHeadingArrow(
+    heading: String,
+    onBackClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp)
+    ) {
+        IconButton(
+            onClick = onBackClick
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_left),
+                contentDescription = "arrow_left",
+                tint = Color.Black
+            )
+        }
+
+        Text(
+            text = heading,
+            fontSize = 35.sp,
+            fontFamily = boundedFamily,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
 
 data class FieldData(
     val value: String,
@@ -43,6 +80,7 @@ data class FieldData(
     val isEditable: Boolean = true
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -59,6 +97,7 @@ fun SettingsScreen(
     val isSaving by userViewModel.isSaving.collectAsState()
     val saveError by userViewModel.saveError.collectAsState()
     val saveSuccess by userViewModel.saveSuccess.collectAsState()
+    val favoritePlacePhotoUrl by userViewModel.favoritePlacePhotoUrl.collectAsState()
 
     var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -75,6 +114,8 @@ fun SettingsScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     var hasUnsavedChanges by remember { mutableStateOf(false) }
     var pendingNavigation by remember { mutableStateOf(false) }
+    var showDeletePhotoDialog by remember { mutableStateOf(false) }
+    var showContactDialog by remember { mutableStateOf(false) }
 
     val isDataLoaded = remember { mutableStateOf(false) }
 
@@ -83,6 +124,10 @@ fun SettingsScreen(
     val spacing = LocalDatingAppSpacing.current
     val context = LocalContext.current
 
+    var isUploadingFavoritePlace by remember { mutableStateOf(false) }
+    var showDeleteFavoritePhotoDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -90,36 +135,6 @@ fun SettingsScreen(
             userViewModel.uploadProfileImage(it, context.contentResolver)
         }
     }
-    @Composable
-    fun SettingsHeadingArrow(
-        heading: String,
-        onBackClick: () -> Unit
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp)
-        ) {
-            IconButton(
-                onClick = onBackClick
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.arrow_left),
-                    contentDescription = "arrow_left",
-                    tint = Color.Black
-                )
-            }
-
-            Text(
-                text = heading,
-                fontSize = 35.sp,
-                fontFamily = boundedFamily,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-    }
-
 
     LaunchedEffect(Unit) {
         userViewModel.loadUserData()
@@ -193,6 +208,29 @@ fun SettingsScreen(
             onComplete()
         }
     }
+    fun uploadFavoritePlacePhoto(uri: Uri) {
+        isUploadingFavoritePlace = true
+        scope.launch {
+            try {
+                userViewModel.uploadFavoritePlacePhoto(uri, context.contentResolver)
+                snackbarHostState.showSnackbar("Фото любимого места загружено")
+            } catch (e: Exception) {
+                snackbarHostState.showSnackbar("Ошибка загрузки: ${e.message}")
+            } finally {
+                isUploadingFavoritePlace = false
+            }
+        }
+    }
+    fun deleteFavoritePlacePhoto() {
+        scope.launch {
+            try {
+                userViewModel.deleteFavoritePlacePhoto()
+                snackbarHostState.showSnackbar("Фото удалено")
+            } catch (e: Exception) {
+                snackbarHostState.showSnackbar("Ошибка удаления: ${e.message}")
+            }
+        }
+    }
 
     fun saveChanges() {
         val data = mutableMapOf<String, Any?>(
@@ -209,10 +247,25 @@ fun SettingsScreen(
 
         val changedData = data.filterValues { it != null }
             .mapValues { (_, value) -> value!! }
+            .toMutableMap()
+
+        if (favoritePlace.isBlank() && favoritePlacePhotoUrl != null) {
+            deleteFavoritePlacePhoto()
+        }
 
         if (changedData.isNotEmpty()) {
             userViewModel.updateUserData(changedData)
             hasUnsavedChanges = false
+        }
+    }
+
+
+
+    val pickFavoritePlaceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            uploadFavoritePlacePhoto(it)
         }
     }
 
@@ -221,6 +274,7 @@ fun SettingsScreen(
             navController.popBackStack()
         }
     }
+
     BackHandler(enabled = true) {
         handleBackPressed()
     }
@@ -275,6 +329,180 @@ fun SettingsScreen(
         )
     }
 
+    if (showContactDialog) {
+        AlertDialog(
+            onDismissRequest = { showContactDialog = false },
+            title = {
+                Text(
+                    text = "Связаться с нами",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Есть вопросы или идеи? Пиши нам на почту:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = "meetmap.team@gmail.com",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_SENDTO,
+                                    android.net.Uri.parse("mailto:meetmap.team@gmail.com")
+                                )
+                                context.startActivity(intent)
+                            }
+                            .padding(vertical = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Подписывайся на Telegram-канал, чтобы следить за новостями и бета-тестами:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "t.me/meet_meet_map",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("https://t.me/meet_meet_map")
+                                )
+                                context.startActivity(intent)
+                            }
+                            .padding(vertical = 4.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showContactDialog = false }
+                ) {
+                    Text("Закрыть")
+                }
+            }
+        )
+    }
+
+    if (showDeletePhotoDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeletePhotoDialog = false },
+            title = { Text("Фото профиля") },
+            text = { Text("Выбери действие") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeletePhotoDialog = false
+                        pickImageLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    }
+                ) {
+                    Text("Выбрать новое")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeletePhotoDialog = false
+                        userViewModel.deleteProfilePhoto()
+                    }
+                ) {
+                    Text("Удалить фото")
+                }
+            }
+        )
+    }
+
+    if (showDeleteFavoritePhotoDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteFavoritePhotoDialog = false },
+            title = { Text("Удалить фото") },
+            text = { Text("Ты уверен, что хочешь удалить фото любимого места?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteFavoritePhotoDialog = false
+                        deleteFavoritePlacePhoto()
+                    }
+                ) {
+                    Text("Удалить")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteFavoritePhotoDialog = false }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = {
+                Text(
+                    text = "Выход из профиля",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    text = "Ты уверен, что хочешь выйти?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        userViewModel.logout()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0)
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "Выйти",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             if (hasUnsavedChanges) {
@@ -320,7 +548,7 @@ fun SettingsScreen(
                     Text(
                         text = "Загрузка данных...",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        color = Color.Gray.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -350,9 +578,11 @@ fun SettingsScreen(
                                 }
                             } else {
                                 val imageModel = remember(profileImageUrl) {
-                                    profileImageUrl?.let {
-                                        it.substringBefore("?X-Amz-")
-                                    } ?: R.drawable.picture_defaullt_profile
+                                    if (profileImageUrl.isNullOrBlank() || profileImageUrl == com.example.datingapp.utils.CloudImageUtils.NO_PICTURE_URL) {
+                                        R.drawable.picture_defaullt_profile
+                                    } else {
+                                        profileImageUrl!!.substringBefore("?X-Amz-")
+                                    }
                                 }
 
                                 AsyncImage(
@@ -378,11 +608,7 @@ fun SettingsScreen(
                                     .offset(x = (-10).dp)
                                     .clip(CircleShape)
                                     .clickable {
-                                        pickImageLauncher.launch(
-                                            PickVisualMediaRequest(
-                                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                                            )
-                                        )
+                                        showDeletePhotoDialog = true
                                     }
                                     .padding(4.dp)
                             ) {
@@ -422,10 +648,6 @@ fun SettingsScreen(
                         university = it
                         hasUnsavedChanges = true
                     }, true),
-                    FieldData(favoritePlace, "Любимое место", "Твое любимое место в городе", {
-                        favoritePlace = it
-                        hasUnsavedChanges = true
-                    }, true)
                 ).forEach { fieldData ->
                     item {
                         DatingTextField(
@@ -443,6 +665,171 @@ fun SettingsScreen(
                     item {
                         Spacer(modifier = Modifier.height(spacing.medium))
                     }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(spacing.medium))
+                }
+
+                item {
+                    DatingTextField(
+                        value = favoritePlace,
+                        onValueChange = {
+                            favoritePlace = it
+                            hasUnsavedChanges = true
+                        },
+                        label = "Любимое место",
+                        placeholder = "Твое любимое место",
+                        enabled = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                    ) {
+                        if (favoritePlacePhotoUrl != null &&
+                            favoritePlacePhotoUrl != com.example.datingapp.utils.CloudImageUtils.NO_PICTURE_URL) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(favoritePlacePhotoUrl)
+                                        .crossfade(true)
+                                        .addHeader("User-Agent", "MeetMap-Android-App/1.0")
+                                        .build(),
+                                    contentDescription = "Фото любимого места",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(220.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(16.dp)
+                                        ),
+                                    contentScale = ContentScale.Crop,
+                                    error = painterResource(id = R.drawable.picture_museum_background),
+                                    placeholder = painterResource(id = R.drawable.picture_museum_background)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 8.dp, y = (-8).dp)
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(Color.White)
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(20.dp)
+                                        )
+                                        .clickable {
+                                            showDeleteFavoritePhotoDialog = true
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (isUploadingFavoritePlace) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Удалить фото",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = Color.Black
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .clickable(enabled = favoritePlace.isNotBlank() && !isUploadingFavoritePlace) {
+                                        if (favoritePlace.isNotBlank()) {
+                                            pickFavoritePlaceLauncher.launch(
+                                                PickVisualMediaRequest(
+                                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                                )
+                                            )
+                                        }
+                                    }
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    if (isUploadingFavoritePlace) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp),
+                                            strokeWidth = 3.dp
+                                        )
+                                    } else {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.icon_plus),
+                                            contentDescription = "Добавить фото",
+                                            modifier = Modifier.size(32.dp),
+                                            tint = if (favoritePlace.isNotBlank())
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                Color.Gray.copy(alpha = 0.4f)
+                                        )
+                                        Text(
+                                            text = if (favoritePlace.isNotBlank())
+                                                "Нажми, чтобы добавить фото места"
+                                            else
+                                                "Сначала укажи название места",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = if (favoritePlace.isNotBlank())
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                Color.Gray.copy(alpha = 0.4f),
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(spacing.medium))
+                }
+
+                item {
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large),
+                        thickness = 0.5.dp,
+                        color = Color.Gray.copy(alpha = 0.3f)
+                    )
                 }
 
                 item {
@@ -509,7 +896,7 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = spacing.large)
                             .clickable {
-                                navController.navigate("main")
+                                showContactDialog = true
                             }
                             .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -523,7 +910,7 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Normal
                                 ),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.Black
                             )
                         }
 
@@ -532,7 +919,8 @@ fun SettingsScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.icon_help_circle),
                             contentDescription = "Помощь",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Black
                         )
                     }
                 }
@@ -543,7 +931,7 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = spacing.large),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        color = Color.Gray.copy(alpha = 0.3f)
                     )
                 }
 
@@ -574,7 +962,7 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Normal
                                 ),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.Black
                             )
                         }
 
@@ -583,7 +971,8 @@ fun SettingsScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.icon_shield),
                             contentDescription = "Политика конфиденциальности",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Black
                         )
                     }
                 }
@@ -594,7 +983,55 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = spacing.large),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        color = Color.Gray.copy(alpha = 0.3f)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(spacing.medium))
+                }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                            .clickable {
+                                showLogoutDialog = true
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Выйти из профиля",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Normal
+                                ),
+                                color = Color.Black
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.icon_logout),
+                            contentDescription = "Выйти",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Black
+                        )
+                    }
+                }
+
+                item {
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large),
+                        thickness = 0.5.dp,
+                        color = Color.Gray.copy(alpha = 0.3f)
                     )
                 }
 

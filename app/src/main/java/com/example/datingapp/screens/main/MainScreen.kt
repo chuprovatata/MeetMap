@@ -8,6 +8,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +28,8 @@ import com.example.datingapp.components.notifications.NotificationBanner
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.GrayLight
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +58,17 @@ fun MainScreen(
 
     val notificationTopPadding = if (isLandscape) 20.dp else screenHeight * 0.2f
     val notificationOffset = if (isLandscape) 0.dp else screenWidth * 0.08f
+    val ADMIN_EMAILS = listOf(
+        "meetmap.team@gmail.com",
+        "chuprova_tata@mail.ru",
+        "vmbaizdrenko@gmail.com",
+        "liliadyrnina7464@gmail.com"
+    )
+    var currentUserEmail by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        currentUserEmail = Firebase.auth.currentUser?.email
+    }
 
     Scaffold(
         topBar = {
@@ -112,11 +130,13 @@ fun MainScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.PlacesAdmin.route) },
-                modifier = Modifier.padding(bottom = if (isLandscape) 16.dp else screenHeight * 0.08f)
-            ) {
-                Icon(Icons.Default.AdminPanelSettings, contentDescription = "Админка")
+            if (currentUserEmail in ADMIN_EMAILS) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Screen.PlacesAdmin.route) },
+                    modifier = Modifier.padding(bottom = if (isLandscape) 16.dp else screenHeight * 0.08f)
+                ) {
+                    Icon(Icons.Default.AdminPanelSettings, contentDescription = "Админка")
+                }
             }
         }
     ) { paddingValues ->

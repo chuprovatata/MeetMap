@@ -42,6 +42,7 @@ object CloudImageUtils {
     // Публичный URL для NO Picture
     val NO_PICTURE_URL = "https://$ENDPOINT/$BUCKET_NAME/NO%20Picture.png"
 
+
     /**
      * Проверить и исправить URL изображения
      */
