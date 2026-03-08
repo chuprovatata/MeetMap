@@ -115,20 +115,19 @@ fun Cur_Friend(navController: NavController, friendId: String, viewModel: UserVi
 
                         FavPlace(
                             placeName = user.favoritePlace,
-                            photoUrl = user.favoritePlacePhoto
+                            photoUrl = user.favoritePlacePhoto,
+                            isEditable = false
                         )
 
                         Spacer(modifier = Modifier.height(25.dp))
 
-                        //MutPlaces(user1.mutPlaces)
                         Spacer(modifier = Modifier.height(25.dp))
                         FriendsHorizontal("Общие друзья", mutualFriends, navController)
-
 
                         Spacer(modifier = Modifier.height(100.dp))
                     }
                 }
-                }
+            }
         }
     }
 }

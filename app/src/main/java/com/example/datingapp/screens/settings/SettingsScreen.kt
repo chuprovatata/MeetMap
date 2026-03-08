@@ -1,9 +1,10 @@
 package com.example.datingapp.screens.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.boundedFamily
 
@@ -128,11 +130,76 @@ fun SettingsScreen(
     var showDeleteFavoritePhotoDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
+    var isForProfilePhoto by remember { mutableStateOf(true) }
+    var showPermissionRationale by remember { mutableStateOf(false) }
+
     val pickImageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
+        contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
             userViewModel.uploadProfileImage(it, context.contentResolver)
+            userViewModel.loadUserData()
+        }
+    }
+
+    val pickFavoritePlaceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            isUploadingFavoritePlace = true
+            scope.launch {
+                try {
+                    userViewModel.uploadFavoritePlacePhoto(it, context.contentResolver)
+                    snackbarHostState.showSnackbar("Фото любимого места загружено")
+                    userViewModel.loadUserData()
+                } catch (e: Exception) {
+                    snackbarHostState.showSnackbar("Ошибка загрузки: ${e.message}")
+                } finally {
+                    isUploadingFavoritePlace = false
+                }
+            }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            if (isForProfilePhoto) {
+                pickImageLauncher.launch("image/*")
+            } else {
+                pickFavoritePlaceLauncher.launch("image/*")
+            }
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar("Нет разрешения на чтение файлов")
+            }
+        }
+    }
+
+    fun openGallery(isProfile: Boolean) {
+        isForProfilePhoto = isProfile
+
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        val permissionCheck = ContextCompat.checkSelfPermission(
+            context,
+            permission
+        )
+
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            if (isProfile) {
+                pickImageLauncher.launch("image/*")
+            } else {
+                pickFavoritePlaceLauncher.launch("image/*")
+            }
+        } else {
+            // Всегда запрашиваем разрешение заново при нажатии
+            permissionLauncher.launch(permission)
         }
     }
 
@@ -208,19 +275,7 @@ fun SettingsScreen(
             onComplete()
         }
     }
-    fun uploadFavoritePlacePhoto(uri: Uri) {
-        isUploadingFavoritePlace = true
-        scope.launch {
-            try {
-                userViewModel.uploadFavoritePlacePhoto(uri, context.contentResolver)
-                snackbarHostState.showSnackbar("Фото любимого места загружено")
-            } catch (e: Exception) {
-                snackbarHostState.showSnackbar("Ошибка загрузки: ${e.message}")
-            } finally {
-                isUploadingFavoritePlace = false
-            }
-        }
-    }
+
     fun deleteFavoritePlacePhoto() {
         scope.launch {
             try {
@@ -256,16 +311,6 @@ fun SettingsScreen(
         if (changedData.isNotEmpty()) {
             userViewModel.updateUserData(changedData)
             hasUnsavedChanges = false
-        }
-    }
-
-
-
-    val pickFavoritePlaceLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let {
-            uploadFavoritePlacePhoto(it)
         }
     }
 
@@ -412,11 +457,7 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         showDeletePhotoDialog = false
-                        pickImageLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
+                        openGallery(true)
                     }
                 ) {
                     Text("Выбрать новое")
@@ -770,11 +811,7 @@ fun SettingsScreen(
                                     )
                                     .clickable(enabled = favoritePlace.isNotBlank() && !isUploadingFavoritePlace) {
                                         if (favoritePlace.isNotBlank()) {
-                                            pickFavoritePlaceLauncher.launch(
-                                                PickVisualMediaRequest(
-                                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                                )
-                                            )
+                                            openGallery(false)
                                         }
                                     }
                                     .padding(16.dp),

@@ -43,7 +43,6 @@ fun ReqMeet(navController: NavController) {
 
     Scaffold(
         topBar = {
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,21 +53,16 @@ fun ReqMeet(navController: NavController) {
                 Heading_Arrow("Рекомендации", navController)
             }
         },
-
-
-
-
-        ) { paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()) {
-
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(paddingValues)
                     .background(Color.White)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 25.dp).padding(bottom=150.dp)
+                    .padding(horizontal = 25.dp)
+                    .padding(bottom = 150.dp)
             ) {
                 val user1 = User(
                     name = "Кирилл",
@@ -88,8 +82,6 @@ fun ReqMeet(navController: NavController) {
                     )
                 )
 
-
-                //UserInfo(user1)
                 Spacer(modifier = Modifier.height(30.dp))
                 ProgressLine(0.6f, height = 12)
                 Spacer(modifier = Modifier.height(15.dp))
@@ -105,16 +97,16 @@ fun ReqMeet(navController: NavController) {
                         text = "ваших мест совпадают!\nэто больше, чем в среднем",
                         style = MaterialTheme.typography.bodyLarge,
                         fontSize = 15.sp
-
                     )
-
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
                 if (user1.favPlace != null) {
                     FavPlace(
                         placeName = user1.favPlace.placeName,
-                        photoUrl = null
+                        photoUrl = null,
+                        isUploading = false,
+                        isEditable = false,
                     )
                 }
 
@@ -123,15 +115,11 @@ fun ReqMeet(navController: NavController) {
                 MutPlaces(user1.mutPlaces)
                 Spacer(modifier = Modifier.height(25.dp))
                 //FriendsHorizontal("Общие друзья", user1.mutFriends, navController)
-
-
-
-
-
             }
 
             Box(
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = spacing.large)
@@ -162,7 +150,6 @@ fun ReqMeet(navController: NavController) {
                     }
                 }
             }
-
         }
     }
 }
