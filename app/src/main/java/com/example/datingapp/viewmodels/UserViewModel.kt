@@ -6,8 +6,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.datingapp.R
+import com.example.datingapp.data.models.PlaceInfo
+import com.example.datingapp.data.models.UserPlace
 import com.example.datingapp.data.repository.FriendStatus
 import com.example.datingapp.data.repository.MyUser
+import com.example.datingapp.data.repository.UserPlacesRepository
 import com.example.datingapp.data.repository.UserRepository
 import com.example.datingapp.utils.CloudImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +22,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val userPlacesRepository: UserPlacesRepository
 ) : ViewModel() {
 
     private val _isUploadingImage = MutableStateFlow(false)
@@ -69,6 +73,8 @@ class UserViewModel @Inject constructor(
 
     private val _mutualFriends = MutableStateFlow<List<MyUser>>(emptyList())
     val mutualFriends: StateFlow<List<MyUser>> = _mutualFriends.asStateFlow()
+    private val _mutualPlaces = MutableStateFlow<List<PlaceInfo>>(emptyList())
+    val mutualPlaces: StateFlow<List<PlaceInfo>> = _mutualPlaces.asStateFlow()
     val PROFILE_PLACEHOLDER = R.drawable.picture_defaullt_profile
 
     init {
@@ -80,6 +86,25 @@ class UserViewModel @Inject constructor(
 
     private val _favoritePlacePhotoUrl = MutableStateFlow<String?>(null)
     val favoritePlacePhotoUrl: StateFlow<String?> = _favoritePlacePhotoUrl.asStateFlow()
+    private val _compatibilityPercent = MutableStateFlow(0)
+    val compatibilityPercent: StateFlow<Int> = _compatibilityPercent.asStateFlow()
+
+    fun loadCompatibility(otherUserId: String) {
+        viewModelScope.launch {
+            try {
+                val myPlaces = userPlacesRepository.getUserLikedPlaces().getOrNull() ?: emptyList()
+                val otherPlaces = userPlacesRepository.getUserLikedPlaces(otherUserId).getOrNull() ?: emptyList()
+
+                val percent = calculateCompatibilityPercentage(myPlaces, otherPlaces)
+                _compatibilityPercent.value = percent
+
+                Log.d("COMPATIBILITY", "Compatibility with $otherUserId: $percent%")
+            } catch (e: Exception) {
+                Log.e("COMPATIBILITY", "Error calculating compatibility", e)
+                _compatibilityPercent.value = 0
+            }
+        }
+    }
 
     fun uploadFavoritePlacePhoto(uri: Uri, contentResolver: ContentResolver) {
         _isUploadingFavoritePlace.value = true
@@ -110,13 +135,10 @@ class UserViewModel @Inject constructor(
             _uploadError.value = null
 
             try {
-                // Удаляем поле из Firebase
                 userRepository.updateUserData(mapOf("favoritePlacePhoto" to com.google.firebase.firestore.FieldValue.delete()))
 
-                // Обновляем локальные данные
                 _favoritePlacePhotoUrl.value = null
 
-                // Обновляем _userData
                 val currentData = _userData.value?.toMutableMap() ?: mutableMapOf()
                 currentData.remove("favoritePlacePhoto")
                 _userData.value = currentData
@@ -511,6 +533,33 @@ class UserViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+    fun loadMutualPlaces(otherUserId: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("UserViewModel", "Loading mutual places for user: $otherUserId")
+                val places = userPlacesRepository.getMutualPlaces(otherUserId)
+                _mutualPlaces.value = places
+                Log.d("UserViewModel", "Found ${places.size} mutual places")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading mutual places", e)
+                _mutualPlaces.value = emptyList()
+            }
+        }
+    }
+    fun calculateCompatibilityPercentage(
+        myPlaces: List<UserPlace>,
+        otherUserPlaces: List<UserPlace>
+    ): Int {
+        if (myPlaces.isEmpty() || otherUserPlaces.isEmpty()) return 0
+
+        val myPlaceIds = myPlaces.map { it.placeId }.toSet()
+        val otherPlaceIds = otherUserPlaces.map { it.placeId }.toSet()
+
+        val mutualCount = myPlaceIds.intersect(otherPlaceIds).size
+        val totalUniquePlaces = (myPlaceIds + otherPlaceIds).size
+
+        return (mutualCount * 100 / totalUniquePlaces).coerceIn(0, 100)
     }
 
     fun clearMutualFriends() {

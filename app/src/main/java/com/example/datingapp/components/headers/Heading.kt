@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -56,13 +55,7 @@ fun Heading_Arrow(heading: String, navController: NavController) {
             text = heading,
             fontSize = 35.sp,
             fontFamily = boundedFamily,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-
+            fontWeight = FontWeight.Normal
         )
 
 
@@ -83,6 +76,7 @@ fun Heading(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // ИСПРАВЛЕНИЕ: убираем пустой Box, просто показываем кнопку только когда нужно
         if (showBackButton) {
             IconButton(
                 onClick = {
@@ -100,7 +94,8 @@ fun Heading(
                 )
             }
         } else {
-            Box(modifier = Modifier.size(48.dp))
+            // Вместо Box с фиксированным размером, просто ничего не ставим
+            // Пространство слева будет равно 0.dp
         }
 
         Text(

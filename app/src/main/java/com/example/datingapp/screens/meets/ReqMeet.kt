@@ -34,6 +34,7 @@ import com.example.datingapp.components.blocks.Place
 import com.example.datingapp.components.blocks.UserInfo
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.progress.ProgressLine
+import com.example.datingapp.data.models.PlaceInfo  // Добавьте этот импорт
 import com.example.datingapp.screens.friends.User
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 
@@ -112,7 +113,36 @@ fun ReqMeet(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(25.dp))
 
-                MutPlaces(user1.mutPlaces)
+                // Исправлено: MutPlaces теперь ожидает List<PlaceInfo>
+                // Создаем тестовые PlaceInfo из существующих Place
+                val testPlaces = user1.mutPlaces.map { place ->
+                    PlaceInfo(
+                        id = place.placeName.hashCode().toString(),
+                        name = place.placeName,
+                        photoUrl = "",
+                        categories = listOf("Место"),
+                        address = "",
+                        latitude = 0.0,
+                        longitude = 0.0,
+                        metroStation = "",
+                        metroLine = "",
+                        distanceToMetro = 0.0,
+                        likesCount = 0,
+                        hasFireIcon = false,
+                        place_ofday = false,
+                        uniqueId = "",
+                        description = "",
+                        rarity = "common"
+                    )
+                }
+
+                MutPlaces(
+                    places = testPlaces,
+                    onPlaceClick = { placeInfo ->
+                        // Переход на детальную страницу места
+                        navController.navigate("myPlaceDetail/${placeInfo.id}")
+                    }
+                )
                 Spacer(modifier = Modifier.height(25.dp))
                 //FriendsHorizontal("Общие друзья", user1.mutFriends, navController)
             }

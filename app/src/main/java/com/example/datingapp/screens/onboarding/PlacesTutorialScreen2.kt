@@ -166,7 +166,12 @@ fun PlacesTutorialScreen2(
                 ) {
                     WhiteButton(
                         text = "Да",
-                        onClick = onReadyClick,
+                        onClick = {
+                            // Передаем параметр fromOnboarding=true при навигации к местам дня
+                            navController?.navigate("places_of_day?fromOnboarding=true") {
+                                popUpTo(Screen.PlacesTutorial2.route) { inclusive = true }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(57.dp)

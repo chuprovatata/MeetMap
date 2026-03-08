@@ -1,6 +1,7 @@
 package com.example.datingapp.data.repository
 
 import com.example.datingapp.data.models.UserPlace
+import com.example.datingapp.data.models.PlaceInfo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
@@ -138,6 +139,96 @@ class UserPlacesRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("GET_PLACES", "Error in getUserLikedPlaces", e)
             Result.failure(e)
+        }
+    }
+    /**
+     * Получить лайкнутые места другого пользователя по его ID
+     */
+    suspend fun getUserLikedPlaces(userId: String): Result<List<UserPlace>> {
+        return try {
+            Log.d("GET_PLACES", "getUserLikedPlaces - userId: $userId")
+
+            val snapshot = collection
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("status", "liked")
+                .orderBy("addedTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            Log.d("GET_PLACES", "Query result size: ${snapshot.size()}")
+
+            val places = snapshot.documents.mapNotNull { doc ->
+                try {
+                    val place = doc.toObject<UserPlace>()
+                    Log.d("GET_PLACES", "Found place: ${place?.placeId}")
+                    place
+                } catch (e: Exception) {
+                    Log.e("GET_PLACES", "Error converting document", e)
+                    null
+                }
+            }
+
+            Log.d("GET_PLACES", "Successfully loaded ${places.size} places for user $userId")
+            Result.success(places)
+        } catch (e: Exception) {
+            Log.e("GET_PLACES", "Error in getUserLikedPlaces for user $userId", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Получить общие места с другим пользователем
+     */
+    suspend fun getMutualPlaces(otherUserId: String): List<PlaceInfo> {
+        val currentUser = auth.currentUser ?: return emptyList()
+        val currentUserId = currentUser.uid
+
+        return try {
+            val currentUserPlaces = collection
+                .whereEqualTo("userId", currentUserId)
+                .whereEqualTo("status", "liked")
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(UserPlace::class.java) }
+
+            val otherUserPlaces = collection
+                .whereEqualTo("userId", otherUserId)
+                .whereEqualTo("status", "liked")
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(UserPlace::class.java) }
+
+            Log.d("UserPlacesRepo", "Current user places: ${currentUserPlaces.size}, Other user places: ${otherUserPlaces.size}")
+
+            val currentUserPlaceIds = currentUserPlaces.map { it.placeId }.toSet()
+            val otherUserPlaceIds = otherUserPlaces.map { it.placeId }.toSet()
+            val mutualPlaceIds = otherUserPlaceIds.intersect(currentUserPlaceIds)
+
+            if (mutualPlaceIds.isEmpty()) {
+                return emptyList()
+            }
+
+            val placesCollection = firestore.collection("places_info")
+            val mutualPlacesInfo = mutableListOf<PlaceInfo>()
+
+            for (placeId in mutualPlaceIds) {
+                val placeDoc = placesCollection.document(placeId).get().await()
+                if (placeDoc.exists()) {
+                    val placeInfo = placeDoc.toObject(PlaceInfo::class.java)?.copy(id = placeDoc.id)
+                    if (placeInfo != null) {
+                        mutualPlacesInfo.add(placeInfo)
+                    }
+                }
+            }
+
+            Log.d("UserPlacesRepo", "Found ${mutualPlacesInfo.size} mutual places")
+            mutualPlacesInfo
+
+        } catch (e: Exception) {
+            Log.e("UserPlacesRepo", "Error getting mutual places", e)
+            emptyList()
         }
     }
 

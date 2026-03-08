@@ -1,13 +1,14 @@
 package com.example.datingapp.button_navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.datingapp.navigation.GlobalNavController
 import com.example.datingapp.viewmodels.UserViewModel
-
 
 @Composable
 fun MainBottomMenuScreen(
@@ -17,10 +18,9 @@ fun MainBottomMenuScreen(
     val userViewModel: UserViewModel = hiltViewModel()
 
     LaunchedEffect(startTab) {
-
         if (navBottomController.currentBackStackEntry?.destination?.route != startTab) {
             navBottomController.navigate(startTab) {
-                popUpTo(0)  // Очищаем стек
+                popUpTo(0)
             }
         }
     }
@@ -29,7 +29,12 @@ fun MainBottomMenuScreen(
         bottomBar = {
             ButtonNavigation(navController = navBottomController)
         }
-    ) {
-        NavGraph(navHostController = navBottomController, userViewModel)
+    ) { paddingValues ->
+        // Передаем оба контроллера в NavGraph
+        NavGraph(
+            localNavController = navBottomController,
+            globalNavController = GlobalNavController.navController, // Добавляем глобальный контроллер
+            viewModel = userViewModel
+        )
     }
 }

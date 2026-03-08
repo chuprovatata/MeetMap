@@ -17,19 +17,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.datingapp.R
-
+import com.example.datingapp.navigation.Screen  // Убедитесь, что это правильный импорт!
+import android.util.Log
 @Composable
 fun NotificationBanner(
     navController: NavController,
     count: Int = 3,
     modifier: Modifier = Modifier
 ) {
+    // Добавим логирование
+    println("🔔 NotificationBanner получил navController: $navController")
+    println("🔔 Маршрут для навигации: ${Screen.Notification.route}")
+
     Box(
         modifier = modifier
             .width(168.dp)
             .height(80.dp)
             .clickable {
-                navController.navigate("notification")
+                println("🔔 NotificationBanner нажат! Используем navController: $navController")
+                println("🔔 Пытаемся перейти по маршруту: ${Screen.Notification.route}")
+                try {
+                    navController.navigate(Screen.Notification.route)
+                    println("🔔 Навигация выполнена успешно")
+                } catch (e: Exception) {
+                    println("🔔 ОШИБКА навигации: ${e.message}")
+                    e.printStackTrace()
+                }
             }
     ) {
         Image(

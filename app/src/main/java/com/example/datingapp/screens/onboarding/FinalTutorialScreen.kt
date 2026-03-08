@@ -138,7 +138,9 @@ fun FinalTutorialScreen(
                     PrimaryButton(
                         text = "Завершить обучение",
                         onClick = {
-                            navController?.navigate(Screen.PlacesOfDay.route) {
+                            // Здесь должна быть навигация на главный экран, а не на места дня
+                            navController?.navigate(Screen.Main.route) {
+                                popUpTo(0) { inclusive = true }
                             }
                         },
                         modifier = Modifier
