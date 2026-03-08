@@ -90,7 +90,7 @@ fun AppNavigation() {
 
                 when (authState) {
                     AuthState.Authenticated -> {
-                        navController.navigate(Screen.Main.route) {
+                        navController.navigate(Screen.PlacesTutorial.route) {
                             popUpTo(Screen.Greeting.route) { inclusive = true }
                         }
                     }
@@ -216,10 +216,20 @@ fun AppNavigation() {
             )
         }
 
-        composable(Screen.PlacesOfDay.route) {
+        composable(
+            route = "places_of_day?fromOnboarding={fromOnboarding}",
+            arguments = listOf(
+                navArgument("fromOnboarding") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val fromOnboarding = backStackEntry.arguments?.getBoolean("fromOnboarding") ?: false
+
             PlacesOfDayScreen(
                 navController = navController,
-                isFirstEntry = isFirstLaunch
+                fromOnboarding = fromOnboarding  // Передаем параметр в экран
             )
         }
 
@@ -268,7 +278,7 @@ fun AppNavigation() {
         }
 
         composable(Screen.Main.route) {
-            MainScreen(navController = navController)
+            MainBottomMenuScreen(startTab = "main")
         }
 
         composable(Screen.FeedbackAfterPlacesOfDay.route) {
@@ -289,13 +299,12 @@ fun AppNavigation() {
             val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
             MyPlaceDetailScreen(
                 placeId = placeId,
-                navController = navController,
-                onBackClick = { navController.popBackStack() }
+                navController = navController
             )
         }
 
         composable(Screen.MyPlaces.route) {
-            MyPlacesScreen(navController = navController)
+            MainBottomMenuScreen(startTab = "screen_2")  // "screen_2" - это маршрут для Моих мест
         }
 
         composable(Screen.PeopleOfDay.route) {
@@ -322,11 +331,6 @@ fun AppNavigation() {
                 friendId = friendId,
                 pageTitle = pageTitle
             )
-        }
-
-        // Common screens
-        composable(Screen.Notification.route) {
-            NotificationScreen(navController = navController)
         }
 
         composable(Screen.Settings.route) {
@@ -375,7 +379,11 @@ fun AppNavigation() {
             TestCloudScreen(navController = navController)
         }
         composable(Screen.Main.route) {
-            MainScreen(navController = navController)
+            MainBottomMenuScreen(startTab = "main")
+        }
+
+        composable(Screen.Notification.route) {
+            NotificationScreen(navController = navController)
         }
     }
 }

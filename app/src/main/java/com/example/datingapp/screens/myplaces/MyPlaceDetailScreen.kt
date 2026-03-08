@@ -41,8 +41,7 @@ import java.text.DecimalFormat
 fun MyPlaceDetailScreen(
     placeId: String,
     navController: NavController,
-    viewModel: MyPlaceDetailViewModel = hiltViewModel(),
-    onBackClick: () -> Unit
+    viewModel: MyPlaceDetailViewModel = hiltViewModel()
 ) {
     val placeInfo by viewModel.placeInfo.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -85,7 +84,13 @@ fun MyPlaceDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        navController.navigate(Screen.MyPlaces.route) {
+                            popUpTo(0) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад"
@@ -129,7 +134,13 @@ fun MyPlaceDetailScreen(
                         style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = onBackClick) {
+                    Button(onClick = {
+                        navController.navigate(Screen.MyPlaces.route) {
+                            popUpTo(0) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                    ) {
                         Text("Вернуться к списку")
                     }
                 }

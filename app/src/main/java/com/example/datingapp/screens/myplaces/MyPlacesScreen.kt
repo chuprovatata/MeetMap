@@ -42,7 +42,8 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyPlacesScreen(
-    navController: NavController,
+    navController: NavController,  // Глобальный контроллер
+    localNavController: NavController, // Локальный контроллер (для совместимости)
     modifier: Modifier = Modifier,
     viewModel: MyPlacesViewModel = hiltViewModel()
 ) {
@@ -99,14 +100,16 @@ fun MyPlacesScreen(
                     ) {
                         Heading(
                             heading = "Мои места",
-                            showBackButton = true,
+                            showBackButton = false,
                             showSettings = true,
                             showProfile = true,
-                            onBackClick = {GlobalNavController.navController?.navigate(Screen.Main.route) {
-                                popUpTo(0)
+                            onBackClick = {
+                                // Используем глобальный контроллер для возврата на главную
+                                navController.navigate(Screen.Main.route) {
+                                    popUpTo(0)
                                 }
                             },
-                            navController = navController
+                            navController = navController // Передаем глобальный контроллер
                         )
                     }
                 }
@@ -227,7 +230,8 @@ fun MyPlacesScreen(
                                 MyPlaceGridItem(
                                     placeInfo = placeInfo,
                                     onClick = {
-                                        navController.navigate("my_place_detail/${placeInfo.id}")
+                                        // ИСПРАВЛЕНО: используем правильный маршрут и глобальный контроллер
+                                        navController.navigate("myPlaceDetail/${placeInfo.id}")
                                     }
                                 )
                             }
@@ -238,6 +242,7 @@ fun MyPlacesScreen(
         }
     }
 }
+
 
 @Composable
 fun MyPlaceGridItem(

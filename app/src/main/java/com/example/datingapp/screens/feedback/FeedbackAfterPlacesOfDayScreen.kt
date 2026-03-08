@@ -26,6 +26,7 @@ fun FeedbackAfterPlacesOfDayScreen(
     onContinue: () -> Unit = { navController.popBackStack() }
 ) {
     var rating by remember { mutableStateOf(0) }
+    val spacing = LocalDatingAppSpacing.current
 
     val options = listOf(
         "Кафе и ресторанов",
@@ -36,7 +37,10 @@ fun FeedbackAfterPlacesOfDayScreen(
 
     var selectedOptionIndex by remember { mutableStateOf(-1) }
 
-    val spacing = LocalDatingAppSpacing.current
+    // Определяем, откуда пришли, по previousBackStackEntry
+    val cameFromOnboarding = remember {
+        navController.previousBackStackEntry?.destination?.route?.startsWith("places_of_day?fromOnboarding=true") == true
+    }
 
     Column(
         modifier = Modifier
@@ -173,10 +177,18 @@ fun FeedbackAfterPlacesOfDayScreen(
         }
 
         PrimaryButton(
-            text = "на главную",
+            text = if (cameFromOnboarding) "далее" else "на главную",
             onClick = {
-                navController.navigate(Screen.Main.route) {
-                    popUpTo(0) { inclusive = true }
+                if (cameFromOnboarding) {
+                    // Если пришли из обучения - идем на финальный туториал
+                    navController.navigate(Screen.FinalTutorial.route) {
+                        popUpTo(Screen.FeedbackAfterPlacesOfDay.route) { inclusive = true }
+                    }
+                } else {
+                    // Если пришли с главной - возвращаемся на главную
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             },
             modifier = Modifier

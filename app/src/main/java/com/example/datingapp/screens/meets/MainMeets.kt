@@ -106,7 +106,7 @@ fun MainMeets(navController: NavController, viewModel: UserViewModel) {
                 ) {
                     Heading(
                         heading = "Знакомства",
-                        showBackButton = true,
+                        showBackButton = false,
                         showSettings = false,
                         showProfile = true,
                         onBackClick = {

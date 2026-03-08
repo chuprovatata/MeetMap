@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/datingapp/screens/places/PlacesOfDayScreen.kt
 package com.example.datingapp.screens.places
 
 import android.util.Log
@@ -54,7 +55,7 @@ import java.text.DecimalFormat
 @Composable
 fun PlacesOfDayScreen(
     navController: NavController,
-    isFirstEntry: Boolean = false,
+    fromOnboarding: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -62,23 +63,26 @@ fun PlacesOfDayScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Получаем ViewModel через Hilt
     val userPlacesViewModel: UserPlacesViewModel = hiltViewModel()
 
+    // Состояния из ViewModel
     val isLiking by userPlacesViewModel.isLiking.collectAsState()
     val likeResult by userPlacesViewModel.likeResult.collectAsState()
     val errorMessage by userPlacesViewModel.errorMessage.collectAsState()
     val likedPlaces by userPlacesViewModel.likedPlaces.collectAsState()
 
+    // Состояние для мест дня
     var placesOfDay by remember { mutableStateOf<List<PlaceInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessageLoad by remember { mutableStateOf<String?>(null) }
 
-    val hasShownFeedback = remember { mutableStateOf(false) }
-
+    // Множество ID мест, которые уже лайкнул пользователь
     val likedPlaceIds = remember(likedPlaces) {
         likedPlaces.map { it.placeId }.toSet()
     }
 
+    // Загружаем места дня из Firestore
     LaunchedEffect(Unit) {
         loadPlacesOfDay(db) { loadedPlaces, error ->
             placesOfDay = loadedPlaces
@@ -88,6 +92,7 @@ fun PlacesOfDayScreen(
         }
     }
 
+    // Следим за результатом лайка/анлайка
     LaunchedEffect(likeResult) {
         likeResult?.onSuccess { userPlace ->
             scope.launch {
@@ -107,6 +112,7 @@ fun PlacesOfDayScreen(
         }
     }
 
+    // Следим за ошибками
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             scope.launch {
@@ -116,6 +122,7 @@ fun PlacesOfDayScreen(
         }
     }
 
+    // Состояние пейджера
     val pagerState = rememberPagerState(
         initialPage = 0,
         initialPageOffsetFraction = 0f
@@ -123,22 +130,27 @@ fun PlacesOfDayScreen(
         placesOfDay.size
     }
 
+    // Состояние для отслеживания направления свайпа и предотвращения множественных срабатываний
     var lastDragDirection by remember { mutableStateOf(0f) }
     var lastDragTime by remember { mutableStateOf(0L) }
 
+    // Состояние для высоты фото
     var photoHeight by remember { mutableStateOf(380.dp) }
     val minPhotoHeight = 200.dp
     val maxPhotoHeight = 380.dp
 
+    // NestedScrollConnection для плавного скролла (меняет высоту фото)
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
 
+                // Плавное изменение высоты с коэффициентом 0.3
                 val newHeight = (photoHeight + delta.dp * 0.3f).coerceIn(minPhotoHeight, maxPhotoHeight)
 
                 return if (newHeight != photoHeight) {
                     photoHeight = newHeight
+                    // Возвращаем весь consumed offset для плавности
                     Offset(0f, delta)
                 } else {
                     Offset.Zero
@@ -147,35 +159,29 @@ fun PlacesOfDayScreen(
         }
     }
 
+    // Функции для навигации с правильным зацикливанием
     fun navigateToNextPage() {
         scope.launch {
-            if (pagerState.currentPage == placesOfDay.size - 1) {
-                if (!hasShownFeedback.value) {
-                    hasShownFeedback.value = true
-                    navController.navigate("feedback_after_places_of_day/${isFirstEntry}")
-                }
-            } else {
-                val nextPage = pagerState.currentPage + 1
-                pagerState.animateScrollToPage(nextPage)
-            }
+            val nextPage = (pagerState.currentPage + 1) % placesOfDay.size
+            pagerState.animateScrollToPage(nextPage)
         }
     }
 
     fun navigateToPreviousPage() {
         scope.launch {
-            if (pagerState.currentPage > 0) {
-                val prevPage = pagerState.currentPage - 1
-                pagerState.animateScrollToPage(prevPage)
-            }
+            val prevPage = (pagerState.currentPage - 1 + placesOfDay.size) % placesOfDay.size
+            pagerState.animateScrollToPage(prevPage)
         }
     }
 
+    // Глобальный обработчик горизонтальных свайпов для всего экрана
     val globalHorizontalDragModifier = Modifier.pointerInput(Unit) {
         detectHorizontalDragGestures(
             onDragStart = {
                 lastDragDirection = 0f
             },
             onDragEnd = {
+                // При завершении свайпа проверяем накопленное направление
                 if (abs(lastDragDirection) > 30f) {
                     if (lastDragDirection > 0) {
                         navigateToPreviousPage()
@@ -190,6 +196,7 @@ fun PlacesOfDayScreen(
             },
             onHorizontalDrag = { change, dragAmount ->
                 change.consume()
+                // Накопление направления свайпа
                 lastDragDirection += dragAmount
             }
         )
@@ -207,6 +214,7 @@ fun PlacesOfDayScreen(
                 Log.d("PLACES_DAY", "Decremented likesCount for place $placeId")
             }
 
+            // Обновляем локальное состояние места
             placesOfDay = placesOfDay.map { place ->
                 if (place.id == placeId) {
                     place.copy(likesCount = place.likesCount + (if (increment) 1 else -1))
@@ -243,7 +251,17 @@ fun PlacesOfDayScreen(
     }
 
     fun onBackClick() {
-        navController.popBackStack()
+        if (fromOnboarding) {
+            // Если пришли из обучения - идем на финальный туториал
+            navController.navigate(Screen.FinalTutorial.route) {
+                popUpTo(Screen.PlacesOfDay.route) { inclusive = true }
+            }
+        } else {
+            // Если пришли с главной - идем на фидбек
+            navController.navigate(Screen.FeedbackAfterPlacesOfDay.route) {
+                popUpTo(Screen.PlacesOfDay.route) { inclusive = true }
+            }
+        }
     }
 
     fun getRarityInfo(rarity: String): Pair<Color, String> {
@@ -255,6 +273,7 @@ fun PlacesOfDayScreen(
         }
     }
 
+    // Функция форматирования расстояния
     fun formatDistance(distanceInKm: Double): String {
         return if (distanceInKm >= 1.0) {
             val formatter = DecimalFormat("#.#")
@@ -391,17 +410,13 @@ fun PlacesOfDayScreen(
                     ) {
                         IconButton(
                             onClick = { navigateToPreviousPage() },
-                            modifier = Modifier.size(48.dp),
-                            enabled = pagerState.currentPage > 0
+                            modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.icon_chevron_left),
                                 contentDescription = "Предыдущее место",
                                 modifier = Modifier.size(24.dp),
-                                tint = if (pagerState.currentPage > 0)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    Color.Gray
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
 
@@ -423,8 +438,7 @@ fun PlacesOfDayScreen(
 
                         IconButton(
                             onClick = { navigateToNextPage() },
-                            modifier = Modifier.size(48.dp),
-                            enabled = true
+                            modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.icon_chevron_right),

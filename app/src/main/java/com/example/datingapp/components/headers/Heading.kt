@@ -76,6 +76,7 @@ fun Heading(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // ИСПРАВЛЕНИЕ: убираем пустой Box, просто показываем кнопку только когда нужно
         if (showBackButton) {
             IconButton(
                 onClick = {
@@ -93,7 +94,8 @@ fun Heading(
                 )
             }
         } else {
-            Box(modifier = Modifier.size(48.dp))
+            // Вместо Box с фиксированным размером, просто ничего не ставим
+            // Пространство слева будет равно 0.dp
         }
 
         Text(
