@@ -229,7 +229,7 @@ fun AppNavigation() {
 
             PlacesOfDayScreen(
                 navController = navController,
-                fromOnboarding = fromOnboarding  // Передаем параметр в экран
+                fromOnboarding = fromOnboarding
             )
         }
 
@@ -240,20 +240,7 @@ fun AppNavigation() {
             val isFirstEntry = backStackEntry.arguments?.getBoolean("isFirstEntry") ?: false
 
             FeedbackAfterPlacesOfDayScreen(
-                navController = navController,
-                onContinue = {
-                    if (isFirstEntry) {
-                        println("DEBUG: First entry - going to FinalTutorial")
-                        navController.navigate(Screen.FinalTutorial.route) {
-                            popUpTo("feedback_after_places_of_day/${isFirstEntry}") { inclusive = true }
-                        }
-                    } else {
-                        println("DEBUG: Not first entry - going to Main")
-                        navController.navigate(Screen.Main.route) {
-                            popUpTo(0)
-                        }
-                    }
-                }
+                navController = navController
             )
         }
 
@@ -283,12 +270,7 @@ fun AppNavigation() {
 
         composable(Screen.FeedbackAfterPlacesOfDay.route) {
             FeedbackAfterPlacesOfDayScreen(
-                navController = navController,
-                onContinue = {
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(0)
-                    }
-                }
+                navController = navController
             )
         }
 

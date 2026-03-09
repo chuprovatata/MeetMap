@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Dating App</string>
+    <string name="app_name">МитМап</string>
 
 <!-- Profile Setup Screens -->
 <string name="profile_setup">Настройка профиля</string>

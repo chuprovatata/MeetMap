@@ -50,6 +50,9 @@ import coil.decode.SvgDecoder
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import kotlin.math.abs
 import java.text.DecimalFormat
+import com.example.datingapp.screens.feedback.FeedbackAfterPlaceAdded
+import java.util.Random
+import com.example.datingapp.viewmodels.FeedbackViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +68,7 @@ fun PlacesOfDayScreen(
 
     // Получаем ViewModel через Hilt
     val userPlacesViewModel: UserPlacesViewModel = hiltViewModel()
+    val feedbackViewModel: FeedbackViewModel = hiltViewModel()
 
     // Состояния из ViewModel
     val isLiking by userPlacesViewModel.isLiking.collectAsState()
@@ -76,6 +80,12 @@ fun PlacesOfDayScreen(
     var placesOfDay by remember { mutableStateOf<List<PlaceInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessageLoad by remember { mutableStateOf<String?>(null) }
+
+    // Состояния для диалога фидбека после добавления места
+    var showPlaceFeedbackDialog by remember { mutableStateOf(false) }
+    var currentPlaceForFeedback by remember { mutableStateOf<PlaceInfo?>(null) }
+    val random = remember { Random() }
+
 
     // Множество ID мест, которые уже лайкнул пользователь
     val likedPlaceIds = remember(likedPlaces) {
@@ -246,6 +256,15 @@ fun PlacesOfDayScreen(
             } else {
                 userPlacesViewModel.likePlace(placeId, "places_of_day")
                 updatePlaceLikesCount(placeId, true)
+
+                val shouldShowFeedback = random.nextInt(1) == 0
+                if (shouldShowFeedback) {
+                    val currentPlace = placesOfDay.find { it.id == placeId }
+                    if (currentPlace != null) {
+                        currentPlaceForFeedback = currentPlace
+                        showPlaceFeedbackDialog = true
+                    }
+                }
             }
         }
     }
@@ -655,6 +674,25 @@ fun PlacesOfDayScreen(
             }
         }
     }
+    FeedbackAfterPlaceAdded(
+        isOpen = showPlaceFeedbackDialog,
+        onDismiss = {
+            showPlaceFeedbackDialog = false
+            currentPlaceForFeedback = null
+        },
+        onSubmit = { selectedOption ->
+            currentPlaceForFeedback?.let { place ->
+                feedbackViewModel.savePlaceAddedFeedback(
+                    placeId = place.id,
+                    placeName = place.name,
+                    heardAboutOption = selectedOption
+                )
+            }
+            showPlaceFeedbackDialog = false
+            currentPlaceForFeedback = null
+        },
+        place = currentPlaceForFeedback
+    )
 }
 
 private suspend fun loadPlacesOfDay(

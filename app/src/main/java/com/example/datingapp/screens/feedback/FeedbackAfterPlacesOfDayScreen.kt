@@ -3,7 +3,10 @@ package com.example.datingapp.screens.feedback
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,17 +19,22 @@ import com.example.datingapp.R
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.datingapp.components.buttons.PrimaryButton
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.example.datingapp.viewmodels.FeedbackViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun FeedbackAfterPlacesOfDayScreen(
     navController: NavController,
-    onContinue: () -> Unit = { navController.popBackStack() }
+    viewModel: FeedbackViewModel = hiltViewModel()
 ) {
     var rating by remember { mutableStateOf(0) }
     val spacing = LocalDatingAppSpacing.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val options = listOf(
         "Кафе и ресторанов",
@@ -36,10 +44,19 @@ fun FeedbackAfterPlacesOfDayScreen(
     )
 
     var selectedOptionIndex by remember { mutableStateOf(-1) }
+    val isSaving by viewModel.isSaving.collectAsState()
+    val saveError by viewModel.saveError.collectAsState()
 
     // Определяем, откуда пришли, по previousBackStackEntry
     val cameFromOnboarding = remember {
         navController.previousBackStackEntry?.destination?.route?.startsWith("places_of_day?fromOnboarding=true") == true
+    }
+
+    LaunchedEffect(saveError) {
+        saveError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearState()
+        }
     }
 
     Column(
@@ -176,25 +193,52 @@ fun FeedbackAfterPlacesOfDayScreen(
             }
         }
 
-        PrimaryButton(
-            text = if (cameFromOnboarding) "далее" else "на главную",
-            onClick = {
-                if (cameFromOnboarding) {
-                    // Если пришли из обучения - идем на финальный туториал
-                    navController.navigate(Screen.FinalTutorial.route) {
-                        popUpTo(Screen.FeedbackAfterPlacesOfDay.route) { inclusive = true }
-                    }
-                } else {
-                    // Если пришли с главной - возвращаемся на главную
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp, bottom = 24.dp),
-            textSize = 32.sp
-        )
+        Spacer(modifier = Modifier.weight(1f))
+
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            } else {
+                PrimaryButton(
+                    text = if (cameFromOnboarding) "далее" else "на главную",
+                    onClick = {
+                        val wantMoreCategories = if (selectedOptionIndex != -1) {
+                            listOf(options[selectedOptionIndex])
+                        } else {
+                            emptyList()
+                        }
+
+                        viewModel.savePlacesOfDayFeedback(
+                            rating = rating,
+                            selectedOptionIndex = selectedOptionIndex,
+                            wantMoreCategories = wantMoreCategories,
+                            source = if (cameFromOnboarding) "onboarding" else "main",
+                            onComplete = {
+                                if (cameFromOnboarding) {
+                                    // Если пришли из обучения - идем на финальный туториал
+                                    navController.navigate(Screen.FinalTutorial.route) {
+                                        popUpTo(Screen.FeedbackAfterPlacesOfDay.route) { inclusive = true }
+                                    }
+                                } else {
+                                    // Если пришли с главной - возвращаемся на главную
+                                    navController.navigate(Screen.Main.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            }
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    textSize = 32.sp,
+                    //enabled = rating > 0
+                )
+            }
+        }
     }
 }

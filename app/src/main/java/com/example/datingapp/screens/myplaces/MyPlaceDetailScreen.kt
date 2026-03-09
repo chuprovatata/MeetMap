@@ -31,10 +31,14 @@ import coil.request.ImageRequest
 import coil.decode.SvgDecoder
 import com.example.datingapp.R
 import com.example.datingapp.data.models.AppUser
+import com.example.datingapp.data.models.PlaceInfo
 import com.example.datingapp.navigation.Screen
+import com.example.datingapp.screens.feedback.FeedbackAfterPlaceDeleted
+import com.example.datingapp.viewmodels.FeedbackViewModel
 import com.example.datingapp.viewmodels.MyPlaceDetailViewModel
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
+import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,11 +47,17 @@ fun MyPlaceDetailScreen(
     navController: NavController,
     viewModel: MyPlaceDetailViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     val placeInfo by viewModel.placeInfo.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isLiking by viewModel.isLiking.collectAsState()
     val isLiked by viewModel.isLiked.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Feedback ViewModel
+    val feedbackViewModel: FeedbackViewModel = hiltViewModel()
 
     // Данные о пользователях
     val usersCount by viewModel.usersCount.collectAsState()
@@ -55,9 +65,12 @@ fun MyPlaceDetailScreen(
     val isLoadingUsers by viewModel.isLoadingUsers.collectAsState()
     val hasMoreUsers by viewModel.hasMoreUsers.collectAsState()
 
+    // Состояния для диалога фидбека при удалении
+    var showDeleteFeedbackDialog by remember { mutableStateOf(false) }
+    var currentPlaceForDeleteFeedback by remember { mutableStateOf<PlaceInfo?>(null) }
+
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(placeId) {
         viewModel.loadPlaceDetails(placeId)
@@ -67,6 +80,16 @@ fun MyPlaceDetailScreen(
         errorMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
+        }
+    }
+
+    fun onToggleLike(place: PlaceInfo) {
+        viewModel.toggleLike(place.id)
+
+        // Если место было в избранном и мы его удаляем (unlike)
+        if (isLiked) {
+            currentPlaceForDeleteFeedback = place
+            showDeleteFeedbackDialog = true
         }
     }
 
@@ -333,10 +356,8 @@ fun MyPlaceDetailScreen(
                         )
                     }
 
-                    // Блок с количеством пользователей - исправлено центрирование числа
-                    UsersCountCard(
-                        count = usersCount
-                    )
+                    // Блок с количеством пользователей
+                    UsersCountCard(count = usersCount)
 
                     // Список пользователей, добавивших это место
                     if (users.isNotEmpty()) {
@@ -399,9 +420,7 @@ fun MyPlaceDetailScreen(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Button(
-                    onClick = {
-                        viewModel.toggleLike(place.id)
-                    },
+                    onClick = { onToggleLike(place) },  // Используем обновленную функцию
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -465,6 +484,27 @@ fun MyPlaceDetailScreen(
             }
         }
     }
+
+    // Диалог фидбека при удалении места
+    FeedbackAfterPlaceDeleted(
+        isOpen = showDeleteFeedbackDialog,
+        onDismiss = {
+            showDeleteFeedbackDialog = false
+            currentPlaceForDeleteFeedback = null
+        },
+        onSubmit = { selectedOption ->
+            currentPlaceForDeleteFeedback?.let { place ->
+                feedbackViewModel.savePlaceDeletedFeedback(
+                    placeId = place.id,
+                    placeName = place.name,
+                    deletedReasonOption = selectedOption
+                )
+            }
+            showDeleteFeedbackDialog = false
+            currentPlaceForDeleteFeedback = null
+        },
+        place = currentPlaceForDeleteFeedback
+    )
 }
 
 // Функция форматирования расстояния
@@ -503,7 +543,6 @@ fun UsersCountCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Число с дополнительным отступом слева для центрирования
             Text(
                 text = count.toString(),
                 fontSize = 32.sp,
@@ -511,7 +550,7 @@ fun UsersCountCard(
                 color = Color(0xFF7A4FCB),
                 modifier = Modifier
                     .width(48.dp)
-                    .padding(start = 15.dp) // Добавлен отступ слева
+                    .padding(start = 15.dp)
             )
 
             Column(
