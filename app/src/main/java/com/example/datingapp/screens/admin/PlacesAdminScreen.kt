@@ -13,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.datingapp.data.models.PlaceInfo
 import com.example.datingapp.navigation.Screen
+import com.example.datingapp.viewmodels.PlacesAdminViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -27,7 +29,8 @@ import kotlinx.coroutines.tasks.await
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacesAdminScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: PlacesAdminViewModel = hiltViewModel()
 ) {
     val db = Firebase.firestore
     val scope = rememberCoroutineScope()
@@ -149,6 +152,15 @@ fun PlacesAdminScreen(
                         Text("Места дня", style = MaterialTheme.typography.bodySmall)
                     }
                 }
+            }
+
+            Button(
+                onClick = {
+                    viewModel.sendPlacesOfDayNotification()
+                },
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text("📢 Разослать уведомление о новых местах дня")
             }
 
             // Список мест

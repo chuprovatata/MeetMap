@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.SimpleBlock
@@ -26,6 +28,9 @@ import com.example.datingapp.components.notifications.NotificationBanner
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.GrayLight
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.example.datingapp.viewmodels.NotificationViewModel
+import kotlinx.coroutines.launch
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +43,10 @@ fun MainScreen(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+
+    // Получаем ViewModel для уведомлений
+    val notificationViewModel: NotificationViewModel = hiltViewModel()
 
     val isLandscape = screenWidth > screenHeight
 
@@ -88,6 +97,7 @@ fun MainScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(7.dp)
                     ) {
+                        // Кнопка настроек
                         Box(
                             modifier = Modifier
                                 .size(finalIconSize)
@@ -105,6 +115,7 @@ fun MainScreen(
                             )
                         }
 
+                        // Кнопка профиля
                         Box(
                             modifier = Modifier
                                 .size(finalIconSize)
@@ -121,6 +132,26 @@ fun MainScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
+
+//                        // Временная кнопка для создания тестовых уведомлений
+//                        Box(
+//                            modifier = Modifier
+//                                .size(finalIconSize)
+//                                .clip(RoundedCornerShape(30.dp))
+//                                .clickable {
+//                                    scope.launch {
+//                                        notificationViewModel.createTestNotifications()
+//                                    }
+//                                },
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Icon(
+//                                painter = painterResource(id = R.drawable.icon_bell),
+//                                contentDescription = "Тест уведомлений",
+//                                modifier = Modifier.size(finalIconSize),
+//                                tint = MaterialTheme.colorScheme.primary
+//                            )
+//                        }
                     }
                 }
             }
@@ -157,7 +188,6 @@ fun MainScreen(
             // Уведомления - поверх всего
             NotificationBanner(
                 navController = navController,
-                count = 3,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = notificationTopPadding)
