@@ -1,5 +1,6 @@
 package com.example.datingapp.di
 
+import com.example.datingapp.data.repository.NotificationRepository
 import com.example.datingapp.data.repository.UserPlacesRepository
 import com.example.datingapp.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -50,6 +51,14 @@ object AppModule {
     @Singleton
     fun provideUserPlacesRepository(
         auth: FirebaseAuth,
+        firestore: FirebaseFirestore,
+        notificationRepository: NotificationRepository
+    ): UserPlacesRepository = UserPlacesRepository(auth, firestore, notificationRepository)
+
+    @Provides
+    @Singleton
+    fun provideNotificationRepository(
+        auth: FirebaseAuth,
         firestore: FirebaseFirestore
-    ): UserPlacesRepository = UserPlacesRepository(auth, firestore)
+    ): NotificationRepository = NotificationRepository(auth, firestore)
 }

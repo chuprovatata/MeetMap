@@ -10,13 +10,19 @@ import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 import android.util.Log
+import com.example.datingapp.data.repository.NotificationRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Singleton
 class UserPlacesRepository @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val notificationRepository: NotificationRepository
 ) {
     private val collection = firestore.collection("user_places")
+    private val TAG = "UserPlacesRepository"
 
     suspend fun likePlace(placeId: String, source: String = "places_of_day"): Result<UserPlace> {
         return try {
@@ -55,6 +61,11 @@ class UserPlacesRepository @Inject constructor(
             docRef.set(placeWithId).await()
 
             Log.d("LIKE_DEBUG", "Successfully saved place with id: ${placeWithId.id}")
+
+            // Запускаем фоновую задачу для уведомлений друзей (не блокируем основной поток)
+            CoroutineScope(Dispatchers.IO).launch {
+                notifyFriendsAboutNewPlace(userId, placeId)
+            }
 
             Result.success(placeWithId)
         } catch (e: Exception) {
@@ -243,6 +254,50 @@ class UserPlacesRepository @Inject constructor(
             snapshot.size()
         } catch (e: Exception) {
             0
+        }
+    }
+
+    private suspend fun notifyFriendsAboutNewPlace(userId: String, placeId: String) {
+        try {
+            Log.d(TAG, "🔔 Checking friends for user $userId about new place $placeId")
+
+            // Получаем документ пользователя, чтобы извлечь список друзей
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            val friendsMap = userDoc.data?.get("friends") as? Map<String, Map<String, Any>>
+                ?: return
+
+            // Фильтруем только друзей со статусом "friend"
+            val friendIds = friendsMap.filter { it.value["status"] == "friend" }.keys
+            if (friendIds.isEmpty()) {
+                Log.d(TAG, "No friends found for user $userId")
+                return
+            }
+
+            Log.d(TAG, "Found ${friendIds.size} friends: $friendIds")
+
+            // Для каждого друга проверяем, есть ли у него уже это место
+            for (friendId in friendIds) {
+                val existing = firestore.collection("user_places")
+                    .whereEqualTo("userId", friendId)
+                    .whereEqualTo("placeId", placeId)
+                    .whereEqualTo("status", "liked")
+                    .get()
+                    .await()
+
+                if (existing.isEmpty) {
+                    // У друга нет этого места — создаём уведомление
+                    Log.d(TAG, "Friend $friendId doesn't have this place, sending notification")
+                    notificationRepository.createNewPlaceFromFriendNotification(
+                        friendId = userId,
+                        placeId = placeId,
+                        targetUserId = friendId
+                    )
+                } else {
+                    Log.d(TAG, "Friend $friendId already has this place, skipping notification")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in notifyFriendsAboutNewPlace", e)
         }
     }
 }
