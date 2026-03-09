@@ -296,7 +296,7 @@ fun MainMeets(navController: NavController, viewModel: UserViewModel) {
                     modifier = Modifier
 
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 100.dp)
+                        .padding(bottom = 150.dp)
 
                         .background(shape = RoundedCornerShape(12.dp), color = PurpleCard)
                         .clickable {

@@ -4,8 +4,10 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
 import com.example.datingapp.BuildConfig
+import com.example.datingapp.data.models.PlaceInfo
 import com.example.datingapp.utils.CloudImageUtils
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.Dispatchers
@@ -26,81 +28,86 @@ class UserRepository @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
 
-    suspend fun uploadProfileImage(uri: Uri, contentResolver: ContentResolver): String = withContext(Dispatchers.IO) {
-        val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
-        val userId = currentUser.uid
+    suspend fun uploadProfileImage(uri: Uri, contentResolver: ContentResolver): String =
+        withContext(Dispatchers.IO) {
+            val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
+            val userId = currentUser.uid
 
-        var file: File? = null
+            var file: File? = null
 
-        try {
-            file = uriToFile(uri, contentResolver)
-                ?: throw Exception("Не удалось обработать изображение")
+            try {
+                file = uriToFile(uri, contentResolver)
+                    ?: throw Exception("Не удалось обработать изображение")
 
-            val extension = getFileExtension(uri, contentResolver) ?: "jpg"
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "profile-photo/$userId-$timestamp.$extension"
+                val extension = getFileExtension(uri, contentResolver) ?: "jpg"
+                val timestamp =
+                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val fileName = "profile-photo/$userId-$timestamp.$extension"
 
-            val imageUrl = CloudImageUtils.uploadFile(
-                file = file,
-                fileName = fileName,
-                accessKey = BuildConfig.YANDEX_ACCESS_KEY_ID,
-                secretKey = BuildConfig.YANDEX_SECRET_ACCESS_KEY
-            )
+                val imageUrl = CloudImageUtils.uploadFile(
+                    file = file,
+                    fileName = fileName,
+                    accessKey = BuildConfig.YANDEX_ACCESS_KEY_ID,
+                    secretKey = BuildConfig.YANDEX_SECRET_ACCESS_KEY
+                )
 
-            withContext(Dispatchers.Main) {
-                firestore.collection("users")
-                    .document(userId)
-                    .update("profileImageUrl", imageUrl)
-                    .await()
+                withContext(Dispatchers.Main) {
+                    firestore.collection("users")
+                        .document(userId)
+                        .update("profileImageUrl", imageUrl)
+                        .await()
+                }
+
+                return@withContext imageUrl
+
+            } catch (e: Exception) {
+                Log.e("UserRepository", "Upload error", e)
+                throw Exception("Ошибка загрузки: ${e.message}")
+            } finally {
+                file?.delete()
             }
-
-            return@withContext imageUrl
-
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Upload error", e)
-            throw Exception("Ошибка загрузки: ${e.message}")
-        } finally {
-            file?.delete()
         }
-    }
-    suspend fun uploadFavoritePlaceImage(uri: Uri, contentResolver: ContentResolver): String = withContext(Dispatchers.IO) {
-        val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
-        val userId = currentUser.uid
 
-        var file: File? = null
+    suspend fun uploadFavoritePlaceImage(uri: Uri, contentResolver: ContentResolver): String =
+        withContext(Dispatchers.IO) {
+            val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
+            val userId = currentUser.uid
 
-        try {
-            file = uriToFile(uri, contentResolver)
-                ?: throw Exception("Не удалось обработать изображение")
+            var file: File? = null
 
-            val extension = getFileExtension(uri, contentResolver) ?: "jpg"
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "favoriteplace/$userId-$timestamp.$extension"
+            try {
+                file = uriToFile(uri, contentResolver)
+                    ?: throw Exception("Не удалось обработать изображение")
 
-            val imageUrl = CloudImageUtils.uploadFile(
-                file = file,
-                fileName = fileName,
-                accessKey = BuildConfig.YANDEX_ACCESS_KEY_ID,
-                secretKey = BuildConfig.YANDEX_SECRET_ACCESS_KEY
-            )
+                val extension = getFileExtension(uri, contentResolver) ?: "jpg"
+                val timestamp =
+                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val fileName = "favoriteplace/$userId-$timestamp.$extension"
 
-            withContext(Dispatchers.Main) {
-                firestore.collection("users")
-                    .document(userId)
-                    .update("favoritePlacePhoto", imageUrl)
-                    .await()
+                val imageUrl = CloudImageUtils.uploadFile(
+                    file = file,
+                    fileName = fileName,
+                    accessKey = BuildConfig.YANDEX_ACCESS_KEY_ID,
+                    secretKey = BuildConfig.YANDEX_SECRET_ACCESS_KEY
+                )
+
+                withContext(Dispatchers.Main) {
+                    firestore.collection("users")
+                        .document(userId)
+                        .update("favoritePlacePhoto", imageUrl)
+                        .await()
+                }
+
+                Log.d("UserRepository", "Favorite place photo uploaded successfully: $imageUrl")
+                return@withContext imageUrl
+
+            } catch (e: Exception) {
+                Log.e("UserRepository", "Error uploading favorite place photo", e)
+                throw Exception("Ошибка загрузки фото места: ${e.message}")
+            } finally {
+                file?.delete()
             }
-
-            Log.d("UserRepository", "Favorite place photo uploaded successfully: $imageUrl")
-            return@withContext imageUrl
-
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Error uploading favorite place photo", e)
-            throw Exception("Ошибка загрузки фото места: ${e.message}")
-        } finally {
-            file?.delete()
         }
-    }
 
     suspend fun getUserData(): Map<String, Any> {
         val currentUser = auth.currentUser ?: throw Exception("Пользователь не авторизован")
@@ -228,19 +235,34 @@ class UserRepository @Inject constructor(
     /**
      * Обновить статус друга для пользователя
      */
+    /**
+     * Обновить статус друга для пользователя
+     */
     suspend fun updateFriendStatusForUser(userId: String, friendId: String, newStatus: String) {
         try {
             if (userId.isEmpty() || friendId.isEmpty()) {
                 throw Exception("userId или friendId пустые: userId='$userId', friendId='$friendId'")
             }
 
-            val fieldPath = "friends.$friendId.status"
-            Log.d("UserRepository", "Updating: users/$userId/$fieldPath = $newStatus")
+            // Создаем map с данными о друге
+            val friendData = mapOf(
+                "status" to newStatus,
+                "since" to if (newStatus == "friend") com.google.firebase.Timestamp.now() else null
+            )
+
+            // Обновляем поле friends.friendId
+            val updates = mapOf(
+                "friends.$friendId" to friendData
+            )
+
+            Log.d("UserRepository", "Updating: users/$userId with $updates")
 
             firestore.collection("users")
                 .document(userId)
-                .update(fieldPath, newStatus)
+                .update(updates)
                 .await()
+
+            Log.d("UserRepository", "Successfully updated friend status for user $userId")
 
         } catch (e: Exception) {
             Log.e("UserRepository", "Error updating friend status. userId='$userId', friendId='$friendId'", e)
@@ -273,11 +295,13 @@ class UserRepository @Inject constructor(
                 return emptyList()
             }
 
-            val currentUserFriends = currentUserDoc.data?.get("friends") as? Map<String, Map<String, Any>>
-                ?: emptyMap()
+            val currentUserFriends =
+                currentUserDoc.data?.get("friends") as? Map<String, Map<String, Any>>
+                    ?: emptyMap()
 
-            val otherUserFriends = otherUserDoc.data?.get("friends") as? Map<String, Map<String, Any>>
-                ?: emptyMap()
+            val otherUserFriends =
+                otherUserDoc.data?.get("friends") as? Map<String, Map<String, Any>>
+                    ?: emptyMap()
 
             val currentUserFriendIds = currentUserFriends
                 .filter { it.value["status"] == "friend" }
@@ -325,7 +349,8 @@ class UserRepository @Inject constructor(
     private fun uriToFile(uri: Uri, contentResolver: ContentResolver): File? {
         return try {
             val inputStream = contentResolver.openInputStream(uri) ?: return null
-            val file = File.createTempFile("profile_", getFileExtension(uri, contentResolver) ?: "jpg")
+            val file =
+                File.createTempFile("profile_", getFileExtension(uri, contentResolver) ?: "jpg")
             FileOutputStream(file).use { outputStream ->
                 inputStream.copyTo(outputStream)
             }
@@ -343,12 +368,14 @@ class UserRepository @Inject constructor(
                 val mime = android.webkit.MimeTypeMap.getSingleton()
                 mime.getExtensionFromMimeType(contentResolver.getType(uri))
             }
+
             else -> {
                 val path = uri.path ?: return null
                 path.substringAfterLast(".", "").takeIf { it.isNotEmpty() }
             }
         }?.lowercase()
     }
+
     fun logout() {
         try {
             auth.signOut()
@@ -356,6 +383,168 @@ class UserRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("UserRepository", "Error during sign out", e)
             throw Exception("Ошибка при выходе: ${e.message}")
+        }
+    }
+
+    // Добавить в UserRepository.kt:
+
+    /**
+     * Получить всех пользователей из базы данных
+     */
+    /**
+     * Получить всех пользователей из базы данных
+     */
+    suspend fun getAllUsers(): List<MyUser> {
+        Log.d("UserRepository", "=== ПОЛУЧЕНИЕ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ ===")
+
+        return try {
+            val snapshot = firestore.collection("users")
+                .get()
+                .await()
+
+            Log.d("UserRepository", "Получено документов: ${snapshot.size()}")
+
+            val users = snapshot.documents.mapNotNull { document ->
+                try {
+                    val user = document.toObject(MyUser::class.java)
+                    if (user != null) {
+                        val userWithId = user.copy(uid = document.id)
+                        Log.d(
+                            "UserRepository",
+                            "Найден пользователь: ${userWithId.name} (${userWithId.uid})"
+                        )
+                        userWithId
+                    } else {
+                        Log.d("UserRepository", "Не удалось преобразовать документ: ${document.id}")
+                        null
+                    }
+                } catch (e: Exception) {
+                    Log.e("UserRepository", "Ошибка преобразования документа ${document.id}", e)
+                    null
+                }
+            }
+
+            Log.d("UserRepository", "Всего пользователей после обработки: ${users.size}")
+            users
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Ошибка получения всех пользователей", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Получить количество общих друзей с другим пользователем
+     */
+    suspend fun getMutualFriendsCount(otherUserId: String): Int {
+        val currentUser = auth.currentUser ?: return 0
+        val currentUserId = currentUser.uid
+
+        return try {
+            val currentUserDoc = firestore.collection("users")
+                .document(currentUserId)
+                .get()
+                .await()
+
+            val otherUserDoc = firestore.collection("users")
+                .document(otherUserId)
+                .get()
+                .await()
+
+            if (!currentUserDoc.exists() || !otherUserDoc.exists()) {
+                return 0
+            }
+
+            val currentUserFriends =
+                currentUserDoc.data?.get("friends") as? Map<String, Map<String, Any>>
+                    ?: emptyMap()
+
+            val otherUserFriends =
+                otherUserDoc.data?.get("friends") as? Map<String, Map<String, Any>>
+                    ?: emptyMap()
+
+            val currentUserFriendIds = currentUserFriends
+                .filter { it.value["status"] == "friend" }
+                .keys
+                .toSet()
+
+            val otherUserFriendIds = otherUserFriends
+                .filter { it.value["status"] == "friend" }
+                .keys
+                .toSet()
+
+            currentUserFriendIds.intersect(otherUserFriendIds).size
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error counting mutual friends", e)
+            0
+        }
+    }
+
+
+    /**
+     * Получить детальную информацию о местах по их ID
+     */
+    /**
+     * Получить детальную информацию о местах по их ID
+     */
+    suspend fun getPlacesDetails(placeIds: List<String>): Result<List<PlaceInfo>> =
+        withContext(Dispatchers.IO) {
+            try {
+                if (placeIds.isEmpty()) {
+                    return@withContext Result.success(emptyList())
+                }
+
+                // Firebase не поддерживает прямой запрос с большим количеством ID за раз
+                // Разбиваем на чанки по 10 (максимальное значение для 'in' запроса)
+                val chunkedIds = placeIds.chunked(10)
+                val allPlaces = mutableListOf<PlaceInfo>()
+
+                for (chunk in chunkedIds) {
+                    val snapshot = firestore.collection("places")
+                        .whereIn(
+                            FieldPath.documentId(),
+                            chunk
+                        )  // Используем documentId() для поиска по ID документа
+                        .get()
+                        .await()
+
+                    val places = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(PlaceInfo::class.java)?.copy(id = doc.id)
+                    }
+                    allPlaces.addAll(places)
+                }
+
+                Result.success(allPlaces)
+            } catch (e: Exception) {
+                Log.e("UserPlacesRepository", "Error getting places details", e)
+                Result.failure(e)
+            }
+    }
+    /**
+     * Удалить поле friend у пользователя (отменить заявку)
+     */
+    suspend fun removeFriendField(userId: String, friendId: String) {
+        try {
+            if (userId.isEmpty() || friendId.isEmpty()) {
+                throw Exception("userId или friendId пустые: userId='$userId', friendId='$friendId'")
+            }
+
+            // Используем FieldValue.delete() для удаления поля
+            val updates = mapOf(
+                "friends.$friendId" to com.google.firebase.firestore.FieldValue.delete()
+            )
+
+            Log.d("UserRepository", "Removing field: users/$userId/friends.$friendId")
+
+            firestore.collection("users")
+                .document(userId)
+                .update(updates)
+                .await()
+
+            Log.d("UserRepository", "Successfully removed friend field for user $userId")
+
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error removing friend field. userId='$userId', friendId='$friendId'", e)
+            throw Exception("Ошибка удаления статуса друга: ${e.message}")
         }
     }
 }

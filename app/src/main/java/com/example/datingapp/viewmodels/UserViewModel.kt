@@ -14,6 +14,7 @@ import com.example.datingapp.data.repository.UserPlacesRepository
 import com.example.datingapp.data.repository.UserRepository
 import com.example.datingapp.utils.CloudImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -95,7 +96,35 @@ class UserViewModel @Inject constructor(
                 val myPlaces = userPlacesRepository.getUserLikedPlaces().getOrNull() ?: emptyList()
                 val otherPlaces = userPlacesRepository.getUserLikedPlaces(otherUserId).getOrNull() ?: emptyList()
 
-                val percent = calculateCompatibilityPercentage(myPlaces, otherPlaces)
+                // Загружаем детали мест для категорий
+                val myPlaceIds = myPlaces.map { it.placeId }
+                val otherPlaceIds = otherPlaces.map { it.placeId }
+
+                val myPlaceDetails = if (myPlaceIds.isNotEmpty()) {
+                    userPlacesRepository.getPlacesDetails(myPlaceIds).getOrNull() ?: emptyList()
+                } else emptyList()
+
+                val otherPlaceDetails = if (otherPlaceIds.isNotEmpty()) {
+                    userPlacesRepository.getPlacesDetails(otherPlaceIds).getOrNull() ?: emptyList()
+                } else emptyList()
+
+                // Получаем количество общих друзей
+                val mutualFriendsCount = userRepository.getMutualFriendsCount(otherUserId)
+
+                // Получаем общее количество друзей текущего пользователя
+                val currentUser = _myUser.value
+                val totalFriendsCount = currentUser?.friends?.count { it.value.status == "friend" }?.coerceAtMost(10) ?: 0
+
+                // Используем улучшенную формулу со всеми параметрами
+                val percent = calculateEnhancedCompatibility(
+                    myPlaces = myPlaces,
+                    otherUserPlaces = otherPlaces,
+                    myPlaceDetails = myPlaceDetails,
+                    otherUserPlaceDetails = otherPlaceDetails,
+                    mutualFriendsCount = mutualFriendsCount,
+                    totalFriendsCount = totalFriendsCount
+                )
+
                 _compatibilityPercent.value = percent
 
                 Log.d("COMPATIBILITY", "Compatibility with $otherUserId: $percent%")
@@ -494,7 +523,7 @@ class UserViewModel @Inject constructor(
     }
 
     fun updateFriendshipStatus(
-        myId: String,
+        myUserId: String,
         friendId: String,
         newStatusForMe: FriendStatus,
         newStatusForFriend: FriendStatus
@@ -502,12 +531,24 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                Log.d("UserViewModel", "Updating friendship: me=$myId, friend=$friendId")
+                Log.d("UserViewModel", "Updating friendship: me=$myUserId, friend=$friendId")
+                Log.d("UserViewModel", "My new status: ${newStatusForMe.value}, Friend new status: ${newStatusForFriend.value}")
 
-                userRepository.updateFriendStatusForUser(myId, friendId, newStatusForMe.value)
-                userRepository.updateFriendStatusForUser(friendId, myId, newStatusForFriend.value)
+                // Обновляем статус у текущего пользователя по отношению к другу
+                userRepository.updateFriendStatusForUser(myUserId, friendId, newStatusForMe.value)
 
-                loadAllFriendData()
+                // Обновляем статус у друга по отношению к текущему пользователю
+                userRepository.updateFriendStatusForUser(friendId, myUserId, newStatusForFriend.value)
+
+                // Обновляем данные текущего пользователя
+                loadMyUser()
+
+                // Если это был экран друга, обновляем и его данные
+                if (friendId == _otherUser.value?.uid) {
+                    loadUserById(friendId)
+                }
+
+                Log.d("UserViewModel", "Friendship updated successfully")
 
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error updating friendship", e)
@@ -547,19 +588,50 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-    fun calculateCompatibilityPercentage(
+
+    /**
+     * Улучшенная формула расчета совместимости
+     * Учитывает: общие места (70%), общие категории мест (20%), общих друзей (10%)
+     */
+    fun calculateEnhancedCompatibility(
         myPlaces: List<UserPlace>,
-        otherUserPlaces: List<UserPlace>
+        otherUserPlaces: List<UserPlace>,
+        myPlaceDetails: List<PlaceInfo>,
+        otherUserPlaceDetails: List<PlaceInfo>,
+        mutualFriendsCount: Int,
+        totalFriendsCount: Int
     ): Int {
         if (myPlaces.isEmpty() || otherUserPlaces.isEmpty()) return 0
 
+        // 1. Общие места (70% веса)
         val myPlaceIds = myPlaces.map { it.placeId }.toSet()
         val otherPlaceIds = otherUserPlaces.map { it.placeId }.toSet()
 
-        val mutualCount = myPlaceIds.intersect(otherPlaceIds).size
+        val mutualPlacesCount = myPlaceIds.intersect(otherPlaceIds).size
         val totalUniquePlaces = (myPlaceIds + otherPlaceIds).size
 
-        return (mutualCount * 100 / totalUniquePlaces).coerceIn(0, 100)
+        val placesScore = if (totalUniquePlaces > 0) {
+            (mutualPlacesCount * 100 / totalUniquePlaces) * 0.7
+        } else 0.0
+
+        // 2. Общие категории мест (20% веса)
+        val myCategories = myPlaceDetails.flatMap { it.categories }.toSet()
+        val otherCategories = otherUserPlaceDetails.flatMap { it.categories }.toSet()
+
+        val mutualCategoriesCount = myCategories.intersect(otherCategories).size
+        val totalUniqueCategories = (myCategories + otherCategories).size
+
+        val categoriesScore = if (totalUniqueCategories > 0) {
+            (mutualCategoriesCount * 100 / totalUniqueCategories) * 0.2
+        } else 0.0
+
+        // 3. Общие друзья (10% веса)
+        val friendsScore = if (totalFriendsCount > 0) {
+            (mutualFriendsCount * 100 / totalFriendsCount) * 0.1
+        } else 0.0
+
+        // Суммируем и округляем
+        return (placesScore + categoriesScore + friendsScore).toInt().coerceIn(0, 100)
     }
 
     fun clearMutualFriends() {
@@ -593,6 +665,169 @@ class UserViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Error during logout", e)
                 _dataLoadError.value = e.message ?: "Ошибка при выходе"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Добавить новые поля
+    private val _recommendedUsers = MutableStateFlow<List<MyUser>>(emptyList())
+    val recommendedUsers: StateFlow<List<MyUser>> = _recommendedUsers.asStateFlow()
+
+    private val _usersCompatibility = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val usersCompatibility: StateFlow<Map<String, Int>> = _usersCompatibility.asStateFlow()
+
+    fun loadRecommendedUsers() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                Log.d("UserViewModel", "=== НАЧАЛО ЗАГРУЗКИ РЕКОМЕНДАЦИЙ С УЛУЧШЕННОЙ ФОРМУЛОЙ ===")
+
+                val currentUser = _myUser.value
+                if (currentUser == null) {
+                    loadMyUser()
+                    delay(500)
+                }
+
+                val freshCurrentUser = _myUser.value ?: return@launch
+                Log.d("UserViewModel", "Текущий пользователь: ${freshCurrentUser.name} (${freshCurrentUser.uid})")
+
+                // Получаем всех пользователей
+                val allUsers = userRepository.getAllUsers()
+                Log.d("UserViewModel", "Всего пользователей в БД: ${allUsers.size}")
+
+                // Исключаем текущего пользователя и тех, с кем уже есть взаимодействие
+                val excludedUserIds = freshCurrentUser.friends.keys.toSet() + freshCurrentUser.uid
+                val potentialUsers = allUsers.filter { it.uid !in excludedUserIds }
+                Log.d("UserViewModel", "Потенциальных пользователей после исключения: ${potentialUsers.size}")
+
+                // Загружаем места текущего пользователя
+                val myPlacesResult = userPlacesRepository.getUserLikedPlaces()
+                val myPlaces = if (myPlacesResult.isSuccess) myPlacesResult.getOrNull() ?: emptyList() else emptyList()
+                Log.d("UserViewModel", "Мои лайкнутые места: ${myPlaces.size}")
+
+                if (myPlaces.isEmpty()) {
+                    Log.d("UserViewModel", "У текущего пользователя нет мест, рекомендации не загружаются")
+                    _recommendedUsers.value = emptyList()
+                    _usersCompatibility.value = emptyMap()
+                    return@launch
+                }
+
+                // Загружаем детали мест текущего пользователя для категорий
+                val myPlaceIds = myPlaces.map { it.placeId }
+                val myPlaceDetailsResult = if (myPlaceIds.isNotEmpty()) {
+                    userPlacesRepository.getPlacesDetails(myPlaceIds)
+                } else {
+                    Result.success(emptyList())
+                }
+                val myPlaceDetails = if (myPlaceDetailsResult.isSuccess) myPlaceDetailsResult.getOrNull() ?: emptyList() else emptyList()
+                Log.d("UserViewModel", "Детали моих мест: ${myPlaceDetails.size}")
+
+                // Общее количество друзей для нормализации (максимум 10)
+                val totalFriendsCount = freshCurrentUser.friends.count { it.value.status == "friend" }.coerceAtMost(10)
+                Log.d("UserViewModel", "Общее количество друзей (cap 10): $totalFriendsCount")
+
+                val validUsers = mutableListOf<Pair<MyUser, Int>>()
+
+                for (user in potentialUsers) {
+                    Log.d("UserViewModel", "--- Обработка пользователя: ${user.name} (${user.uid}) ---")
+
+                    // Загружаем места другого пользователя
+                    val otherPlacesResult = userPlacesRepository.getUserLikedPlaces(user.uid)
+                    val otherPlaces = if (otherPlacesResult.isSuccess) otherPlacesResult.getOrNull() ?: emptyList() else emptyList()
+                    Log.d("UserViewModel", "Лайкнутые места пользователя: ${otherPlaces.size}")
+
+                    if (otherPlaces.isNotEmpty()) {
+                        // Загружаем детали мест другого пользователя
+                        val otherPlaceIds = otherPlaces.map { it.placeId }
+                        val otherPlaceDetailsResult = if (otherPlaceIds.isNotEmpty()) {
+                            userPlacesRepository.getPlacesDetails(otherPlaceIds)
+                        } else {
+                            Result.success(emptyList())
+                        }
+                        val otherPlaceDetails = if (otherPlaceDetailsResult.isSuccess) otherPlaceDetailsResult.getOrNull() ?: emptyList() else emptyList()
+                        Log.d("UserViewModel", "Детали мест пользователя: ${otherPlaceDetails.size}")
+
+                        // Получаем количество общих друзей
+                        val mutualFriendsCount = userRepository.getMutualFriendsCount(user.uid)
+                        Log.d("UserViewModel", "Общих друзей: $mutualFriendsCount")
+
+                        // ИСПОЛЬЗУЕМ УЛУЧШЕННУЮ ФОРМУЛУ (не временную)
+                        val percent = calculateEnhancedCompatibility(
+                            myPlaces = myPlaces,
+                            otherUserPlaces = otherPlaces,
+                            myPlaceDetails = myPlaceDetails,
+                            otherUserPlaceDetails = otherPlaceDetails,
+                            mutualFriendsCount = mutualFriendsCount,
+                            totalFriendsCount = totalFriendsCount
+                        )
+
+                        Log.d("UserViewModel", "Процент совместимости (улучшенная формула): $percent%")
+
+                        if (percent > 0) {
+                            validUsers.add(user to percent)
+                            Log.d("UserViewModel", "✅ ДОБАВЛЕН: ${user.name} с $percent%")
+                        } else {
+                            Log.d("UserViewModel", "❌ ПОЛЬЗОВАТЕЛЬ НЕ ДОБАВЛЕН (0%)")
+                        }
+                    } else {
+                        Log.d("UserViewModel", "❌ У ПОЛЬЗОВАТЕЛЯ НЕТ ЛАЙКНУТЫХ МЕСТ")
+                    }
+                }
+
+                // Сортируем по убыванию совместимости
+                val sortedUsers = validUsers.sortedByDescending { it.second }
+
+                Log.d("UserViewModel", "=== ИТОГ: найдено ${sortedUsers.size} пользователей с улучшенной формулой ===")
+                sortedUsers.forEachIndexed { index, (user, percent) ->
+                    Log.d("UserViewModel", "$index. ${user.name}: $percent%")
+                }
+
+                _recommendedUsers.value = sortedUsers.map { it.first }
+                _usersCompatibility.value = sortedUsers.associate { it.first.uid to it.second }
+
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Ошибка загрузки рекомендаций", e)
+                _dataLoadError.value = e.message ?: "Ошибка загрузки рекомендаций"
+            } finally {
+                _isLoading.value = false
+                Log.d("UserViewModel", "=== ЗАГРУЗКА ЗАВЕРШЕНА ===")
+            }
+        }
+    }
+
+    /**
+     * Удалить статус дружбы (отменить заявку)
+     */
+    fun removeFriendshipStatus(
+        myUserId: String,
+        friendId: String
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                Log.d("UserViewModel", "Removing friendship status: me=$myUserId, friend=$friendId")
+
+                // Удаляем запись у текущего пользователя
+                userRepository.removeFriendField(myUserId, friendId)
+
+                // Удаляем запись у друга
+                userRepository.removeFriendField(friendId, myUserId)
+
+                // Обновляем данные текущего пользователя
+                loadMyUser()
+
+                // Если это был экран друга, обновляем и его данные
+                if (friendId == _otherUser.value?.uid) {
+                    loadUserById(friendId)
+                }
+
+                Log.d("UserViewModel", "Friendship status removed successfully")
+
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error removing friendship status", e)
+                _dataLoadError.value = e.message ?: "Ошибка отмены заявки"
             } finally {
                 _isLoading.value = false
             }

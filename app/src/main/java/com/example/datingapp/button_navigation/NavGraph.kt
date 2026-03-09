@@ -114,7 +114,8 @@ fun NavGraph(
                 navController = localNavController,
                 viewModel = viewModel,
                 friendId = friendId,
-                pageTitle = pageTitle
+                pageTitle = pageTitle,
+                hasBottomNavigation = true  // Указываем, что есть нижняя навигация
             )
         }
     }

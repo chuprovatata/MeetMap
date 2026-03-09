@@ -1,5 +1,6 @@
 package com.example.datingapp.navigation
 
+import NotificationScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,7 +25,6 @@ import com.example.datingapp.screens.meets.MainMeets
 import com.example.datingapp.screens.meets.ReqFriend
 import com.example.datingapp.screens.myplaces.MyPlaceDetailScreen
 import com.example.datingapp.screens.myplaces.MyPlacesScreen
-import com.example.datingapp.screens.notification.NotificationScreen
 import com.example.datingapp.screens.onboarding.*
 import com.example.datingapp.screens.places.PlacesOfDayScreen
 import com.example.datingapp.screens.profile.CategorySelectionScreen
@@ -216,6 +216,7 @@ fun AppNavigation() {
             )
         }
 
+        // Places of day with parameter
         composable(
             route = "places_of_day?fromOnboarding={fromOnboarding}",
             arguments = listOf(
@@ -240,7 +241,31 @@ fun AppNavigation() {
             val isFirstEntry = backStackEntry.arguments?.getBoolean("isFirstEntry") ?: false
 
             FeedbackAfterPlacesOfDayScreen(
-                navController = navController
+                navController = navController,
+                onContinue = {
+                    if (isFirstEntry) {
+                        println("DEBUG: First entry - going to FinalTutorial")
+                        navController.navigate(Screen.FinalTutorial.route) {
+                            popUpTo("feedback_after_places_of_day/${isFirstEntry}") { inclusive = true }
+                        }
+                    } else {
+                        println("DEBUG: Not first entry - going to Main")
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(0)
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.FeedbackAfterPlacesOfDay.route) {
+            FeedbackAfterPlacesOfDayScreen(
+                navController = navController,
+                onContinue = {
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(0)
+                    }
+                }
             )
         }
 
@@ -264,16 +289,12 @@ fun AppNavigation() {
             )
         }
 
+        // Main screen
         composable(Screen.Main.route) {
             MainBottomMenuScreen(startTab = "main")
         }
 
-        composable(Screen.FeedbackAfterPlacesOfDay.route) {
-            FeedbackAfterPlacesOfDayScreen(
-                navController = navController
-            )
-        }
-
+        // My places detail
         composable(
             route = Screen.MyPlaceDetail.route,
             arguments = listOf(navArgument("placeId") { type = NavType.StringType })
@@ -285,18 +306,22 @@ fun AppNavigation() {
             )
         }
 
+        // My places list
         composable(Screen.MyPlaces.route) {
-            MainBottomMenuScreen(startTab = "screen_2")  // "screen_2" - это маршрут для Моих мест
+            MainBottomMenuScreen(startTab = "screen_2")
         }
 
+        // People of day
         composable(Screen.PeopleOfDay.route) {
             PeopleOfDay(navController = navController, viewModel = userViewModel)
         }
 
+        // Main meets
         composable(Screen.MainMeets.route) {
             MainMeets(navController = navController, viewModel = userViewModel)
         }
 
+        // Req friend
         composable(
             route = "req_friend/{friendId}/{pageTitle}",
             arguments = listOf(
@@ -315,14 +340,17 @@ fun AppNavigation() {
             )
         }
 
+        // Settings
         composable(Screen.Settings.route) {
             SettingsScreen(navController = navController)
         }
 
+        // My profile
         composable(Screen.MyProfile.route) {
             MyProfile(navController = navController, userViewModel)
         }
 
+        // Current friend
         composable(Screen.CurFriend.route) { backStackEntry ->
             val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
             Cur_Friend(
@@ -332,6 +360,7 @@ fun AppNavigation() {
             )
         }
 
+        // Main bottom menu
         composable(
             route = "main_bottom_menu/{startTab}",
             arguments = listOf(
@@ -345,6 +374,7 @@ fun AppNavigation() {
             MainBottomMenuScreen(startTab = startTab ?: "screen_2")
         }
 
+        // Admin screens
         composable(Screen.PlacesAdmin.route) {
             PlacesAdminScreen(navController = navController)
         }
@@ -360,10 +390,8 @@ fun AppNavigation() {
         composable(Screen.TestCloud.route) {
             TestCloudScreen(navController = navController)
         }
-        composable(Screen.Main.route) {
-            MainBottomMenuScreen(startTab = "main")
-        }
 
+        // Notification
         composable(Screen.Notification.route) {
             NotificationScreen(navController = navController)
         }

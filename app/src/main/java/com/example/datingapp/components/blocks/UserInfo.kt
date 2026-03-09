@@ -52,9 +52,13 @@ fun UserInfo(
     user: MyUser?,
     profileImageUrl: String? = null,
     isUploadingImage: Boolean = false,
-    showTelegram: Boolean = true
+    showTelegram: Boolean = false,  // Изменено: по умолчанию false
+    isFriend: Boolean = false       // Новый параметр для явного указания статуса друга
 ) {
     val context = LocalContext.current
+
+    // Определяем, показывать ли Telegram
+    val shouldShowTelegram = showTelegram || isFriend
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -140,7 +144,9 @@ fun UserInfo(
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-            if (showTelegram && !user?.telegram.isNullOrBlank()) {
+
+            // Показываем Telegram только если shouldShowTelegram = true
+            if (shouldShowTelegram && !user?.telegram.isNullOrBlank()) {
                 Text(
                     text = "Написать в Telegram @${user?.telegram}",
                     style = MaterialTheme.typography.bodyLarge.copy(

@@ -113,76 +113,25 @@ class UserPlacesRepository @Inject constructor(
         }
     }
 
-    suspend fun getUserLikedPlaces(): Result<List<UserPlace>> {
+    // В UserPlacesRepository.kt добавьте логирование
+    suspend fun getUserLikedPlaces(userId: String = auth.currentUser?.uid ?: ""): Result<List<UserPlace>> {
+        Log.d("UserPlacesRepository", "Получение мест для пользователя: $userId")
+
         return try {
-            val userId = auth.currentUser?.uid
-            Log.d("GET_PLACES", "getUserLikedPlaces - userId: $userId")
-
-            if (userId == null) {
-                Log.e("GET_PLACES", "User not authenticated")
-                return Result.failure(Exception("Пользователь не авторизован"))
-            }
-
-            Log.d("GET_PLACES", "Querying collection: user_places")
-
-            val snapshot = collection
+            val snapshot = firestore.collection("user_places")
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("status", "liked")
-                .orderBy("addedTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
 
-            Log.d("GET_PLACES", "Query result size: ${snapshot.size()}")
-
             val places = snapshot.documents.mapNotNull { doc ->
-                try {
-                    val place = doc.toObject<UserPlace>()
-                    Log.d("GET_PLACES", "Found place: ${place?.placeId}")
-                    place
-                } catch (e: Exception) {
-                    Log.e("GET_PLACES", "Error converting document", e)
-                    null
-                }
+                doc.toObject(UserPlace::class.java)
             }
 
-            Log.d("GET_PLACES", "Successfully loaded ${places.size} places")
+            Log.d("UserPlacesRepository", "Найдено мест для пользователя $userId: ${places.size}")
             Result.success(places)
         } catch (e: Exception) {
-            Log.e("GET_PLACES", "Error in getUserLikedPlaces", e)
-            Result.failure(e)
-        }
-    }
-    /**
-     * Получить лайкнутые места другого пользователя по его ID
-     */
-    suspend fun getUserLikedPlaces(userId: String): Result<List<UserPlace>> {
-        return try {
-            Log.d("GET_PLACES", "getUserLikedPlaces - userId: $userId")
-
-            val snapshot = collection
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("status", "liked")
-                .orderBy("addedTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .get()
-                .await()
-
-            Log.d("GET_PLACES", "Query result size: ${snapshot.size()}")
-
-            val places = snapshot.documents.mapNotNull { doc ->
-                try {
-                    val place = doc.toObject<UserPlace>()
-                    Log.d("GET_PLACES", "Found place: ${place?.placeId}")
-                    place
-                } catch (e: Exception) {
-                    Log.e("GET_PLACES", "Error converting document", e)
-                    null
-                }
-            }
-
-            Log.d("GET_PLACES", "Successfully loaded ${places.size} places for user $userId")
-            Result.success(places)
-        } catch (e: Exception) {
-            Log.e("GET_PLACES", "Error in getUserLikedPlaces for user $userId", e)
+            Log.e("UserPlacesRepository", "Ошибка получения мест для пользователя $userId", e)
             Result.failure(e)
         }
     }
@@ -298,6 +247,67 @@ class UserPlacesRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in notifyFriendsAboutNewPlace", e)
+        }
+    }
+
+    /**
+     * Получить детальную информацию о местах по их ID
+     */
+    suspend fun getPlacesDetails(placeIds: List<String>): Result<List<PlaceInfo>> {
+        return try {
+            if (placeIds.isEmpty()) {
+                return Result.success(emptyList())
+            }
+
+            val allPlaces = mutableListOf<PlaceInfo>()
+
+            for (placeId in placeIds) {
+                try {
+                    val doc = firestore.collection("places_info")
+                        .document(placeId)
+                        .get()
+                        .await()
+
+                    if (doc.exists()) {
+                        val place = doc.toObject(PlaceInfo::class.java)
+                        if (place != null) {
+                            allPlaces.add(place.copy(id = doc.id))
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("UserPlacesRepository", "Error loading place $placeId", e)
+                }
+            }
+
+            Result.success(allPlaces)
+        } catch (e: Exception) {
+            Log.e("UserPlacesRepository", "Error getting places details", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun debugGetAllUserPlaces(userId: String): Result<List<UserPlace>> {
+        Log.d("UserPlacesRepository", "DEBUG: Получение ВСЕХ мест для пользователя: $userId")
+
+        return try {
+            val snapshot = firestore.collection("user_places")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            val places = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(UserPlace::class.java)
+            }
+
+            Log.d("UserPlacesRepository", "DEBUG: Найдено ВСЕГО мест: ${places.size}")
+            places.forEachIndexed { index, place ->
+                Log.d("UserPlacesRepository", "DEBUG: Место $index: placeId=${place.placeId}, status='${place.status}'")
+            }
+
+            Result.success(places)
+        } catch (e: Exception) {
+            Log.e("UserPlacesRepository", "DEBUG: Ошибка", e)
+            Result.failure(e)
         }
     }
 }

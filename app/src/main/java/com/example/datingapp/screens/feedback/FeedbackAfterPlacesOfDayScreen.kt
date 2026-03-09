@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun FeedbackAfterPlacesOfDayScreen(
     navController: NavController,
+    onContinue: () -> Unit = { navController.popBackStack() },
     viewModel: FeedbackViewModel = hiltViewModel()
 ) {
     var rating by remember { mutableStateOf(0) }

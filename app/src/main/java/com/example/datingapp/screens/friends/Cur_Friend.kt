@@ -88,7 +88,7 @@ fun Cur_Friend(navController: NavController, friendId: String, viewModel: UserVi
                             user = user,
                             profileImageUrl = null,
                             isUploadingImage = false,
-                            showTelegram = true
+                            isFriend = true  // Показываем Telegram для друзей
                         )
 
                         Spacer(modifier = Modifier.height(30.dp))

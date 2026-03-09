@@ -36,7 +36,8 @@ import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.example.datingapp.viewmodels.NotificationViewModel
-
+import kotlinx.coroutines.launch
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +82,7 @@ fun MainScreen(
     // Нижняя граница для скроллируемой области (до нижней навигации)
     val scrollAreaBottomOffset = bottomNavHeight + spacing.large
 
+    // Проверка для админки
     val ADMIN_EMAILS = listOf(
         "meetmap.team@gmail.com",
         "chuprova_tata@mail.ru",
@@ -252,10 +254,7 @@ fun MainScreen(
                         subtitle = "Посмотри, сколько похожих на тебя людей!",
                         imageResId = null,
                         onClick = {
-                            localNavController.navigate("screen_1") {
-                                popUpTo(Screen.Main.route) { inclusive = false }
-                                launchSingleTop = true
-                            }
+                            navController.navigate(Screen.PeopleOfDay.route)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         height = finalPeopleBlockHeight,
