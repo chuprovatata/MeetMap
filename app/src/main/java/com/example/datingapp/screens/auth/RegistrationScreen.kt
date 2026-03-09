@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ fun RegistrationScreen(
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var isAgreedWithTerms by rememberSaveable { mutableStateOf(false) }
 
     var emailError by remember { mutableStateOf(false) }
@@ -258,7 +260,7 @@ fun RegistrationScreen(
                     placeholder = "Придумай пароль для входа в аккаунт",
                     isError = passwordError,
                     errorMessage = if (passwordError) "Пароль должен быть не менее 6 символов" else null,
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
@@ -274,7 +276,19 @@ fun RegistrationScreen(
                     focusRequester = passwordFocusRequester,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = spacing.large)
+                        .padding(horizontal = spacing.large),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                painter = painterResource(
+                                    id = if (passwordVisible) R.drawable.icon_eye_open
+                                    else R.drawable.icon_eye_closed
+                                ),
+                                contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(spacing.large))

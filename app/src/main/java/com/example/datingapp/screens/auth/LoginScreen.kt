@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +42,8 @@ fun LoginScreen(
 
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
+
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
@@ -194,31 +197,30 @@ fun LoginScreen(
                         placeholder = "Введи свой пароль",
                         isError = passwordError,
                         errorMessage = if (passwordError) "Пароль должен быть не менее 6 символов" else null,
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = {
-                                keyboardController?.hide()
-                                if (validateForm(email, password) && !isLoading) {
-                                    authViewModel.login(
-                                        email = email,
-                                        password = password,
-                                        onSuccess = {
-                                            navController.navigate("main") {
-                                                popUpTo("login") { inclusive = true }
-                                            }
-                                        }
-                                    )
-                                }
-                            }
+                            onDone = { /* ... */ }
                         ),
                         focusRequester = passwordFocusRequester,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = spacing.large)
+                            .padding(horizontal = spacing.large),
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (passwordVisible) R.drawable.icon_eye_open
+                                        else R.drawable.icon_eye_closed
+                                    ),
+                                    contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(spacing.small))
@@ -302,12 +304,12 @@ fun LoginScreen(
                     ) {
                         Text(
                             text = "Ещё нет аккаунта?",
-                            style = MaterialTheme.typography.bodyLarge.copy(
+                            style = MaterialTheme.typography.bodyMedium.copy(
                                 color = MaterialTheme.colorScheme.onBackground,
                             )
                         )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(2.dp))
 
                         TextButtonWithUnderline(
                             text = "Зарегистрироваться",
@@ -316,7 +318,7 @@ fun LoginScreen(
                             },
                             showUnderline = true,
                             textColor = MaterialTheme.colorScheme.primary,
-                            fontSize = 16
+                            fontSize = 13
                         )
                     }
                 }
