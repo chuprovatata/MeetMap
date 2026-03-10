@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.FavPlace
@@ -47,9 +48,11 @@ import com.example.datingapp.components.blocks.UserInfo
 import com.example.datingapp.components.headers.Heading_Arrow
 import com.example.datingapp.components.progress.ProgressLine
 import com.example.datingapp.data.repository.FriendStatus
+import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.GrayDark
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.ui.theme.PurpleCard
+import com.example.datingapp.viewmodels.NotificationViewModel
 import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
@@ -67,9 +70,15 @@ fun ReqFriend(
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
 
+    // Получаем NotificationViewModel
+    val notificationViewModel: NotificationViewModel = hiltViewModel()
+
     // Состояние для отслеживания отправки/отмены заявки
     var isProcessing by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
+
+    // Состояние для отслеживания проверки дружбы
+    var friendshipChecked by remember { mutableStateOf(false) }
 
     // Динамический отступ снизу в зависимости от наличия нижней навигации
     val bottomButtonPadding = if (hasBottomNavigation) {
@@ -96,6 +105,20 @@ fun ReqFriend(
 
     // Статус дружбы
     val friendshipStatus = myUser?.friends?.get(friendId)?.status ?: ""
+
+    // Проверяем, является ли пользователь другом, и перенаправляем на Cur_Friend
+    LaunchedEffect(friendshipStatus, otherUser, friendshipChecked) {
+        if (!friendshipChecked && friendshipStatus == FriendStatus.FRIEND.value && otherUser != null) {
+            friendshipChecked = true
+            // Перенаправляем на страницу друга
+            navController.navigate(Screen.CurFriend.passFriendId(friendId)) {
+                // Удаляем текущий экран из бэктэка
+                popUpTo(navController.currentBackStackEntry?.destination?.route ?: return@navigate) {
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     if (isLoading && otherUser == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -266,6 +289,13 @@ fun ReqFriend(
                                                         newStatusForMe = FriendStatus.FRIEND,
                                                         newStatusForFriend = FriendStatus.FRIEND
                                                     )
+
+                                                    // Отправляем уведомление о принятии заявки
+                                                    notificationViewModel.createFriendAcceptedNotification(
+                                                        fromUserId = myUser?.uid ?: "",
+                                                        toUserId = friendId
+                                                    )
+
                                                     snackbarHostState.showSnackbar("Заявка принята")
                                                     navController.popBackStack()
                                                 } finally {
@@ -397,6 +427,13 @@ fun ReqFriend(
                                                     newStatusForMe = FriendStatus.MY_APPLICATION,
                                                     newStatusForFriend = FriendStatus.REQUEST
                                                 )
+
+                                                // Отправляем уведомление о новой заявке
+                                                notificationViewModel.createFriendRequestNotification(
+                                                    fromUserId = myUser?.uid ?: "",
+                                                    toUserId = friendId
+                                                )
+
                                                 snackbarHostState.showSnackbar("Заявка отправлена")
                                                 viewModel.loadUserById(friendId)
                                             } finally {

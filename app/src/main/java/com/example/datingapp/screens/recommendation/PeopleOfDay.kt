@@ -1,5 +1,6 @@
 package com.example.datingapp.screens.recommendation
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,13 +8,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -22,6 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.Title_Block
@@ -36,8 +37,31 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
     val usersCompatibility by viewModel.usersCompatibility.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Отслеживаем жизненный цикл экрана
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    Log.d("PeopleOfDay", "📱 Экран стал активным - обновляем данные")
+                    viewModel.refreshRecommendedUsers()
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Обновляем при первом открытии
     LaunchedEffect(Unit) {
-        viewModel.loadRecommendedUsers()
+        Log.d("PeopleOfDay", "🚀 Первое открытие экрана")
+        viewModel.refreshRecommendedUsers()
     }
 
     Scaffold(
@@ -71,13 +95,22 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                         .fillMaxSize()
                         .background(Color.White)
                 ) {
-                    Title_Block(
-                        navController,
-                        "У вас схожие интересы",
-                        "Вы часто посещаете одни и те же места, может быть это знак?",
-                        R.drawable.person_on_board,
-                        false
-                    )
+                    // Позиционирование Title_Block
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.25f) // Блок занимает 25% высоты экрана
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 8.dp, bottom = 12.dp)
+                    ) {
+                        Title_Block(
+                            navController,
+                            "У вас схожие интересы",
+                            "Вы часто посещаете одни и те же места, может быть это знак?",
+                            R.drawable.person_on_board,
+                            false
+                        )
+                    }
 
                     if (recommendedUsers.isEmpty()) {
                         Box(
@@ -93,6 +126,9 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                                     contentDescription = "",
                                     modifier = Modifier.size(200.dp)
                                 )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
                                 Text(
                                     text = "Здесь пока никого нет(",
                                     color = Color.Gray,
@@ -100,6 +136,8 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                                     fontSize = 20.sp,
                                     textAlign = TextAlign.Center
                                 )
+
+                                Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
                                     text = buildAnnotatedString {
