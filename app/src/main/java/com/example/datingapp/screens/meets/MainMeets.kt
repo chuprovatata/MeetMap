@@ -52,6 +52,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.Title_Block
@@ -67,7 +68,10 @@ import com.example.datingapp.ui.theme.GrayMedium
 import com.example.datingapp.ui.theme.LocalDatingAppSpacing
 import com.example.datingapp.ui.theme.PurpleCard
 import com.example.datingapp.ui.theme.montserratFamily
+import com.example.datingapp.viewmodels.NotificationViewModel
 import com.example.datingapp.viewmodels.UserViewModel
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import org.w3c.dom.Text
 
 
@@ -75,6 +79,7 @@ import org.w3c.dom.Text
 fun MainMeets(navController: NavController, viewModel: UserViewModel) {
     val spacing = LocalDatingAppSpacing.current
     var selectedTab by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
 
     val friendsList by viewModel.friendsList.collectAsState()
     val incomingRequests by viewModel.incomingRequests.collectAsState()
@@ -85,6 +90,8 @@ fun MainMeets(navController: NavController, viewModel: UserViewModel) {
     val myUser by viewModel.myUser.collectAsState()
     val curId = myUser?.uid ?: ""
 
+    // Получаем NotificationViewModel
+    val notificationViewModel: NotificationViewModel = hiltViewModel()
 
     LaunchedEffect(Unit) {
         viewModel.loadAllFriendData()
@@ -199,14 +206,20 @@ fun MainMeets(navController: NavController, viewModel: UserViewModel) {
                                                 status = FriendStatus.REQUEST,
 
                                                 onClickButton = {
+                                                    scope.launch {
+                                                        viewModel.updateFriendshipStatus(
+                                                            curId,
+                                                            user.uid,
+                                                            FriendStatus.FRIEND,
+                                                            FriendStatus.FRIEND
+                                                        )
 
-                                                    viewModel.updateFriendshipStatus(
-                                                        curId,
-                                                        user.uid,
-                                                        FriendStatus.FRIEND,
-                                                        FriendStatus.FRIEND
-                                                    )
-
+                                                        // Отправляем уведомление о принятии заявки
+                                                        notificationViewModel.createFriendAcceptedNotification(
+                                                            fromUserId = curId,
+                                                            toUserId = user.uid
+                                                        )
+                                                    }
                                                 },
                                             )
                                         }

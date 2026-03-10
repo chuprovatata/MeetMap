@@ -33,6 +33,7 @@ import com.example.datingapp.R
 import com.example.datingapp.data.models.AppUser
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.viewmodels.MyPlaceDetailViewModel
+import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
@@ -353,10 +354,9 @@ fun MyPlaceDetailScreen(
                             users.forEach { user ->
                                 UserItem(
                                     user = user,
-                                    onClick = {
-                                        // Переход в профиль пользователя
-                                        // navController.navigate(Screen.ProfileDetail.route + "/${user.id}")
-                                    }
+                                    onClick = { /* можно оставить пустым или удалить */ },
+                                    navController = navController,  // передаем навигацию
+                                    userViewModel = hiltViewModel() // получаем UserViewModel
                                 )
                             }
                         }
@@ -539,12 +539,37 @@ fun UsersCountCard(
 @Composable
 fun UserItem(
     user: AppUser,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    viewModel: MyPlaceDetailViewModel = hiltViewModel(),
+    navController: NavController,
+    userViewModel: UserViewModel = hiltViewModel()
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable {
+                // Определяем статус дружбы и переходим на нужный экран
+                val currentUser = userViewModel.myUser.value
+                val friendInfo = currentUser?.friends?.get(user.id)
+                val status = friendInfo?.status
+
+                when (status) {
+                    "friend" -> {
+                        // Переход на Cur_Friend
+                        navController.navigate("cur_friend/${user.id}")
+                    }
+                    else -> {
+                        // Переход на ReqFriend
+                        val pageTitle = when (status) {
+                            "request" -> "Входящая заявка"
+                            "my_application" -> "Исходящая заявка"
+                            "deny" -> "Отклоненная заявка"
+                            else -> "Профиль"
+                        }
+                        navController.navigate("req_friend/${user.id}/$pageTitle")
+                    }
+                }
+            }
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

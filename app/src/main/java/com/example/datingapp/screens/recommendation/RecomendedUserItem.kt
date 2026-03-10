@@ -94,11 +94,7 @@ fun RecommendedUserItem(
                     .size(60.dp)
                     .clip(CircleShape)
                     .background(
-                        when {
-                            compatibilityPercent >= 70 -> PurpleCard
-                            compatibilityPercent >= 40 -> PurpleCard.copy(alpha = 0.7f)
-                            else -> PurpleCard.copy(alpha = 0.4f)
-                        }
+                        PurpleCard
                     ),
                 contentAlignment = Alignment.Center
             ) {

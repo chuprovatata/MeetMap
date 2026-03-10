@@ -31,15 +31,19 @@ class NotificationRepository @Inject constructor(
     }
 
     /**
+     * Получить ID текущего пользователя
+     */
+    fun getCurrentUserId(): String {
+        return auth.currentUser?.uid ?: ""
+    }
+
+    /**
      * ПОЛУЧЕНИЕ УВЕДОМЛЕНИЙ
      */
 
     /**
      * Получить уведомления текущего пользователя в реальном времени
      * Используется для отображения в NotificationScreen
-     */
-    /**
-     * Получить уведомления текущего пользователя в реальном времени
      */
     fun getNotificationsFlow(): Flow<List<Notification>> = callbackFlow {
         val currentUser = auth.currentUser
@@ -67,23 +71,15 @@ class NotificationRepository @Inject constructor(
 
                 Log.d(TAG, "📊 Получен snapshot, размер: ${snapshot.size()} документов")
 
-                // Логируем каждый документ
-                snapshot.documents.forEachIndexed { index, doc ->
-                    Log.d(TAG, "  Документ #$index: id=${doc.id}, data=${doc.data}")
-                }
-
                 val notifications = snapshot.documents.mapNotNull { doc ->
                     try {
                         val notification = doc.toObject<Notification>()?.copy(id = doc.id)
-                        Log.d(TAG, "✅ Преобразован в Notification: ${notification?.title}")
                         notification
                     } catch (e: Exception) {
                         Log.e(TAG, "❌ Ошибка преобразования документа ${doc.id}", e)
                         null
                     }
                 }
-
-                Log.d(TAG, "📨 Итого уведомлений после преобразования: ${notifications.size}")
 
                 trySend(notifications).isSuccess
             }
@@ -103,7 +99,7 @@ class NotificationRepository @Inject constructor(
         return try {
             val snapshot = notificationsCollection
                 .whereEqualTo("userId", currentUser.uid)
-                .whereEqualTo("is_read", false)
+                .whereEqualTo("read", false)
                 .get()
                 .await()
             snapshot.size()
@@ -124,7 +120,7 @@ class NotificationRepository @Inject constructor(
         try {
             notificationsCollection
                 .document(notificationId)
-                .update("is_read", true)
+                .update("read", true)
                 .await()
             Log.d(TAG, "Уведомление $notificationId отмечено как прочитанное")
         } catch (e: Exception) {
@@ -140,13 +136,13 @@ class NotificationRepository @Inject constructor(
         try {
             val snapshot = notificationsCollection
                 .whereEqualTo("userId", currentUser.uid)
-                .whereEqualTo("is_read", false)
+                .whereEqualTo("read", false)
                 .get()
                 .await()
 
             val batch = firestore.batch()
             snapshot.documents.forEach { doc ->
-                batch.update(doc.reference, "is_read", true)
+                batch.update(doc.reference, "read", true)
             }
             batch.commit().await()
             Log.d(TAG, "Все уведомления отмечены как прочитанные")
@@ -191,33 +187,20 @@ class NotificationRepository @Inject constructor(
 
     /**
      * СОЗДАНИЕ УВЕДОМЛЕНИЙ
-     *
-     * КАК ДОБАВИТЬ НОВЫЙ ТИП УВЕДОМЛЕНИЯ:
-     * 1. Добавить новый тип в NotificationType
-     * 2. Создать функцию create[Название]Notification
-     * 3. В функции определить:
-     *    - title: заголовок
-     *    - description: описание
-     *    - buttonText: текст кнопки
-     *    - data: дополнительные данные для навигации
-     * 4. Вызвать эту функцию в нужном месте приложения
      */
 
     /**
      * Уведомление: друг добавил новое место
-     * Событие: когда друг пользователя добавляет место в избранное
      */
     suspend fun createNewPlaceFromFriendNotification(
         friendId: String,
         placeId: String,
-        targetUserId: String // кому отправляем уведомление
+        targetUserId: String
     ) {
         try {
-            // Получаем информацию о друге
             val friendDoc = usersCollection.document(friendId).get().await()
             val friendName = friendDoc.getString("name") ?: "Пользователь"
 
-            // Получаем информацию о месте
             val placeDoc = placesCollection.document(placeId).get().await()
             val placeName = placeDoc.getString("name") ?: "новое место"
 
@@ -248,11 +231,10 @@ class NotificationRepository @Inject constructor(
 
     /**
      * Уведомление: обновилась подборка "Места дня"
-     * Событие: при обновлении коллекции places_of_day (например, раз в день)
      */
     suspend fun createPlacesOfDayUpdatedNotification() {
         val notification = Notification(
-            userId = "", // будет установлено для каждого пользователя отдельно
+            userId = "",
             type = NotificationType.PLACES_OF_DAY_UPDATED,
             title = "Свежие места дня 🔥",
             description = "Подборка мест дня обновилась! Смотри, что нового мы для тебя нашли.",
@@ -262,7 +244,6 @@ class NotificationRepository @Inject constructor(
             createdAt = com.google.firebase.Timestamp(Date())
         )
 
-        // Отправляем всем пользователям
         try {
             val users = usersCollection.get().await()
             val batch = firestore.batch()
@@ -285,8 +266,7 @@ class NotificationRepository @Inject constructor(
     }
 
     /**
-     * Пример: уведомление о новом запросе в друзья
-     * (для демонстрации расширяемости)
+     * Уведомление о новом запросе в друзья
      */
     suspend fun createFriendRequestNotification(
         fromUserId: String,
@@ -305,7 +285,7 @@ class NotificationRepository @Inject constructor(
                     "friendId" to fromUserId,
                     "friendName" to userName
                 ),
-                buttonText = "Посмотреть",
+                buttonText = "Перейти в заявки",
                 read = false,
                 createdAt = com.google.firebase.Timestamp(Date())
             )
@@ -320,42 +300,41 @@ class NotificationRepository @Inject constructor(
     }
 
     /**
-     * ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+     * Уведомление о принятии заявки в друзья
      */
+    suspend fun createFriendAcceptedNotification(
+        fromUserId: String,
+        toUserId: String
+    ) {
+        try {
+            val userDoc = usersCollection.document(fromUserId).get().await()
+            val userName = userDoc.getString("name") ?: "Пользователь"
 
-    /**
-     * Проверить, есть ли уже такое уведомление (чтобы не дублировать)
-     */
-    private suspend fun notificationExists(
-        userId: String,
-        type: NotificationType,
-        data: Map<String, String>
-    ): Boolean {
-        return try {
-            var query = notificationsCollection
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("type", type)
+            val notification = Notification(
+                userId = toUserId,
+                type = NotificationType.FRIEND_ACCEPTED,
+                title = "Заявка принята ✅",
+                description = "$userName принял(а) вашу заявку в друзья!",
+                data = mapOf(
+                    "friendId" to fromUserId,
+                    "friendName" to userName
+                ),
+                buttonText = "Посмотреть профиль",
+                read = false,
+                createdAt = com.google.firebase.Timestamp(Date())
+            )
 
-            // Добавляем условия для данных
-            data.forEach { (key, value) ->
-                query = query.whereEqualTo("data.$key", value)
-            }
+            val docRef = notificationsCollection.document()
+            docRef.set(notification.copy(id = docRef.id)).await()
 
-            val snapshot = query
-                .whereGreaterThan("created_at", Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000)) // последние 24 часа
-                .get()
-                .await()
-
-            snapshot.size() > 0
+            Log.d(TAG, "Создано уведомление FRIEND_ACCEPTED для пользователя $toUserId")
         } catch (e: Exception) {
-            Log.e(TAG, "Ошибка при проверке существования уведомления", e)
-            false
+            Log.e(TAG, "Ошибка при создании уведомления FRIEND_ACCEPTED", e)
         }
     }
 
     /**
      * СОЗДАНИЕ ТЕСТОВЫХ УВЕДОМЛЕНИЙ
-     * Используется только для отладки!
      */
     suspend fun createTestNotifications() {
         val currentUser = auth.currentUser ?: return
@@ -363,7 +342,6 @@ class NotificationRepository @Inject constructor(
 
         Log.d(TAG, "Создание тестовых уведомлений для пользователя $userId")
 
-        // Удаляем старые тестовые уведомления
         try {
             val oldNotifications = notificationsCollection
                 .whereEqualTo("userId", userId)
@@ -380,7 +358,6 @@ class NotificationRepository @Inject constructor(
             Log.e(TAG, "Ошибка при удалении старых тестовых уведомлений", e)
         }
 
-        // Создаем новые тестовые уведомления
         val testNotifications = listOf(
             Notification(
                 userId = userId,
@@ -399,21 +376,6 @@ class NotificationRepository @Inject constructor(
             ),
             Notification(
                 userId = userId,
-                type = NotificationType.NEW_PLACE_FROM_FRIEND,
-                title = "Михаил добавил новое место 🌟",
-                description = "Михаил добавил ресторан 'Итальянский дворик' в избранное",
-                data = mapOf(
-                    "friendId" to "test_friend_2",
-                    "placeId" to "test_place_2",
-                    "friendName" to "Михаил",
-                    "placeName" to "Итальянский дворик"
-                ),
-                buttonText = "Посмотреть место",
-                read = false,
-                createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 3600000))
-            ),
-            Notification(
-                userId = userId,
                 type = NotificationType.PLACES_OF_DAY_UPDATED,
                 title = "Свежие места дня 🔥",
                 description = "Подборка мест дня обновилась! Смотри, что нового мы для тебя нашли.",
@@ -421,13 +383,38 @@ class NotificationRepository @Inject constructor(
                 buttonText = "Смотреть подборку",
                 read = true,
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 86400000))
+            ),
+            Notification(
+                userId = userId,
+                type = NotificationType.FRIEND_REQUEST,
+                title = "Запрос в друзья 👋",
+                description = "Екатерина хочет добавить вас в друзья",
+                data = mapOf(
+                    "friendId" to "test_friend_3",
+                    "friendName" to "Екатерина"
+                ),
+                buttonText = "Перейти в заявки",
+                read = false,
+                createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 7200000))
+            ),
+            Notification(
+                userId = userId,
+                type = NotificationType.FRIEND_ACCEPTED,
+                title = "Заявка принята ✅",
+                description = "Дмитрий принял вашу заявку в друзья!",
+                data = mapOf(
+                    "friendId" to "test_friend_4",
+                    "friendName" to "Дмитрий"
+                ),
+                buttonText = "Посмотреть профиль",
+                read = false,
+                createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 1800000))
             )
         )
 
         testNotifications.forEach { notification ->
             val docRef = notificationsCollection.document()
             docRef.set(notification.copy(id = docRef.id)).await()
-            Log.d(TAG, "Создано тестовое уведомление: ${notification.title}")
         }
 
         Log.d(TAG, "Все тестовые уведомления созданы")

@@ -203,13 +203,19 @@ private fun handleNotificationClick(
         }
 
         NotificationType.PLACES_OF_DAY_UPDATED -> {
-            navController.navigate(Screen.PlacesOfDay.route)
+            navController.navigate("places_of_day?fromOnboarding=false")
         }
 
         NotificationType.FRIEND_REQUEST -> {
             val friendId = notification.getFriendId()
             if (friendId != null) {
-                navController.navigate(Screen.CurFriend.passFriendId(friendId))
+                // Исправлено: переходим на экран ReqFriend с параметрами
+                navController.navigate(
+                    Screen.ReqFriend.passParams(
+                        friendId = friendId,
+                        pageTitle = "Заявка в друзья"
+                    )
+                )
             }
         }
 
