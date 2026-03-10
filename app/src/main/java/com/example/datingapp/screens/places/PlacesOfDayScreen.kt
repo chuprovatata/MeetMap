@@ -257,7 +257,7 @@ fun PlacesOfDayScreen(
                 userPlacesViewModel.likePlace(placeId, "places_of_day")
                 updatePlaceLikesCount(placeId, true)
 
-                val shouldShowFeedback = random.nextInt(1) == 0
+                val shouldShowFeedback = random.nextInt(3) == 0
                 if (shouldShowFeedback) {
                     val currentPlace = placesOfDay.find { it.id == placeId }
                     if (currentPlace != null) {
