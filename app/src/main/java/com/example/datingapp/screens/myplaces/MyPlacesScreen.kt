@@ -1,5 +1,6 @@
 package com.example.datingapp.screens.myplaces
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,7 +21,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -194,24 +199,40 @@ fun MyPlacesScreen(
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.icon_location),
-                                contentDescription = "Нет мест",
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                            Image(
+                                painter = painterResource(id = R.drawable.cloud),
+                                contentDescription = "",
+                                modifier = Modifier.size(200.dp)
                             )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             Text(
-                                text = if (searchText.isNotBlank()) "Ничего не найдено" else "У вас пока нет сохраненных мест",
-                                style = MaterialTheme.typography.titleLarge
+                                text = if (searchText.isNotBlank()) "Ничего не найдено(" else "У тебя пока нет сохраненных мест(",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Color.Gray,
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center
                             )
+
                             if (searchText.isBlank()) {
                                 Text(
-                                    text = "Нажмите 'Мне нравится' на местах, чтобы они появились здесь",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 32.dp)
+                                    text = buildAnnotatedString {
+                                        append("Отмечай понравившиеся места в подборке ")
+                                        withStyle(style = SpanStyle(
+                                            color = Color(0xFFA75CC6),
+                                            fontWeight = FontWeight.Bold
+                                        )) {
+                                            append("Места дня")
+                                        }
+                                        append(" — и они появятся здесь!")
+                                    },
+                                    color = Color.Gray,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 24.dp)
                                 )
                             }
                         }

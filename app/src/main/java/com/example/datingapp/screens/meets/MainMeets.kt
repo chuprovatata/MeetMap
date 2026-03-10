@@ -363,9 +363,9 @@ fun EmptyFriend() {
 
             Text(
                 text = buildAnnotatedString {
-                    append("Переходи в ")
+                    append("Переходи в подборку ")
                     withStyle(style = SpanStyle(color = PurpleCard, fontWeight = FontWeight.Bold)) {
-                        append("Знакомства")
+                        append("Люди дня")
                     }
                     append(" и находи \nновых людей!")
                 },
@@ -398,14 +398,17 @@ fun EmptyNotFriend() {
             )
             Text(
                 text = "У тебя пока нет заявок(",
-                color = Color.Gray
+                color = Color.Gray,
+                style = MaterialTheme.typography.titleSmall,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center
             )
 
             Text(
                 text = buildAnnotatedString {
-                    append("Переходи в ")
+                    append("Переходи в подборку ")
                     withStyle(style = SpanStyle(color = PurpleCard, fontWeight = FontWeight.Bold)) {
-                        append("Рекомендации")
+                        append("Люди дня")
                     }
                     append(", чтобы посмотреть, кто посещает те же места, что и ты!")
                 },

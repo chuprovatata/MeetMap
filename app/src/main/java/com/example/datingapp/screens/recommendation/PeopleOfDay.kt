@@ -15,7 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.Title_Block
@@ -65,7 +71,6 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                         .fillMaxSize()
                         .background(Color.White)
                 ) {
-                    // Заголовок (оставляем существующий Title_Block)
                     Title_Block(
                         navController,
                         "У вас схожие интересы",
@@ -75,25 +80,40 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                     )
 
                     if (recommendedUsers.isEmpty()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Box(
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Text(
-                                text = "😕 Пока нет подходящих людей",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Добавляйте больше мест в избранное,\nчтобы мы могли найти людей с похожими интересами!",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.Gray.copy(alpha = 0.7f),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.cloud),
+                                    contentDescription = "",
+                                    modifier = Modifier.size(200.dp)
+                                )
+                                Text(
+                                    text = "Здесь пока никого нет(",
+                                    color = Color.Gray,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Text(
+                                    text = buildAnnotatedString {
+                                        append("Добавляй места из подборки ")
+                                        withStyle(style = SpanStyle(color = PurpleCard, fontWeight = FontWeight.Bold)) {
+                                            append("Места дня")
+                                        }
+                                        append(", чтобы мы могли найти людей с похожими интересами!")
+                                    },
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 24.dp)
+                                )
+                            }
                         }
                     } else {
                         LazyColumn(
@@ -121,57 +141,6 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun EmptyRecommendations() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Image(
-            painter = painterResource(R.drawable.cloud),
-            contentDescription = null,
-            modifier = Modifier.size(120.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Здесь пока никого нет",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Чтобы получать рекомендации,\nдобавляйте места в избранное",
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray.copy(alpha = 0.7f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                // Переход на экран с местами дня
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = PurpleCard
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = "Найти места",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
         }
     }
 }
