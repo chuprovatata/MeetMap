@@ -547,4 +547,39 @@ class UserRepository @Inject constructor(
             throw Exception("Ошибка удаления статуса друга: ${e.message}")
         }
     }
+
+    fun observeFriendStatus(
+        userId: String,
+        friendId: String,
+        onFriendStatusChanged: (String?) -> Unit
+    ): () -> Unit {
+        Log.d("UserRepository", "Setting up friend status observer for user=$userId, friend=$friendId")
+
+        val listenerRegistration = firestore.collection("users")
+            .document(userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("UserRepository", "Error observing friend status", error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    try {
+                        // Получаем поле friends.friendId.status
+                        val friendStatus = snapshot.get("friends.$friendId.status") as? String
+                        Log.d("UserRepository", "Friend status changed: $friendStatus for friend=$friendId")
+                        onFriendStatusChanged(friendStatus)
+                    } catch (e: Exception) {
+                        Log.e("UserRepository", "Error parsing friend status", e)
+                        onFriendStatusChanged(null)
+                    }
+                }
+            }
+
+        // Возвращаем функцию для отписки
+        return {
+            Log.d("UserRepository", "Removing friend status observer for user=$userId, friend=$friendId")
+            listenerRegistration.remove()
+        }
+    }
 }

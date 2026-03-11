@@ -1,5 +1,6 @@
 package com.example.datingapp.screens.myplaces
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -46,7 +47,8 @@ import java.util.Random
 fun MyPlaceDetailScreen(
     placeId: String,
     navController: NavController,
-    viewModel: MyPlaceDetailViewModel = hiltViewModel()
+    viewModel: MyPlaceDetailViewModel = hiltViewModel(),
+    userViewModel: UserViewModel
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -377,7 +379,7 @@ fun MyPlaceDetailScreen(
                                     user = user,
                                     onClick = { /* можно оставить пустым или удалить */ },
                                     navController = navController,  // передаем навигацию
-                                    userViewModel = hiltViewModel() // получаем UserViewModel
+                                    userViewModel = userViewModel // получаем UserViewModel
                                 )
                             }
                         }
@@ -579,39 +581,63 @@ fun UsersCountCard(
 fun UserItem(
     user: AppUser,
     onClick: () -> Unit,
-    viewModel: MyPlaceDetailViewModel = hiltViewModel(),
     navController: NavController,
-    userViewModel: UserViewModel = hiltViewModel()
+    userViewModel: UserViewModel
 ) {
+    // Состояние для отслеживания загрузки
+    var isLoading by remember { mutableStateOf(false) }
+    var isNavigating by remember { mutableStateOf(false) }
+
+    // LaunchedEffect для навигации после загрузки
+    LaunchedEffect(isNavigating) {
+        if (isNavigating) {
+            // Небольшая задержка для завершения загрузки
+            kotlinx.coroutines.delay(300)
+
+            // Получаем актуальные данные
+            val currentUser = userViewModel.myUser.value
+            val friendInfo = currentUser?.friends?.get(user.id)
+            val status = friendInfo?.status
+
+            isLoading = false
+            isNavigating = false
+
+            Log.d("MyPlaceDetail", "🔍 Статус дружбы с ${user.name}: $status")
+
+            when (status) {
+                "friend" -> {
+                    navController.navigate("cur_friend/${user.id}")
+                }
+                else -> {
+                    val pageTitle = when (status) {
+                        "request" -> "Входящая заявка"
+                        "my_application" -> "Исходящая заявка"
+                        "deny" -> "Отклоненная заявка"
+                        else -> "Профиль"
+                    }
+                    navController.navigate("req_friend/${user.id}/$pageTitle")
+                }
+            }
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                // Определяем статус дружбы и переходим на нужный экран
-                val currentUser = userViewModel.myUser.value
-                val friendInfo = currentUser?.friends?.get(user.id)
-                val status = friendInfo?.status
-
-                when (status) {
-                    "friend" -> {
-                        // Переход на Cur_Friend
-                        navController.navigate("cur_friend/${user.id}")
-                    }
-                    else -> {
-                        // Переход на ReqFriend
-                        val pageTitle = when (status) {
-                            "request" -> "Входящая заявка"
-                            "my_application" -> "Исходящая заявка"
-                            "deny" -> "Отклоненная заявка"
-                            else -> "Профиль"
-                        }
-                        navController.navigate("req_friend/${user.id}/$pageTitle")
-                    }
+            .clickable(
+                enabled = !isLoading,
+                onClick = {
+                    isLoading = true
+                    // Принудительно загружаем свежие данные о пользователе
+                    userViewModel.forceLoadUserData(user.id)
+                    // Запускаем навигацию
+                    isNavigating = true
                 }
-            }
+            )
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Аватар
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -637,6 +663,22 @@ fun UserItem(
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
+            }
+
+            // Индикатор загрузки
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                }
             }
         }
 

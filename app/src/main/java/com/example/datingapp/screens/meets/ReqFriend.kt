@@ -24,6 +24,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,9 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.FavPlace
@@ -62,13 +66,14 @@ fun ReqFriend(
     viewModel: UserViewModel,
     friendId: String,
     pageTitle: String,
-    hasBottomNavigation: Boolean = false  // По умолчанию false, так как экран может открываться из разных мест
+    hasBottomNavigation: Boolean = false
 ) {
     val spacing = LocalDatingAppSpacing.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Получаем NotificationViewModel
     val notificationViewModel: NotificationViewModel = hiltViewModel()
@@ -82,18 +87,57 @@ fun ReqFriend(
 
     // Динамический отступ снизу в зависимости от наличия нижней навигации
     val bottomButtonPadding = if (hasBottomNavigation) {
-        // Если есть нижнее меню, поднимаем кнопку выше
         (screenHeight * 0.12f).coerceAtLeast(140.dp)
     } else {
-        // Если нет нижнего меню, стандартный отступ (ближе к низу)
         60.dp
     }
+
+    // Получаем статус дружбы из Flow (обновляется в реальном времени)
+    val realtimeFriendshipStatus by viewModel.friendshipStatus.collectAsState()
 
     LaunchedEffect(friendId) {
         viewModel.loadUserById(friendId)
         viewModel.loadMutualFriends(friendId)
         viewModel.loadMutualPlaces(friendId)
         viewModel.loadCompatibility(friendId)
+
+        // Начинаем отслеживать изменения статуса дружбы
+        viewModel.observeFriendshipStatus(friendId)
+    }
+
+    // Отписываемся при уходе с экрана
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopObservingFriendshipStatus()
+        }
+    }
+
+    // Следим за жизненным циклом, чтобы переподписываться при возвращении на экран
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    // При возвращении на экран перезапускаем наблюдение
+                    viewModel.observeFriendshipStatus(friendId)
+                    // Также обновляем данные пользователя
+                    viewModel.loadUserById(friendId)
+                    viewModel.loadMutualFriends(friendId)
+                    viewModel.loadMutualPlaces(friendId)
+                    viewModel.loadCompatibility(friendId)
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    // При уходе с экрана отписываемся
+                    viewModel.stopObservingFriendshipStatus()
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     val mutualFriends by viewModel.mutualFriends.collectAsState()
@@ -103,16 +147,14 @@ fun ReqFriend(
     val isLoading by viewModel.isLoading.collectAsState()
     val compatibilityPercent by viewModel.compatibilityPercent.collectAsState()
 
-    // Статус дружбы
-    val friendshipStatus = myUser?.friends?.get(friendId)?.status ?: ""
+    // Определяем статус дружбы - используем realtimeFriendshipStatus, если он есть, иначе из myUser
+    val friendshipStatus = realtimeFriendshipStatus ?: myUser?.friends?.get(friendId)?.status ?: ""
 
     // Проверяем, является ли пользователь другом, и перенаправляем на Cur_Friend
     LaunchedEffect(friendshipStatus, otherUser, friendshipChecked) {
         if (!friendshipChecked && friendshipStatus == FriendStatus.FRIEND.value && otherUser != null) {
             friendshipChecked = true
-            // Перенаправляем на страницу друга
             navController.navigate(Screen.CurFriend.passFriendId(friendId)) {
-                // Удаляем текущий экран из бэктэка
                 popUpTo(navController.currentBackStackEntry?.destination?.route ?: return@navigate) {
                     inclusive = true
                 }
@@ -147,13 +189,13 @@ fun ReqFriend(
                         .background(Color.White)
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 25.dp)
-                        .padding(bottom = bottomButtonPadding + 40.dp)  // Нижний отступ для контента
+                        .padding(bottom = bottomButtonPadding + 40.dp)
                 ) {
                     otherUser?.let { user ->
                         UserInfo(
                             user = user,
-                            showTelegram = false,  // Явно указываем, что Telegram не показывать
-                            isFriend = false       // Или можно вообще не передавать, так как по умолчанию false
+                            showTelegram = false,
+                            isFriend = false
                         )
 
                         Spacer(modifier = Modifier.height(30.dp))
@@ -178,7 +220,6 @@ fun ReqFriend(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Любимое место пользователя
                         if (user.favoritePlace.isNotBlank()) {
                             FavPlace(
                                 placeName = user.favoritePlace,
@@ -188,7 +229,6 @@ fun ReqFriend(
                             Spacer(modifier = Modifier.height(25.dp))
                         }
 
-                        // Общие места
                         if (mutualPlaces.isNotEmpty()) {
                             MutPlaces(
                                 places = mutualPlaces,
@@ -199,7 +239,6 @@ fun ReqFriend(
                             Spacer(modifier = Modifier.height(25.dp))
                         }
 
-                        // Общие друзья
                         if (mutualFriends.isNotEmpty()) {
                             FriendsHorizontal("Общие друзья", mutualFriends, navController)
                             Spacer(modifier = Modifier.height(25.dp))
@@ -207,7 +246,6 @@ fun ReqFriend(
                     }
                 }
 
-                // Диалог подтверждения отмены заявки
                 if (showCancelDialog) {
                     AlertDialog(
                         onDismissRequest = { showCancelDialog = false },
@@ -225,7 +263,7 @@ fun ReqFriend(
                                                 friendId = friendId
                                             )
                                             snackbarHostState.showSnackbar("Заявка отменена")
-                                            viewModel.loadUserById(friendId)
+                                            // Не нужно загружать вручную - обновится через слушатель
                                         } finally {
                                             isProcessing = false
                                         }
@@ -243,7 +281,7 @@ fun ReqFriend(
                     )
                 }
 
-                // Нижняя панель с кнопками - с динамическим отступом
+                // Нижняя панель с кнопками
                 when {
                     isProcessing -> {
                         Box(
@@ -259,7 +297,7 @@ fun ReqFriend(
                         }
                     }
 
-                    friendshipStatus == "request" -> {
+                    friendshipStatus == FriendStatus.REQUEST.value -> {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -272,7 +310,6 @@ fun ReqFriend(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                // Кнопка "Принять"
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
@@ -290,7 +327,6 @@ fun ReqFriend(
                                                         newStatusForFriend = FriendStatus.FRIEND
                                                     )
 
-                                                    // Отправляем уведомление о принятии заявки
                                                     notificationViewModel.createFriendAcceptedNotification(
                                                         fromUserId = myUser?.uid ?: "",
                                                         toUserId = friendId
@@ -312,7 +348,6 @@ fun ReqFriend(
                                     )
                                 }
 
-                                // Кнопка "Отклонить"
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
@@ -348,7 +383,7 @@ fun ReqFriend(
                         }
                     }
 
-                    friendshipStatus == "my_application" -> {
+                    friendshipStatus == FriendStatus.MY_APPLICATION.value -> {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -375,7 +410,7 @@ fun ReqFriend(
                         }
                     }
 
-                    friendshipStatus == "deny" -> {
+                    friendshipStatus == FriendStatus.DENY.value -> {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -428,14 +463,13 @@ fun ReqFriend(
                                                     newStatusForFriend = FriendStatus.REQUEST
                                                 )
 
-                                                // Отправляем уведомление о новой заявке
                                                 notificationViewModel.createFriendRequestNotification(
                                                     fromUserId = myUser?.uid ?: "",
                                                     toUserId = friendId
                                                 )
 
                                                 snackbarHostState.showSnackbar("Заявка отправлена")
-                                                viewModel.loadUserById(friendId)
+                                                // Не нужно загружать вручную - обновится через слушатель
                                             } finally {
                                                 isProcessing = false
                                             }

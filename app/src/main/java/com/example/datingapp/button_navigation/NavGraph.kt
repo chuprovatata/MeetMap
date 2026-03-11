@@ -1,6 +1,7 @@
 package com.example.datingapp.button_navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -37,14 +38,17 @@ fun NavGraph(
                 localNavController = localNavController // И локальный на всякий случай
             )
         }
+
         composable(
             route = "myPlaceDetail/{placeId}",
             arguments = listOf(navArgument("placeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
+
             MyPlaceDetailScreen(
                 placeId = placeId,
-                navController = globalNavController  // Используем глобальный контроллер
+                navController = globalNavController,
+                userViewModel = viewModel  // Передаем его
             )
         }
 

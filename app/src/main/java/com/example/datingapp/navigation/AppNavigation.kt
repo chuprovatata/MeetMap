@@ -302,7 +302,8 @@ fun AppNavigation() {
             val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
             MyPlaceDetailScreen(
                 placeId = placeId,
-                navController = navController
+                navController = navController,
+                userViewModel = userViewModel  // Передаем существующий ViewModel
             )
         }
 

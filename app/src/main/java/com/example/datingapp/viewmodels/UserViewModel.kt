@@ -931,4 +931,86 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
+    private val _friendshipStatus = MutableStateFlow<String?>(null)
+    val friendshipStatus: StateFlow<String?> = _friendshipStatus.asStateFlow()
+
+    private var friendshipListener: (() -> Unit)? = null
+
+    /**
+     * Подписаться на изменения статуса дружбы с конкретным пользователем
+     */
+    fun observeFriendshipStatus(friendId: String) {
+        val currentUserId = _myUser.value?.uid ?: return
+
+        // Отписываемся от предыдущего слушателя, если он был
+        friendshipListener?.invoke()
+
+        Log.d("UserViewModel", "Starting to observe friendship status with $friendId")
+
+        friendshipListener = userRepository.observeFriendStatus(
+            userId = currentUserId,
+            friendId = friendId,
+            onFriendStatusChanged = { status ->
+                viewModelScope.launch {
+                    Log.d("UserViewModel", "Friendship status updated: $status")
+                    _friendshipStatus.value = status
+
+                    // Обновляем данные пользователя, чтобы синхронизировать остальные поля
+                    if (status != null) {
+                        // Обновляем otherUser, если это тот же друг
+                        if (_otherUser.value?.uid == friendId) {
+                            loadUserById(friendId)
+                        }
+
+                        // Обновляем myUser, чтобы актуализировать friends map
+                        loadMyUser()
+                    }
+                }
+            }
+        )
+    }
+
+    /**
+     * Отписаться от изменений статуса дружбы
+     */
+    fun stopObservingFriendshipStatus() {
+        Log.d("UserViewModel", "Stopping friendship status observation")
+        friendshipListener?.invoke()
+        friendshipListener = null
+        _friendshipStatus.value = null
+    }
+
+    /**
+     * ПРИНУДИТЕЛЬНО загрузить свежие данные о пользователе из БД (не из кеша)
+     * Аналогично refreshRecommendedUsers()
+     */
+    fun forceLoadUserData(userId: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("UserViewModel", "🔄 ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА пользователя $userId из БД")
+
+                // Загружаем СВЕЖИЕ данные напрямую из репозитория
+                val freshUser = userRepository.getUserById(userId)
+
+                if (freshUser != null) {
+                    // Обновляем otherUser
+                    _otherUser.value = freshUser
+
+                    Log.d("UserViewModel", "✅ Пользователь $userId загружен: ${freshUser.name}")
+                    Log.d("UserViewModel", "📊 Статус дружбы: ${freshUser.friends}")
+                } else {
+                    Log.e("UserViewModel", "❌ Пользователь $userId не найден в БД")
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "❌ Ошибка при загрузке пользователя $userId", e)
+            }
+        }
+    }
+
+    // Добавьте в onCleared() для очистки ресурсов
+    override fun onCleared() {
+        super.onCleared()
+        stopObservingFriendshipStatus()
+    }
 }
