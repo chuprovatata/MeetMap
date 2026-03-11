@@ -897,7 +897,7 @@ fun SettingsScreen(
                     )
                 }
 
-                item {
+                    /* item {
                     TermsSwitch(
                         checked = isNotificationsEnabled,
                         onCheckedChange = {
@@ -934,6 +934,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(spacing.medium))
                 }
+                     */
 
                 item {
                     Row(
