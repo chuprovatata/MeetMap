@@ -85,10 +85,11 @@ fun MyPlacesScreen(
         }
     }
 
-    PullToRefresh(
-        isRefreshing = isLoading,
-        onRefresh = { viewModel.refresh() }
-    ) {
+        //PullToRefresh(
+        //isRefreshing = isLoading,
+        //onRefresh = { viewModel.refresh() },
+        //hasItems = combinedPlaces.isNotEmpty()
+    //) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
@@ -262,7 +263,7 @@ fun MyPlacesScreen(
             }
         }
     }
-}
+//}
 
 
 @Composable
@@ -358,11 +359,12 @@ fun MyPlaceGridItem(
 fun PullToRefresh(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    hasItems: Boolean,
     content: @Composable () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         content()
-        if (isRefreshing) {
+        if (isRefreshing && hasItems) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

@@ -3,21 +3,12 @@ package com.example.datingapp.components.blocks
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,100 +43,144 @@ fun UserInfo(
     user: MyUser?,
     profileImageUrl: String? = null,
     isUploadingImage: Boolean = false,
-    showTelegram: Boolean = false,  // Изменено: по умолчанию false
-    isFriend: Boolean = false       // Новый параметр для явного указания статуса друга
+    showTelegram: Boolean = false,
+    isFriend: Boolean = false,
+    showDescription: Boolean = true
 ) {
     val context = LocalContext.current
+    var isExpanded by remember { mutableStateOf(false) }
 
-    // Определяем, показывать ли Telegram
     val shouldShowTelegram = showTelegram || isFriend
+    val shouldShowDescription = showDescription && !user?.bio.isNullOrBlank()
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .size(110.dp)
-                .clip(CircleShape)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (isUploadingImage) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                val imageModel = if (!profileImageUrl.isNullOrBlank() &&
-                    profileImageUrl != CloudImageUtils.NO_PICTURE_URL) {
-                    profileImageUrl
-                } else {
-                    when (user?.gender) {
-                        "M" -> R.drawable.profile_male
-                        "F" -> R.drawable.profile_female
-                        else -> R.drawable.picture_defaullt_profile
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .clip(CircleShape)
+            ) {
+                if (isUploadingImage) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
-                }
+                } else {
+                    val imageModel = if (!profileImageUrl.isNullOrBlank() &&
+                        profileImageUrl != CloudImageUtils.NO_PICTURE_URL) {
+                        profileImageUrl
+                    } else {
+                        when (user?.gender) {
+                            "M" -> R.drawable.profile_male
+                            "F" -> R.drawable.profile_female
+                            else -> R.drawable.picture_defaullt_profile
+                        }
+                    }
 
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(imageModel)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Фото профиля",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                    error = painterResource(id = when (user?.gender) {
-                        "M" -> R.drawable.profile_male
-                        "F" -> R.drawable.profile_female
-                        else -> R.drawable.picture_defaullt_profile
-                    }),
-                    placeholder = painterResource(id = when (user?.gender) {
-                        "M" -> R.drawable.profile_male
-                        "F" -> R.drawable.profile_female
-                        else -> R.drawable.picture_defaullt_profile
-                    })
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(imageModel)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Фото профиля",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(id = when (user?.gender) {
+                            "M" -> R.drawable.profile_male
+                            "F" -> R.drawable.profile_female
+                            else -> R.drawable.picture_defaullt_profile
+                        }),
+                        placeholder = painterResource(id = when (user?.gender) {
+                            "M" -> R.drawable.profile_male
+                            "F" -> R.drawable.profile_female
+                            else -> R.drawable.picture_defaullt_profile
+                        })
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(21.dp))
+
+            Column(
+                modifier = Modifier.fillMaxHeight()
+            ) {
+                Text(
+                    text = user?.name ?: "",
+                    fontFamily = montserratFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 25.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = getAgeString(user?.age),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Normal
+                )
+                Text(
+                    text = user?.university ?: "",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Normal
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(21.dp))
-
         Column(
-            modifier = Modifier.fillMaxHeight()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
         ) {
-            Text(
-                text = user?.name ?: "",
-                fontFamily = montserratFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 25.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (shouldShowDescription) {
+                Text(
+                    text = "О себе",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = getAgeString(user?.age),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Normal
-            )
-            Text(
-                text = user?.university ?: "",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Normal
-            )
+                Text(
+                    text = user?.bio ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isExpanded = !isExpanded }
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                if (!isExpanded && (user?.bio?.length ?: 0) > 100) {
+                    Text(
+                        text = "ещё",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable { isExpanded = true }
+                            .padding(top = 2.dp)
+                    )
+                }
 
-            // Показываем Telegram только если shouldShowTelegram = true
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             if (shouldShowTelegram && !user?.telegram.isNullOrBlank()) {
                 Text(
                     text = "Написать в Telegram @${user?.telegram}",

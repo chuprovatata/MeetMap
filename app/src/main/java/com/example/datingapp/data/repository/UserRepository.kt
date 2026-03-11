@@ -40,8 +40,12 @@ class UserRepository @Inject constructor(
                     ?: throw Exception("Не удалось обработать изображение")
 
                 val extension = getFileExtension(uri, contentResolver) ?: "jpg"
-                val timestamp =
-                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+
+                val utcFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+                val timestamp = utcFormat.format(Date())
+
                 val fileName = "profile-photo/$userId-$timestamp.$extension"
 
                 val imageUrl = CloudImageUtils.uploadFile(
@@ -67,6 +71,13 @@ class UserRepository @Inject constructor(
                 file?.delete()
             }
         }
+
+    suspend fun saveFcmToken(token: String) {
+        val userId = auth.currentUser?.uid ?: return
+        firestore.collection("users")
+            .document(userId)
+            .update("fcmToken", token)
+    }
 
     suspend fun uploadFavoritePlaceImage(uri: Uri, contentResolver: ContentResolver): String =
         withContext(Dispatchers.IO) {

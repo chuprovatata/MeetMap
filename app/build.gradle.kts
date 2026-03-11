@@ -126,4 +126,9 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-s3:2.72.0")
     implementation("com.amazonaws:aws-android-sdk-core:2.72.0")
     implementation("io.coil-kt:coil-svg:2.4.0")
+
+    implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
+
+    // Для работы с уведомлениями в фоне
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

@@ -95,13 +95,12 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                         .fillMaxSize()
                         .background(Color.White)
                 ) {
-                    // Позиционирование Title_Block
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(0.25f) // Блок занимает 25% высоты экрана
+                            .fillMaxHeight(0.25f)
                             .padding(horizontal = 16.dp)
-                            .padding(top = 8.dp, bottom = 12.dp)
+                            .padding(top = 8.dp, bottom = 4.dp)
                     ) {
                         Title_Block(
                             navController,
@@ -113,11 +112,16 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                     }
 
                     if (recommendedUsers.isEmpty()) {
+                        // Пустое состояние занимает оставшееся пространство
                         Box(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
                         ) {
                             Column(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 24.dp),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -156,10 +160,11 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                     } else {
                         LazyColumn(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .weight(1f)
+                                .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(bottom = 16.dp)
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             items(recommendedUsers) { user ->
                                 RecommendedUserItem(

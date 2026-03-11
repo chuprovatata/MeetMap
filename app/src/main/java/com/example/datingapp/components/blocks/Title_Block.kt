@@ -83,7 +83,7 @@ fun Title_Block(
                     text = title,
                     style = MaterialTheme.typography.headlineLarge,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Column(
                     modifier = Modifier
                         .width(190.dp)

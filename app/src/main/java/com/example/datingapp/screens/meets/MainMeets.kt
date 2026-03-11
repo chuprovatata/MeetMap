@@ -114,7 +114,7 @@ fun MainMeets(navController: NavController, viewModel: UserViewModel) {
                     Heading(
                         heading = "Знакомства",
                         showBackButton = false,
-                        showSettings = false,
+                        showSettings = true,
                         showProfile = true,
                         onBackClick = {
                             GlobalNavController.navController?.navigate(Screen.Main.route) {

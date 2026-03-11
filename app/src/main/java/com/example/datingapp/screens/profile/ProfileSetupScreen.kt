@@ -384,6 +384,30 @@ fun ProfileSetupScreen(
 
                     Spacer(modifier = Modifier.height(spacing.medium))
 
+                    DatingTextField(
+                        value = bio,
+                        onValueChange = { newText -> bio = newText },
+                        label = "Описание профиля",
+                        placeholder = "Напиши пару слов о себе и своих увлечениях",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { keyboardController?.hide() }
+                        ),
+                        singleLine = false,
+                        maxLines = Int.MAX_VALUE,
+                        maxCharacters = 200,
+                        showCharacterCounter = true,
+                        focusRequester = bioFocusRequester
+                    )
+
+                    Spacer(modifier = Modifier.height(spacing.medium))
+
                     Text(
                         text = "Пол",
                         style = MaterialTheme.typography.bodyMedium,
@@ -423,28 +447,6 @@ fun ProfileSetupScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(spacing.medium))
-
-                    DatingTextField(
-                        value = bio,
-                        onValueChange = { newText -> bio = newText },
-                        label = "Описание профиля",
-                        placeholder = "Напиши пару слов о себе и своих увлечениях",
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = { keyboardController?.hide() }
-                        ),
-                        singleLine = false,
-                        maxLines = 4,
-                        maxCharacters = 200,
-                        showCharacterCounter = true,
-                        focusRequester = bioFocusRequester
-                    )
 
                     Spacer(modifier = Modifier.height(spacing.medium))
 

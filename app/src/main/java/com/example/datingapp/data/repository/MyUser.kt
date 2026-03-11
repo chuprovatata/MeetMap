@@ -23,6 +23,7 @@ data class MyUser(
     val friends: Map<String, FriendInfo> = emptyMap(),
     val favoritePlace: String = "",
     val favoritePlacePhoto: String = "",
+    val fcmToken: String = "",
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp

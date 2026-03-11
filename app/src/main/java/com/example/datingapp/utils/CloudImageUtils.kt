@@ -285,18 +285,18 @@ object CloudImageUtils {
         payloadHash: String
     ): String {
         val canonicalRequest = """
-        PUT
-        /$fileName
-        
-        host:$BUCKET_NAME.$ENDPOINT
-        content-type:$contentType
-        x-amz-acl:public-read
-        x-amz-content-sha256:$payloadHash
-        x-amz-date:$dateTime
-        
-        host;content-type;x-amz-acl;x-amz-content-sha256;x-amz-date
-        $payloadHash
-    """.trimIndent().replace("\n", "\n")
+    PUT
+    /$fileName
+    
+    content-type:$contentType
+    host:$BUCKET_NAME.$ENDPOINT
+    x-amz-acl:public-read
+    x-amz-content-sha256:$payloadHash
+    x-amz-date:$dateTime
+    
+    content-type;host;x-amz-acl;x-amz-content-sha256;x-amz-date
+    $payloadHash
+""".trimIndent().replace("\n", "\n")
 
         Log.d(TAG, "CanonicalRequest: $canonicalRequest")
 
@@ -317,7 +317,7 @@ object CloudImageUtils {
 
         Log.d(TAG, "Signature: $signature")
 
-        return "AWS4-HMAC-SHA256 Credential=$accessKey/$date/$REGION/$SERVICE/aws4_request, SignedHeaders=host;content-type;x-amz-acl;x-amz-content-sha256;x-amz-date, Signature=$signature"
+        return "AWS4-HMAC-SHA256 Credential=$accessKey/$date/$REGION/$SERVICE/aws4_request, SignedHeaders=content-type;host;x-amz-acl;x-amz-content-sha256;x-amz-date, Signature=$signature"
     }
 
     private fun deriveSigningKey(secretKey: String, date: String, region: String, service: String): ByteArray {
@@ -345,12 +345,16 @@ object CloudImageUtils {
 
     private fun getCurrentDate(): String {
         val dateFormat = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US)
+        dateFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
         return dateFormat.format(java.util.Date())
     }
 
     private fun getCurrentDateTime(): String {
         val dateFormat = java.text.SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", java.util.Locale.US)
         dateFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
-        return dateFormat.format(java.util.Date())
+        val now = java.util.Date()
+        val result = dateFormat.format(now)
+        Log.d(TAG, "Current UTC time: $result")
+        return result
     }
 }

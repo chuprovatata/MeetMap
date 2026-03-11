@@ -109,6 +109,7 @@ fun SettingsScreen(
     var age by remember { mutableStateOf("") }
     var university by remember { mutableStateOf("") }
     var favoritePlace by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
 
     var isPrivateAccount by remember { mutableStateOf(false) }
     var isNotificationsEnabled by remember { mutableStateOf(true) }
@@ -220,6 +221,7 @@ fun SettingsScreen(
             isPrivateAccount = data["isPrivateAccount"] as? Boolean ?: false
             isNotificationsEnabled = data["notificationsEnabled"] as? Boolean ?: true
             isNotificationSoundEnabled = data["notificationSoundEnabled"] as? Boolean ?: true
+            description = data["bio"] as? String ?: ""
 
             isDataLoaded.value = true
             hasUnsavedChanges = false
@@ -265,7 +267,8 @@ fun SettingsScreen(
                 favoritePlace != (originalData["favoritePlace"] as? String ?: "") ||
                 isPrivateAccount != (originalData["isPrivateAccount"] as? Boolean ?: false) ||
                 isNotificationsEnabled != (originalData["notificationsEnabled"] as? Boolean ?: true) ||
-                isNotificationSoundEnabled != (originalData["notificationSoundEnabled"] as? Boolean ?: true)
+                isNotificationSoundEnabled != (originalData["notificationSoundEnabled"] as? Boolean ?: true) ||
+                description != (originalData["bio"] as? String ?: "")
 
         hasUnsavedChanges = hasChanges
 
@@ -298,7 +301,8 @@ fun SettingsScreen(
             "favoritePlace" to favoritePlace,
             "isPrivateAccount" to isPrivateAccount,
             "notificationsEnabled" to isNotificationsEnabled,
-            "notificationSoundEnabled" to isNotificationSoundEnabled
+            "notificationSoundEnabled" to isNotificationSoundEnabled,
+            "bio" to description
         )
 
         val changedData = data.filterValues { it != null }
@@ -703,10 +707,33 @@ fun SettingsScreen(
                                 .padding(horizontal = spacing.large)
                         )
                     }
-
                     item {
                         Spacer(modifier = Modifier.height(spacing.medium))
                     }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(spacing.medium))
+                }
+                item {
+                    DatingTextField(
+                        value = description,
+                        onValueChange = {
+                            description = it
+                            hasUnsavedChanges = true
+                        },
+                        label = "Описание профиля",
+                        placeholder = "Расскажи о себе, своих увлечениях и интересах",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                            .heightIn(min = 120.dp),
+                        enabled = true,
+                        singleLine = false,
+                        maxLines = Int.MAX_VALUE,
+                        maxCharacters = 200,
+                        showCharacterCounter = true
+                    )
                 }
 
                 item {
@@ -868,26 +895,6 @@ fun SettingsScreen(
                         thickness = 0.5.dp,
                         color = Color.Gray.copy(alpha = 0.3f)
                     )
-                }
-
-                item {
-                    TermsSwitch(
-                        checked = isPrivateAccount,
-                        onCheckedChange = {
-                            isPrivateAccount = it
-                            hasUnsavedChanges = true
-                        },
-                        text = "Закрытый аккаунт",
-                        subtitle = "Только твои друзья могут просматривать твой профиль.",
-                        showDetailsLink = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = spacing.large)
-                    )
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(spacing.medium))
                 }
 
                 item {
