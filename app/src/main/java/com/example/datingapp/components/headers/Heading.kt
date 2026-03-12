@@ -29,20 +29,24 @@ import com.example.datingapp.R
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.ui.theme.boundedFamily
 
-
 @Composable
-fun Heading_Arrow(heading: String, navController: NavController) {
-
+fun Heading_Arrow(
+    heading: String,
+    navController: NavController,
+    onBackClick: (() -> Unit)? = null  // Добавляем опциональный параметр
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-
     ) {
         IconButton(
             onClick = {
-                navController.popBackStack()
+                if (onBackClick != null) {
+                    onBackClick()  // Используем кастомный обработчик, если он передан
+                } else {
+                    navController.popBackStack()  // Иначе стандартное поведение
+                }
             }
-
         ) {
             Icon(
                 painter = painterResource(R.drawable.arrow_left),
@@ -57,8 +61,6 @@ fun Heading_Arrow(heading: String, navController: NavController) {
             fontFamily = boundedFamily,
             fontWeight = FontWeight.Normal
         )
-
-
     }
 }
 
@@ -76,7 +78,6 @@ fun Heading(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ИСПРАВЛЕНИЕ: убираем пустой Box, просто показываем кнопку только когда нужно
         if (showBackButton) {
             IconButton(
                 onClick = {
@@ -94,8 +95,7 @@ fun Heading(
                 )
             }
         } else {
-            // Вместо Box с фиксированным размером, просто ничего не ставим
-            // Пространство слева будет равно 0.dp
+            // Ничего не ставим
         }
 
         Text(

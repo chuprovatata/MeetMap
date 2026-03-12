@@ -83,7 +83,12 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 ) {
                     Heading_Arrow(
                         heading = if (username.isNotBlank()) "@$username" else "Профиль",
-                        navController = navController
+                        navController = navController,
+                        onBackClick = {
+                            // ИСПРАВЛЕНО: Используем navigateUp вместо popBackStack
+                            // Это вернет на предыдущий экран в стеке, а не на самый первый
+                            navController.navigateUp()
+                        }
                     )
 
                     IconButton(
@@ -156,7 +161,11 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 curFriends = viewModel.getUsersByFriendStatus(FriendStatus.FRIEND)
             }
 
-            FriendsHorizontal("Мои друзья", curFriends, navController)
+            FriendsHorizontal(
+                "Мои друзья",
+                curFriends,
+                navController
+            )
 
             Spacer(modifier = Modifier.height(100.dp))
         }
