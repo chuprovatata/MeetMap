@@ -26,6 +26,8 @@ class UserViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val userPlacesRepository: UserPlacesRepository
 ) : ViewModel() {
+    private val _userPlacesCount = MutableStateFlow(0)
+    val userPlacesCount: StateFlow<Int> = _userPlacesCount.asStateFlow()
 
     private val _isUploadingImage = MutableStateFlow(false)
     val isUploadingImage: StateFlow<Boolean> = _isUploadingImage.asStateFlow()
@@ -81,6 +83,7 @@ class UserViewModel @Inject constructor(
     init {
         loadUserData()
         loadMyUser()
+        loadUserPlacesCount()
     }
     private val _isUploadingFavoritePlace = MutableStateFlow(false)
     val isUploadingFavoritePlace: StateFlow<Boolean> = _isUploadingFavoritePlace.asStateFlow()
@@ -89,6 +92,14 @@ class UserViewModel @Inject constructor(
     val favoritePlacePhotoUrl: StateFlow<String?> = _favoritePlacePhotoUrl.asStateFlow()
     private val _compatibilityPercent = MutableStateFlow(0)
     val compatibilityPercent: StateFlow<Int> = _compatibilityPercent.asStateFlow()
+    fun refreshUserPlacesCount() {
+        viewModelScope.launch {
+            val userId = getCurrentUserId() ?: return@launch
+            val count = userPlacesRepository.getUserPlacesCount(userId)
+            _userPlacesCount.value = count
+            Log.d("🔥🔥🔥", "ОБНОВЛЕНО количество мест: $count")
+        }
+    }
 
     fun loadCompatibility(otherUserId: String) {
         viewModelScope.launch {
@@ -132,6 +143,20 @@ class UserViewModel @Inject constructor(
                 Log.e("COMPATIBILITY", "Error calculating compatibility", e)
                 _compatibilityPercent.value = 0
             }
+        }
+    }
+    fun loadUserPlacesCount() {
+        viewModelScope.launch {
+            // Ждем загрузки пользователя, если нужно
+            val userId = getCurrentUserId()
+            if (userId == null) {
+                delay(500) // Даем время на загрузку
+                loadUserPlacesCount() // Пробуем снова
+                return@launch
+            }
+            val count = userPlacesRepository.getUserPlacesCount(userId)
+            _userPlacesCount.value = count
+            Log.d("PlacesCount", "✅ Итоговое количество: $count")
         }
     }
 

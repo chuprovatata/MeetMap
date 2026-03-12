@@ -38,6 +38,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
     val user by viewModel.myUser.collectAsState()
     val profileImageUrl by viewModel.profileImageUrl.collectAsState()
     val userData by viewModel.userData.collectAsState()
+    val userPlacesCount by viewModel.userPlacesCount.collectAsState()
 
     var profileImageState by remember { mutableStateOf<Any?>(null) }
 
@@ -48,6 +49,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
     LaunchedEffect(Unit) {
         viewModel.loadUserData()
         viewModel.loadMyUser()
+        viewModel.refreshUserPlacesCount()
     }
 
     DisposableEffect(Unit) {
@@ -124,7 +126,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "24",
+                    text = userPlacesCount.toString(),
                     style = MaterialTheme.typography.displayLarge,
                     color = MaterialTheme.colorScheme.primary
                 )

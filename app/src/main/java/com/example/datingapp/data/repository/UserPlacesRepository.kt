@@ -23,6 +23,43 @@ class UserPlacesRepository @Inject constructor(
 ) {
     private val collection = firestore.collection("user_places")
     private val TAG = "UserPlacesRepository"
+    suspend fun getUserPlacesCount(userId: String = auth.currentUser?.uid ?: ""): Int {
+        return try {
+            if (userId.isEmpty()) return 0
+
+            Log.d("PlacesCount", "🔍 Ищем места для userId: $userId")
+
+            // Сначала посмотрим ВСЕ документы пользователя (без фильтра по статусу)
+            val allSnapshot = collection
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            Log.d("PlacesCount", "📊 Всего документов в user_places для этого userId: ${allSnapshot.size()}")
+
+            // Посмотрим каждый документ
+            allSnapshot.documents.forEachIndexed { index, doc ->
+                val status = doc.getString("status")
+                val placeId = doc.getString("placeId")
+                Log.d("PlacesCount", "📄 Документ $index: status=$status, placeId=$placeId")
+            }
+
+            // Теперь считаем только со статусом "liked"
+            val likedSnapshot = collection
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("status", "liked")
+                .get()
+                .await()
+
+            val count = likedSnapshot.size()
+            Log.d("PlacesCount", "✅ Найдено liked мест: $count")
+
+            return count
+        } catch (e: Exception) {
+            Log.e("PlacesCount", "❌ Ошибка: ${e.message}", e)
+            return 0
+        }
+    }
 
     suspend fun likePlace(placeId: String, source: String = "places_of_day"): Result<UserPlace> {
         return try {
