@@ -29,6 +29,9 @@ import com.example.datingapp.data.repository.MyUser
 import com.example.datingapp.navigation.Screen
 import com.example.datingapp.viewmodels.UserViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.datingapp.ui.theme.boundedFamily
 
 @Composable
 fun MyProfile(navController: NavController, viewModel: UserViewModel) {
@@ -76,23 +79,51 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     .background(Color.White)
                     .padding(top = 40.dp)
             ) {
-                Box(
+                // Убираем Box и переделываем Row напрямую
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 9.dp, end = 19.dp)
+                        .padding(start = 9.dp, end = 19.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Heading_Arrow(
-                        heading = if (username.isNotBlank()) "@$username" else "Профиль",
-                        navController = navController
-                    )
+                    // Левая часть - стрелка и заголовок
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f, fill = false) // занимает место, но не бесконечно
+                    ) {
+                        IconButton(
+                            onClick = {
+                                navController.navigate(Screen.Main.route) {
+                                    popUpTo(0)
+                                }
+                            },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_left),
+                                contentDescription = "Назад",
+                                tint = Color.Black
+                            )
+                        }
 
+                        Text(
+                            text = if (username.isNotBlank()) "@$username" else "Профиль",
+                            fontSize = 35.sp,
+                            fontFamily = boundedFamily,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+
+                    // Правая часть - иконка настроек
                     IconButton(
                         onClick = {
                             navController.navigate(Screen.Settings.route)
                         },
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(48.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.icon_settings),

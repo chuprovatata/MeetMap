@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -31,18 +32,23 @@ import com.example.datingapp.ui.theme.boundedFamily
 
 
 @Composable
-fun Heading_Arrow(heading: String, navController: NavController) {
-
+fun Heading_Arrow(
+    heading: String,
+    navController: NavController,
+    onBackClick: (() -> Unit)? = null  // добавляем опциональный параметр
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-
     ) {
         IconButton(
             onClick = {
-                navController.popBackStack()
+                if (onBackClick != null) {
+                    onBackClick() // если передан кастомный обработчик - используем его
+                } else {
+                    navController.popBackStack() // иначе просто назад
+                }
             }
-
         ) {
             Icon(
                 painter = painterResource(R.drawable.arrow_left),
@@ -55,10 +61,13 @@ fun Heading_Arrow(heading: String, navController: NavController) {
             text = heading,
             fontSize = 35.sp,
             fontFamily = boundedFamily,
-            fontWeight = FontWeight.Normal
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier
+                .weight(1f)  // ← текст занимает всё доступное место
+                .padding(start = 8.dp, end = 8.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis  // ← если не влезает - многоточие
         )
-
-
     }
 }
 

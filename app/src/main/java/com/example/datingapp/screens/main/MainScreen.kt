@@ -117,24 +117,6 @@ fun MainScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(7.dp)
                     ) {
-                        // Кнопка настроек
-                        Box(
-                            modifier = Modifier
-                                .size(finalIconSize)
-                                .clip(RoundedCornerShape(22.dp))
-                                .clickable {
-                                    navController.navigate("settings")
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.icon_settings),
-                                contentDescription = "Настройки",
-                                modifier = Modifier.size(finalIconSize),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
                         // Кнопка профиля
                         Box(
                             modifier = Modifier

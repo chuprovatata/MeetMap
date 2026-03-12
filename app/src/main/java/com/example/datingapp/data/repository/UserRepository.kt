@@ -214,8 +214,13 @@ class UserRepository @Inject constructor(
 
             Log.d("UserRepository", "Document data for userId $userId: ${document.data}")
 
+            // 🔥🔥🔥 ДОБАВЬ ЭТОТ ЛОГ
+            val profileImageUrl = document.getString("profileImageUrl")
+            Log.d("UserRepository", "🔥 profileImageUrl from Firebase: $profileImageUrl")
+
             val user = document.toObject(MyUser::class.java)
             Log.d("UserRepository", "Converted MyUser before copy: $user")
+            Log.d("UserRepository", "🔥 user.profileImageUrl after conversion: ${user?.profileImageUrl}")
 
             val userWithId = user?.copy(uid = document.id)
             Log.d("UserRepository", "Final MyUser with uid: $userWithId")

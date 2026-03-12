@@ -24,6 +24,7 @@ data class MyUser(
     val favoritePlace: String = "",
     val favoritePlacePhoto: String = "",
     val fcmToken: String = "",
+    val profileImageUrl: String = "",
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp

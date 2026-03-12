@@ -195,7 +195,8 @@ fun ReqFriend(
                         UserInfo(
                             user = user,
                             showTelegram = false,
-                            isFriend = false
+                            isFriend = false,
+                            profileImageUrl = user.profileImageUrl
                         )
 
                         Spacer(modifier = Modifier.height(30.dp))

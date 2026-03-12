@@ -569,7 +569,11 @@ fun SettingsScreen(
             ) {
                 SettingsHeadingArrow(
                     heading = "Настройки",
-                    onBackClick = { handleBackPressed() }
+                    onBackClick = {
+                        navController.navigate(Screen.MyProfile.route) {
+                            popUpTo(0)
+                        }
+                    }
                 )
             }
         }

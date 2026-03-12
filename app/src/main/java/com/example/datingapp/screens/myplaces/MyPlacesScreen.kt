@@ -107,7 +107,7 @@ fun MyPlacesScreen(
                         Heading(
                             heading = "Мои места",
                             showBackButton = false,
-                            showSettings = true,
+                            showSettings = false,
                             showProfile = true,
                             onBackClick = {
                                 // Используем глобальный контроллер для возврата на главную

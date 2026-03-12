@@ -40,7 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.datingapp.R
 import com.example.datingapp.components.blocks.CompatibilityScore
@@ -53,6 +56,7 @@ import com.example.datingapp.components.progress.ProgressLine
 import com.example.datingapp.data.repository.FriendStatus
 import com.example.datingapp.ui.theme.PurpleCard
 import com.example.datingapp.ui.theme.PurpleDark
+import com.example.datingapp.ui.theme.boundedFamily
 import com.example.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
@@ -92,21 +96,43 @@ fun Cur_Friend(
                     .padding(horizontal = 6.dp)
                     .padding(top = 40.dp, bottom = 20.dp)
             ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth()
+                // Убираем Box и делаем Row с правильным распределением
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Heading_Arrow занимает всю ширину
-                    Heading_Arrow(
-                        heading = if (username.isNotBlank()) "@$username" else "Профиль",
-                        navController = navController
-                    )
-
-                    // Иконка с тремя точками наложена поверх, справа
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)  // Выравнивание по правому краю
-                            .padding(end = 8.dp)  // Отступ от правого края
+                    // Левая часть - стрелка и заголовок
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f, fill = false)
                     ) {
+                        IconButton(
+                            onClick = {
+                                navController.popBackStack()
+                            },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_left),
+                                contentDescription = "arrow_left",
+                                tint = Color.Black
+                            )
+                        }
+
+                        Text(
+                            text = if (username.isNotBlank()) "@$username" else "Профиль",
+                            fontSize = 35.sp,
+                            fontFamily = boundedFamily,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+
+                    // Правая часть - меню с тремя точками
+                    Box {
                         IconButton(
                             onClick = { showMenu = true }
                         ) {
@@ -197,8 +223,9 @@ fun Cur_Friend(
                     otherUser?.let { user ->
                         UserInfo(
                             user = user,
-                            showTelegram = true,  // Показываем Telegram для друзей
-                            isFriend = true       // Указываем, что это друг
+                            showTelegram = true,
+                            isFriend = true,
+                            profileImageUrl = user.profileImageUrl
                         )
 
                         Spacer(modifier = Modifier.height(30.dp))
