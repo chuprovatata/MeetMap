@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.datingapp.R
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.datingapp.components.buttons.PrimaryButton
@@ -37,6 +38,10 @@ fun FeedbackAfterPlacesOfDayScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    val hasSubmittedToday by viewModel.hasSubmittedToday.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val saveError by viewModel.saveError.collectAsState()
+
     val options = listOf(
         "Кафе и ресторанов",
         "Музеев и выставок",
@@ -45,12 +50,15 @@ fun FeedbackAfterPlacesOfDayScreen(
     )
 
     var selectedOptionIndex by remember { mutableStateOf(-1) }
-    val isSaving by viewModel.isSaving.collectAsState()
-    val saveError by viewModel.saveError.collectAsState()
 
     // Определяем, откуда пришли, по previousBackStackEntry
     val cameFromOnboarding = remember {
         navController.previousBackStackEntry?.destination?.route?.startsWith("places_of_day?fromOnboarding=true") == true
+    }
+
+    // Проверяем при загрузке экрана
+    LaunchedEffect(Unit) {
+        viewModel.checkIfAlreadySubmitted()
     }
 
     LaunchedEffect(saveError) {
@@ -60,6 +68,13 @@ fun FeedbackAfterPlacesOfDayScreen(
         }
     }
 
+    // Если уже отправлял сегодня
+    if (hasSubmittedToday) {
+        AlreadySubmittedScreen(navController, cameFromOnboarding)
+        return
+    }
+
+    // Основной экран фидбэка
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -220,12 +235,10 @@ fun FeedbackAfterPlacesOfDayScreen(
                             source = if (cameFromOnboarding) "onboarding" else "main",
                             onComplete = {
                                 if (cameFromOnboarding) {
-                                    // Если пришли из обучения - идем на финальный туториал
                                     navController.navigate(Screen.FinalTutorial.route) {
                                         popUpTo(Screen.FeedbackAfterPlacesOfDay.route) { inclusive = true }
                                     }
                                 } else {
-                                    // Если пришли с главной - возвращаемся на главную
                                     navController.navigate(Screen.Main.route) {
                                         popUpTo(0) { inclusive = true }
                                     }
@@ -237,9 +250,66 @@ fun FeedbackAfterPlacesOfDayScreen(
                         .fillMaxWidth()
                         .padding(bottom = 24.dp),
                     textSize = 32.sp,
-                    //enabled = rating > 0
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AlreadySubmittedScreen(
+    navController: NavController,
+    cameFromOnboarding: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.LightGray)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.icon_star),
+            contentDescription = "Спасибо",
+            modifier = Modifier.size(80.dp),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Вы уже оценили подборку сегодня!",
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Возвращайтесь завтра за новыми местами",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        PrimaryButton(
+            text = if (cameFromOnboarding) "далее" else "на главную",
+            onClick = {
+                if (cameFromOnboarding) {
+                    navController.navigate(Screen.FinalTutorial.route) {
+                        popUpTo(Screen.FeedbackAfterPlacesOfDay.route) { inclusive = true }
+                    }
+                } else {
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textSize = 24.sp
+        )
     }
 }

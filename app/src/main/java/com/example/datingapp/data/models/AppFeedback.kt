@@ -20,6 +20,8 @@ data class AppFeedback(
     val feedbackType: String = "",
     @PropertyName("created_at")
     val createdAt: Timestamp? = null,
+    @PropertyName("date")
+    val date: String = "",
 
     // Places of Day feedback
     val rating: Int = 0,

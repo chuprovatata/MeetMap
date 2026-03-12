@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.*
 
 @HiltViewModel
 class FeedbackViewModel @Inject constructor(
@@ -25,6 +27,35 @@ class FeedbackViewModel @Inject constructor(
 
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess.asStateFlow()
+
+    private val _hasSubmittedToday = MutableStateFlow(false)
+    val hasSubmittedToday: StateFlow<Boolean> = _hasSubmittedToday.asStateFlow()
+
+    fun checkIfAlreadySubmitted() {
+        viewModelScope.launch {
+            val userId = feedbackRepository.getCurrentUserId()
+            if (userId == null) {
+                _hasSubmittedToday.value = false
+                return@launch
+            }
+
+            val today = getTodayDateString()
+            val result = feedbackRepository.hasUserSubmittedToday(userId, today)
+            _hasSubmittedToday.value = result
+            Log.d("FeedbackViewModel", "hasSubmittedToday: $result for user $userId")
+        }
+    }
+
+    suspend fun checkIfAlreadySubmittedSync(): Boolean {
+        val userId = feedbackRepository.getCurrentUserId() ?: return false
+        val today = getTodayDateString()
+        return feedbackRepository.hasUserSubmittedToday(userId, today)
+    }
+
+    private fun getTodayDateString(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return dateFormat.format(Date())
+    }
 
     fun savePlacesOfDayFeedback(
         rating: Int,
@@ -42,9 +73,13 @@ class FeedbackViewModel @Inject constructor(
                     source = source
                 )
             },
-            onComplete = onComplete
+            onComplete = {
+                _hasSubmittedToday.value = true
+                onComplete()
+            }
         )
     }
+
     fun savePlaceAddedFeedback(
         placeId: String,
         placeName: String,
@@ -62,6 +97,7 @@ class FeedbackViewModel @Inject constructor(
             onComplete = onComplete
         )
     }
+
     fun savePlaceDeletedFeedback(
         placeId: String,
         placeName: String,
@@ -79,6 +115,7 @@ class FeedbackViewModel @Inject constructor(
             onComplete = onComplete
         )
     }
+
     private fun saveFeedback(
         action: suspend () -> Result<AppFeedback>,
         onComplete: () -> Unit

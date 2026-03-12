@@ -276,9 +276,19 @@ fun PlacesOfDayScreen(
                 popUpTo(Screen.PlacesOfDay.route) { inclusive = true }
             }
         } else {
-            // Если пришли с главной - идем на фидбек
-            navController.navigate(Screen.FeedbackAfterPlacesOfDay.route) {
-                popUpTo(Screen.PlacesOfDay.route) { inclusive = true }
+            scope.launch {
+                val hasSubmitted = feedbackViewModel.checkIfAlreadySubmittedSync()
+                if (hasSubmitted) {
+                    // Если уже отправлял сегодня - идем сразу на главную
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.PlacesOfDay.route) { inclusive = true }
+                    }
+                } else {
+                    // Если не отправлял - идем на фидбэк
+                    navController.navigate(Screen.FeedbackAfterPlacesOfDay.route) {
+                        popUpTo(Screen.PlacesOfDay.route) { inclusive = true }
+                    }
+                }
             }
         }
     }

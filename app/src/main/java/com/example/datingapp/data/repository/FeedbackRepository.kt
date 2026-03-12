@@ -17,6 +17,38 @@ class FeedbackRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private val collection = firestore.collection("app_feedback")
+    fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
+    suspend fun hasUserSubmittedToday(userId: String, date: String): Boolean {
+        return try {
+            val snapshot = collection
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("feedbackType", FeedbackType.PLACES_OF_DAY.name)
+                .whereEqualTo("date", date)
+                .limit(1)
+                .get()
+                .await()
+
+            !snapshot.isEmpty
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun getStartOfDay(date: String): Timestamp {
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val parsedDate = formatter.parse(date)
+        return Timestamp(parsedDate)
+    }
+
+    private fun getEndOfDay(date: String): Timestamp {
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val parsedDate = formatter.parse(date)
+        val nextDay = Date(parsedDate.time + 24 * 60 * 60 * 1000)
+        return Timestamp(nextDay)
+    }
 
     private suspend fun getUserData(): Triple<String, String, String> {
         val userId = auth.currentUser?.uid ?: throw Exception("Пользователь не авторизован")
@@ -53,12 +85,16 @@ class FeedbackRepository @Inject constructor(
     ): Result<AppFeedback> {
         val (userId, userName, userUsername) = getUserData()
 
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val todayDate = dateFormat.format(Date())
+
         val feedback = AppFeedback(
             userId = userId,
             userName = userName,
             userUsername = userUsername,
             feedbackType = FeedbackType.PLACES_OF_DAY.name,
             createdAt = Timestamp(Date()),
+            date = todayDate,
             rating = rating,
             selectedOptionIndex = selectedOptionIndex,
             wantMoreCategories = wantMoreCategories,
