@@ -64,7 +64,8 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
                     color = PurpleCard,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        navController.navigate(Screen.MainMeets.route)
+                        // ИСПРАВЛЕНО: Кнопка "Знакомства" ведет на экран "Люди дня" (PeopleOfDay)
+                        navController.navigate(Screen.PeopleOfDay.route)
                     }
                 )
 
@@ -78,13 +79,12 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
                     color = PurpleCard,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        navController.navigate(Screen.MainMeets.route)                  }
+                        // ИСПРАВЛЕНО: Кнопка "Друзья" ведет на экран "Знакомства" с сохранением нижнего меню
+                        navController.navigate("main_bottom_menu/screen_1")
+                    }
                 )
-
-
             }
         } else {
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,7 +111,6 @@ fun ItemFriendsHorizontal(user: MyUser, navController: NavController) {
         )
         Text(
             text = user.username,
-
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraLight,
             fontFamily = boundedFamily

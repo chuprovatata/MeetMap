@@ -87,7 +87,6 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Левая часть - стрелка и заголовок
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f, fill = false) // занимает место, но не бесконечно
@@ -187,7 +186,11 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 curFriends = viewModel.getUsersByFriendStatus(FriendStatus.FRIEND)
             }
 
-            FriendsHorizontal("Мои друзья", curFriends, navController)
+            FriendsHorizontal(
+                "Мои друзья",
+                curFriends,
+                navController
+            )
 
             Spacer(modifier = Modifier.height(100.dp))
         }
