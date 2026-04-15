@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.meets
+package com.meetmap.datingapp.screens.meets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,20 +44,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.FavPlace
-import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.MutPlaces
-import com.example.datingapp.components.blocks.UserInfo
-import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.components.progress.ProgressLine
-import com.example.datingapp.data.repository.FriendStatus
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.GrayDark
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.example.datingapp.ui.theme.PurpleCard
-import com.example.datingapp.viewmodels.NotificationViewModel
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.components.blocks.FavPlace
+import com.meetmap.datingapp.components.blocks.FriendsHorizontal
+import com.meetmap.datingapp.components.blocks.MutPlaces
+import com.meetmap.datingapp.components.blocks.UserInfo
+import com.meetmap.datingapp.components.headers.Heading_Arrow
+import com.meetmap.datingapp.components.progress.ProgressLine
+import com.meetmap.datingapp.data.repository.FriendStatus
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.GrayDark
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.viewmodels.NotificationViewModel
+import com.meetmap.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable

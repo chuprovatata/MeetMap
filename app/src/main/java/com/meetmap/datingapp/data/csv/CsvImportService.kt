@@ -1,13 +1,12 @@
 // app/src/main/java/com/example/datingapp/data/csv/CsvImportService.kt
-package com.example.datingapp.data.csv
+package com.meetmap.datingapp.data.csv
 
 import android.content.Context
-import com.example.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.models.PlaceInfo
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
-import java.io.BufferedReader
 
 data class CsvParseResult(
     val places: List<PlaceInfo>,

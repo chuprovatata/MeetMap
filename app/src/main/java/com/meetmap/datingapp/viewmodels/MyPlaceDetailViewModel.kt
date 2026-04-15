@@ -1,11 +1,10 @@
-package com.example.datingapp.viewmodels
+package com.meetmap.datingapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.data.models.UserPlace
-import com.example.datingapp.data.models.AppUser
-import com.example.datingapp.data.repository.UserPlacesRepository
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.models.AppUser
+import com.meetmap.datingapp.data.repository.UserPlacesRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query

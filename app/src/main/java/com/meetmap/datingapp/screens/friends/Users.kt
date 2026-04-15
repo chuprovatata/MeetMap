@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.friends
+package com.meetmap.datingapp.screens.friends
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -20,11 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.ui.theme.montserratFamily
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.Place
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.GrayPerson
+import com.meetmap.datingapp.ui.theme.montserratFamily
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.Place
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.GrayPerson
 
 
 data class User(

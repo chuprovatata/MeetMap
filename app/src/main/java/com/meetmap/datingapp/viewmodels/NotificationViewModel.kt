@@ -1,10 +1,10 @@
-package com.example.datingapp.viewmodels
+package com.meetmap.datingapp.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.datingapp.data.models.Notification
-import com.example.datingapp.data.repository.NotificationRepository
+import com.meetmap.datingapp.data.models.Notification
+import com.meetmap.datingapp.data.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

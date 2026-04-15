@@ -1,10 +1,9 @@
 // app/src/main/java/com/example/datingapp/data/excel/ExcelImportService.kt
-package com.example.datingapp.data.excel
+package com.meetmap.datingapp.data.excel
 
 import android.content.Context
-import com.example.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.models.PlaceInfo
 import com.google.firebase.Timestamp
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream

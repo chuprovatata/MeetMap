@@ -1,7 +1,7 @@
-package com.example.datingapp.data.repository
+package com.meetmap.datingapp.data.repository
 
-import com.example.datingapp.data.models.AppFeedback
-import com.example.datingapp.data.models.FeedbackType
+import com.meetmap.datingapp.data.models.AppFeedback
+import com.meetmap.datingapp.data.models.FeedbackType
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await

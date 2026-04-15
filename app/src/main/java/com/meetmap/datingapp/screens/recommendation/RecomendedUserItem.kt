@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.recommendation
+package com.meetmap.datingapp.screens.recommendation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,9 +18,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.datingapp.R
-import com.example.datingapp.data.repository.MyUser
-import com.example.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.data.repository.MyUser
+import com.meetmap.datingapp.ui.theme.PurpleCard
 
 @Composable
 fun RecommendedUserItem(

@@ -1,8 +1,7 @@
-package com.example.datingapp.screens.friends
+package com.meetmap.datingapp.screens.friends
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,9 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-import com.example.datingapp.R
-import com.example.datingapp.components.headers.Heading
-import com.example.datingapp.components.headers.Heading_Arrow
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.headers.Heading_Arrow
 
 
 @Composable

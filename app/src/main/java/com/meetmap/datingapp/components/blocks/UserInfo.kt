@@ -1,6 +1,5 @@
-package com.example.datingapp.components.blocks
+package com.meetmap.datingapp.components.blocks
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -22,11 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.datingapp.R
-import com.example.datingapp.data.repository.MyUser
-import com.example.datingapp.ui.theme.boundedFamily
-import com.example.datingapp.ui.theme.montserratFamily
-import com.example.datingapp.utils.CloudImageUtils
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.data.repository.MyUser
+import com.meetmap.datingapp.ui.theme.montserratFamily
+import com.meetmap.datingapp.utils.CloudImageUtils
 
 fun getAgeString(age: Int?): String {
     return when {

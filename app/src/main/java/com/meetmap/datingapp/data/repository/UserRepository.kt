@@ -1,15 +1,14 @@
-package com.example.datingapp.data.repository
+package com.meetmap.datingapp.data.repository
 
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
-import com.example.datingapp.BuildConfig
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.utils.CloudImageUtils
+import com.meetmap.datingapp.BuildConfig
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.utils.CloudImageUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext

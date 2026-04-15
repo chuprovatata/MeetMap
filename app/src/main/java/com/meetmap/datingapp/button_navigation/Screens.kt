@@ -1,4 +1,4 @@
-package com.example.datingapp.button_navigation
+package com.meetmap.datingapp.button_navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text

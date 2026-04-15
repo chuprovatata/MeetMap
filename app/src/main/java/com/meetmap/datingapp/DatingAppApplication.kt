@@ -1,4 +1,4 @@
-package com.example.datingapp
+package com.meetmap.datingapp
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

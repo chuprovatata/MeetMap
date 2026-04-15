@@ -1,11 +1,9 @@
-package com.example.datingapp.screens.myplaces
+package com.meetmap.datingapp.screens.myplaces
 
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,17 +28,15 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.decode.SvgDecoder
-import com.example.datingapp.R
-import com.example.datingapp.data.models.AppUser
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.screens.feedback.FeedbackAfterPlaceDeleted
-import com.example.datingapp.viewmodels.FeedbackViewModel
-import com.example.datingapp.viewmodels.MyPlaceDetailViewModel
-import com.example.datingapp.viewmodels.UserViewModel
-import kotlinx.coroutines.launch
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.data.models.AppUser
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.screens.feedback.FeedbackAfterPlaceDeleted
+import com.meetmap.datingapp.viewmodels.FeedbackViewModel
+import com.meetmap.datingapp.viewmodels.MyPlaceDetailViewModel
+import com.meetmap.datingapp.viewmodels.UserViewModel
 import java.text.DecimalFormat
-import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

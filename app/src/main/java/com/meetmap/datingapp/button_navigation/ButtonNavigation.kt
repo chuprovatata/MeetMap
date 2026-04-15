@@ -1,4 +1,4 @@
-package com.example.datingapp.button_navigation
+package com.meetmap.datingapp.button_navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -20,14 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.datingapp.ui.theme.BlackNav
-import com.example.datingapp.ui.theme.montserratFamily
+import com.meetmap.datingapp.ui.theme.BlackNav
+import com.meetmap.datingapp.ui.theme.montserratFamily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 
 @Composable
 fun ButtonNavigation(

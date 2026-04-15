@@ -1,8 +1,7 @@
-package com.example.datingapp.screens.settings
+package com.meetmap.datingapp.screens.settings
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,12 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.datingapp.components.forms.DatingTextField
-import com.example.datingapp.components.forms.TermsSwitch
-import com.example.datingapp.R
-import com.example.datingapp.screens.auth.openPdfFile
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.components.forms.DatingTextField
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.screens.auth.openPdfFile
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.activity.compose.BackHandler
@@ -41,9 +39,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.boundedFamily
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.boundedFamily
 
 @Composable
 fun SettingsHeadingArrow(
@@ -628,7 +625,7 @@ fun SettingsScreen(
                                 }
                             } else {
                                 val imageModel = remember(profileImageUrl) {
-                                    if (profileImageUrl.isNullOrBlank() || profileImageUrl == com.example.datingapp.utils.CloudImageUtils.NO_PICTURE_URL) {
+                                    if (profileImageUrl.isNullOrBlank() || profileImageUrl == com.meetmap.datingapp.utils.CloudImageUtils.NO_PICTURE_URL) {
                                         R.drawable.picture_defaullt_profile
                                     } else {
                                         profileImageUrl!!.substringBefore("?X-Amz-")
@@ -771,7 +768,7 @@ fun SettingsScreen(
                             .padding(horizontal = spacing.large)
                     ) {
                         if (favoritePlacePhotoUrl != null &&
-                            favoritePlacePhotoUrl != com.example.datingapp.utils.CloudImageUtils.NO_PICTURE_URL) {
+                            favoritePlacePhotoUrl != com.meetmap.datingapp.utils.CloudImageUtils.NO_PICTURE_URL) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()

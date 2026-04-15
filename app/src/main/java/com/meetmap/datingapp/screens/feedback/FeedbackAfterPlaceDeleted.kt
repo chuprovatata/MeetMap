@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.feedback
+package com.meetmap.datingapp.screens.feedback
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,11 +27,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.datingapp.R
-import com.example.datingapp.components.buttons.PrimaryButton
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.ui.theme.GrayLight
-import com.example.datingapp.ui.theme.PurpleMedium
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.buttons.PrimaryButton
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.ui.theme.GrayLight
 
 @Composable
 fun FeedbackAfterPlaceDeleted(

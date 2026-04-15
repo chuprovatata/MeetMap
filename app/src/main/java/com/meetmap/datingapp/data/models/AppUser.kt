@@ -1,4 +1,4 @@
-package com.example.datingapp.data.models
+package com.meetmap.datingapp.data.models
 
 data class AppUser(
     val id: String = "",

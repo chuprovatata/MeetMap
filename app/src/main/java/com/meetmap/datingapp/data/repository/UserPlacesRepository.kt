@@ -1,7 +1,7 @@
-package com.example.datingapp.data.repository
+package com.meetmap.datingapp.data.repository
 
-import com.example.datingapp.data.models.UserPlace
-import com.example.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.models.UserPlace
+import com.meetmap.datingapp.data.models.PlaceInfo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
@@ -10,7 +10,6 @@ import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 import android.util.Log
-import com.example.datingapp.data.repository.NotificationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -1,6 +1,6 @@
-package com.example.datingapp.button_navigation
+package com.meetmap.datingapp.button_navigation
 
-import com.example.datingapp.R
+import com.meetmap.datingapp.R
 
 sealed class BottomItem(
     val title: String,

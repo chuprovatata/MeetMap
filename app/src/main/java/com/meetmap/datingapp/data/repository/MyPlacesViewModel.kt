@@ -1,10 +1,10 @@
-package com.example.datingapp.viewmodels
+package com.meetmap.datingapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.data.models.UserPlace
-import com.example.datingapp.data.repository.UserPlacesRepository
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.models.UserPlace
+import com.meetmap.datingapp.data.repository.UserPlacesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
 import javax.inject.Inject
 import android.util.Log
 

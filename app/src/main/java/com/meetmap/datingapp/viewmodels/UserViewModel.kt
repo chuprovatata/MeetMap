@@ -1,18 +1,18 @@
-package com.example.datingapp.viewmodels
+package com.meetmap.datingapp.viewmodels
 
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.datingapp.R
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.data.models.UserPlace
-import com.example.datingapp.data.repository.FriendStatus
-import com.example.datingapp.data.repository.MyUser
-import com.example.datingapp.data.repository.UserPlacesRepository
-import com.example.datingapp.data.repository.UserRepository
-import com.example.datingapp.utils.CloudImageUtils
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.models.UserPlace
+import com.meetmap.datingapp.data.repository.FriendStatus
+import com.meetmap.datingapp.data.repository.MyUser
+import com.meetmap.datingapp.data.repository.UserPlacesRepository
+import com.meetmap.datingapp.data.repository.UserRepository
+import com.meetmap.datingapp.utils.CloudImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

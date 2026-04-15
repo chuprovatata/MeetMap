@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.admin
+package com.meetmap.datingapp.screens.admin
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.datingapp.data.firebase.ExcelToFirestoreService
-import com.example.datingapp.data.firebase.ImportStatistics
+import com.meetmap.datingapp.data.firebase.ExcelToFirestoreService
+import com.meetmap.datingapp.data.firebase.ImportStatistics
 import kotlinx.coroutines.launch
 
 @Composable

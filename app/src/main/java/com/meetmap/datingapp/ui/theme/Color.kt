@@ -1,4 +1,4 @@
-package com.example.datingapp.ui.theme
+package com.meetmap.datingapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

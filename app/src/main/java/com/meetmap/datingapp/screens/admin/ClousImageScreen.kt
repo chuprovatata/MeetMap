@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.admin
+package com.meetmap.datingapp.screens.admin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.datingapp.utils.CloudImageUtils  // ← ИЗМЕНЕНО
+import com.meetmap.datingapp.utils.CloudImageUtils  // ← ИЗМЕНЕНО
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

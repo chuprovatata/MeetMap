@@ -1,27 +1,24 @@
-package com.example.datingapp.button_navigation
+package com.meetmap.datingapp.button_navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.screens.friends.Cur_Friend
-import com.example.datingapp.screens.friends.Main_Friends
-import com.example.datingapp.screens.friends.My_Friends
-import com.example.datingapp.screens.main.MainScreen
-import com.example.datingapp.screens.meets.MainMeets
-import com.example.datingapp.screens.meets.ReqFriend
-import com.example.datingapp.screens.meets.ReqMeet
-import com.example.datingapp.screens.myplaces.MyPlaceDetailScreen
-import com.example.datingapp.screens.myplaces.MyPlacesScreen
-import com.example.datingapp.screens.profile.MyProfile
-import com.example.datingapp.screens.recommendation.PeopleOfDay
-import com.example.datingapp.screens.settings.SettingsScreen
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.screens.friends.Cur_Friend
+import com.meetmap.datingapp.screens.friends.My_Friends
+import com.meetmap.datingapp.screens.main.MainScreen
+import com.meetmap.datingapp.screens.meets.MainMeets
+import com.meetmap.datingapp.screens.meets.ReqFriend
+import com.meetmap.datingapp.screens.myplaces.MyPlaceDetailScreen
+import com.meetmap.datingapp.screens.myplaces.MyPlacesScreen
+import com.meetmap.datingapp.screens.profile.MyProfile
+import com.meetmap.datingapp.screens.recommendation.PeopleOfDay
+import com.meetmap.datingapp.screens.settings.SettingsScreen
+import com.meetmap.datingapp.viewmodels.UserViewModel
 
 @Composable
 fun NavGraph(

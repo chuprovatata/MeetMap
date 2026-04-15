@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.meets
+package com.meetmap.datingapp.screens.meets
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,28 +9,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -49,30 +37,23 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.Title_Block
-import com.example.datingapp.components.headers.Heading
-import com.example.datingapp.components.segmentedButton.CustomTabsComponent
-import com.example.datingapp.data.repository.FriendStatus
-import com.example.datingapp.data.repository.MyUser
-import com.example.datingapp.navigation.GlobalNavController
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.screens.friends.User
-import com.example.datingapp.screens.friends.UserItem
-import com.example.datingapp.ui.theme.GrayMedium
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.example.datingapp.ui.theme.PurpleCard
-import com.example.datingapp.ui.theme.montserratFamily
-import com.example.datingapp.viewmodels.NotificationViewModel
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.Title_Block
+import com.meetmap.datingapp.components.headers.Heading
+import com.meetmap.datingapp.components.segmentedButton.CustomTabsComponent
+import com.meetmap.datingapp.data.repository.FriendStatus
+import com.meetmap.datingapp.navigation.GlobalNavController
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.viewmodels.NotificationViewModel
+import com.meetmap.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-import org.w3c.dom.Text
 
 
 @Composable

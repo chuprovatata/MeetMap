@@ -1,4 +1,4 @@
-package com.example.datingapp.components.forms
+package com.meetmap.datingapp.components.forms
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

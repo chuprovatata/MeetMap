@@ -1,4 +1,4 @@
-package com.example.datingapp.navigation
+package com.meetmap.datingapp.navigation
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")

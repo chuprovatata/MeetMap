@@ -1,4 +1,4 @@
-package com.example.datingapp.extensions
+package com.meetmap.datingapp.extensions
 
 import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.suspendCancellableCoroutine

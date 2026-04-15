@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.auth
+package com.meetmap.datingapp.screens.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -24,12 +24,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.buttons.PrimaryButton
-import com.example.datingapp.components.buttons.TextButtonWithUnderline
-import com.example.datingapp.components.forms.DatingTextField
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.example.datingapp.viewmodels.AuthViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.buttons.PrimaryButton
+import com.meetmap.datingapp.components.buttons.TextButtonWithUnderline
+import com.meetmap.datingapp.components.forms.DatingTextField
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.viewmodels.AuthViewModel
 import kotlinx.coroutines.launch
 
 @Composable

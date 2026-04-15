@@ -1,4 +1,4 @@
-package com.example.datingapp.services
+package com.meetmap.datingapp.services
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,8 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.example.datingapp.MainActivity
-import com.example.datingapp.R
+import com.meetmap.datingapp.MainActivity
+import com.meetmap.datingapp.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope

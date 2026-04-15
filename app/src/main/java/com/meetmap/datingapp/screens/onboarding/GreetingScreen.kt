@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.onboarding
+package com.meetmap.datingapp.screens.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.datingapp.R
+import com.meetmap.datingapp.R
 import androidx.compose.material3.MaterialTheme
 
 @Composable

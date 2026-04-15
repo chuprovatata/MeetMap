@@ -1,4 +1,4 @@
-package com.example.datingapp.components.forms
+package com.meetmap.datingapp.components.forms
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,8 +23,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.datingapp.ui.theme.GrayLight
-import com.example.datingapp.ui.theme.White
+import com.meetmap.datingapp.ui.theme.GrayLight
+import com.meetmap.datingapp.ui.theme.White
 
 @Composable
 fun DatingTextField(

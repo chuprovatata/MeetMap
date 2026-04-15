@@ -1,10 +1,10 @@
-package com.example.datingapp.utils
+package com.meetmap.datingapp.utils
 
 import android.util.Log
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.example.datingapp.R
+import com.meetmap.datingapp.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

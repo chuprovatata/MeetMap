@@ -1,8 +1,8 @@
-package com.example.datingapp.viewmodels
+package com.meetmap.datingapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.datingapp.data.repository.NotificationRepository
+import com.meetmap.datingapp.data.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

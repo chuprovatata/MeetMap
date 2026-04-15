@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.meets
+package com.meetmap.datingapp.screens.meets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,17 +26,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.FavPlace
-import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.MutPlaces
-import com.example.datingapp.components.blocks.Place
-import com.example.datingapp.components.blocks.UserInfo
-import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.components.progress.ProgressLine
-import com.example.datingapp.data.models.PlaceInfo  // Добавьте этот импорт
-import com.example.datingapp.screens.friends.User
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.FavPlace
+import com.meetmap.datingapp.components.blocks.MutPlaces
+import com.meetmap.datingapp.components.blocks.Place
+import com.meetmap.datingapp.components.headers.Heading_Arrow
+import com.meetmap.datingapp.components.progress.ProgressLine
+import com.meetmap.datingapp.data.models.PlaceInfo  // Добавьте этот импорт
+import com.meetmap.datingapp.screens.friends.User
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
 
 @Composable
 fun ReqMeet(navController: NavController) {

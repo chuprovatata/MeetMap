@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.recommendation
+package com.meetmap.datingapp.screens.recommendation
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,12 +23,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.Title_Block
-import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.PurpleCard
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.Title_Block
+import com.meetmap.datingapp.components.headers.Heading_Arrow
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.viewmodels.UserViewModel
 
 @Composable
 fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
@@ -39,7 +38,6 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Отслеживаем жизненный цикл экрана
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -58,7 +56,6 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
         }
     }
 
-    // Обновляем при первом открытии
     LaunchedEffect(Unit) {
         Log.d("PeopleOfDay", "🚀 Первое открытие экрана")
         viewModel.refreshRecommendedUsers()
@@ -112,7 +109,6 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                     }
 
                     if (recommendedUsers.isEmpty()) {
-                        // Пустое состояние занимает оставшееся пространство
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -164,7 +160,12 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 8.dp,
+                                bottom = 88.dp
+                            )
                         ) {
                             items(recommendedUsers) { user ->
                                 RecommendedUserItem(

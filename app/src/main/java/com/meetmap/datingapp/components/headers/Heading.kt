@@ -1,6 +1,5 @@
-package com.example.datingapp.components.headers
+package com.meetmap.datingapp.components.headers
 
-import android.net.sip.SipProfile
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,15 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.boundedFamily
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.ui.theme.boundedFamily
 
 @Composable
 fun Heading_Arrow(

@@ -1,4 +1,4 @@
-package com.example.datingapp.components.notification
+package com.meetmap.datingapp.components.notification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,13 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.datingapp.components.buttons.PrimaryButton
-import com.example.datingapp.R
+import com.meetmap.datingapp.components.buttons.PrimaryButton
+import com.meetmap.datingapp.R
 
 @Composable
 fun NotificationItem(

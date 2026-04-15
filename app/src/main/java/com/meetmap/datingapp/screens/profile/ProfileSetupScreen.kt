@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.profile
+package com.meetmap.datingapp.screens.profile
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -24,14 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.datingapp.components.buttons.PrimaryButton
-import com.example.datingapp.components.buttons.TextButtonWithUnderline
-import com.example.datingapp.viewmodels.ProfileSetupViewModel
-import com.example.datingapp.components.forms.DatingTextField
-import com.example.datingapp.components.progress.ProgressLine
-import com.example.datingapp.navigation.NavigationProgress
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.components.buttons.PrimaryButton
+import com.meetmap.datingapp.components.buttons.TextButtonWithUnderline
+import com.meetmap.datingapp.viewmodels.ProfileSetupViewModel
+import com.meetmap.datingapp.components.forms.DatingTextField
+import com.meetmap.datingapp.components.progress.ProgressLine
+import com.meetmap.datingapp.navigation.NavigationProgress
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 

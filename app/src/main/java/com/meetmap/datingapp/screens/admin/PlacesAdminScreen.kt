@@ -1,5 +1,5 @@
 // app/src/main/java/com/example/datingapp/screens/admin/PlacesAdminScreen.kt
-package com.example.datingapp.screens.admin
+package com.meetmap.datingapp.screens.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,12 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.viewmodels.PlacesAdminViewModel
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.viewmodels.PlacesAdminViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

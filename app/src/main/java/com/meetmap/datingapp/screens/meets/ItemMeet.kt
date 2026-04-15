@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.meets
+package com.meetmap.datingapp.screens.meets
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,16 +25,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.data.repository.FriendStatus
-import com.example.datingapp.data.repository.MyUser
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.screens.friends.User
-import com.example.datingapp.ui.theme.GrayDark
-import com.example.datingapp.ui.theme.GrayMedium
-import com.example.datingapp.ui.theme.GrayMedium2
-import com.example.datingapp.ui.theme.GrayPerson
-import com.example.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.data.repository.FriendStatus
+import com.meetmap.datingapp.data.repository.MyUser
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.GrayMedium2
+import com.meetmap.datingapp.ui.theme.PurpleCard
 
 @Composable
 fun ItemMeets(

@@ -10,15 +10,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.datingapp"
+    namespace = "com.meetmap.datingapp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.datingapp"
+        applicationId = "com.meetmap.datingapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val localProperties = Properties()
@@ -41,8 +41,18 @@ android {
         buildConfigField("String", "YANDEX_SECRET_ACCESS_KEY", "\"${yandexSecretKey}\"")
         buildConfigField("String", "YANDEX_OAUTH_TOKEN", "\"${yandexOAuthToken}\"")
     }
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.keystore")
+            storePassword = "MeetMap"
+            keyAlias = "key1"
+            keyPassword = "MeetMap"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -131,4 +141,6 @@ dependencies {
 
     // Для работы с уведомлениями в фоне
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    // AppMetrica SDK.
+    implementation("io.appmetrica.analytics:analytics:8.0.0")
 }

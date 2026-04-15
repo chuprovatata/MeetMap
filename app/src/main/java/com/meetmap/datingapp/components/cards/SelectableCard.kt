@@ -1,4 +1,4 @@
-package com.example.datingapp.components.cards
+package com.meetmap.datingapp.components.cards
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -1,7 +1,6 @@
-package com.example.datingapp.data.models
+package com.meetmap.datingapp.data.models
 
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.ServerTimestamp
 
 /**

@@ -1,13 +1,10 @@
-package com.example.datingapp.data.repository
+package com.meetmap.datingapp.data.repository
 
 import android.util.Log
-import com.example.datingapp.data.models.Notification
-import com.example.datingapp.data.models.NotificationType
+import com.meetmap.datingapp.data.models.Notification
+import com.meetmap.datingapp.data.models.NotificationType
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.snapshots
 import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

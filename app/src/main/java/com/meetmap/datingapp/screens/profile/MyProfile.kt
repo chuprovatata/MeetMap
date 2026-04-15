@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.profile
+package com.meetmap.datingapp.screens.profile
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -19,19 +19,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.FavPlace
-import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.UserInfo
-import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.data.repository.FriendStatus
-import com.example.datingapp.data.repository.MyUser
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.FavPlace
+import com.meetmap.datingapp.components.blocks.FriendsHorizontal
+import com.meetmap.datingapp.components.blocks.UserInfo
+import com.meetmap.datingapp.data.repository.FriendStatus
+import com.meetmap.datingapp.data.repository.MyUser
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.viewmodels.UserViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.datingapp.ui.theme.boundedFamily
+import com.meetmap.datingapp.ui.theme.boundedFamily
 
 @Composable
 fun MyProfile(navController: NavController, viewModel: UserViewModel) {

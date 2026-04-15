@@ -1,8 +1,8 @@
-package com.example.datingapp.di
+package com.meetmap.datingapp.di
 
-import com.example.datingapp.data.repository.NotificationRepository
-import com.example.datingapp.data.repository.UserPlacesRepository
-import com.example.datingapp.data.repository.UserRepository
+import com.meetmap.datingapp.data.repository.NotificationRepository
+import com.meetmap.datingapp.data.repository.UserPlacesRepository
+import com.meetmap.datingapp.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module

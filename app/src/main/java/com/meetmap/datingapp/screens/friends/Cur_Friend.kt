@@ -1,7 +1,6 @@
-package com.example.datingapp.screens.friends
+package com.meetmap.datingapp.screens.friends
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,7 +21,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,19 +42,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.CompatibilityScore
-import com.example.datingapp.components.blocks.FavPlace
-import com.example.datingapp.components.blocks.FriendsHorizontal
-import com.example.datingapp.components.blocks.MutPlaces
-import com.example.datingapp.components.blocks.UserInfo
-import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.components.progress.ProgressLine
-import com.example.datingapp.data.repository.FriendStatus
-import com.example.datingapp.ui.theme.PurpleCard
-import com.example.datingapp.ui.theme.PurpleDark
-import com.example.datingapp.ui.theme.boundedFamily
-import com.example.datingapp.viewmodels.UserViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.CompatibilityScore
+import com.meetmap.datingapp.components.blocks.FavPlace
+import com.meetmap.datingapp.components.blocks.FriendsHorizontal
+import com.meetmap.datingapp.components.blocks.MutPlaces
+import com.meetmap.datingapp.components.blocks.UserInfo
+import com.meetmap.datingapp.components.progress.ProgressLine
+import com.meetmap.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.ui.theme.PurpleDark
+import com.meetmap.datingapp.ui.theme.boundedFamily
+import com.meetmap.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable

@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.onboarding
+package com.meetmap.datingapp.screens.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,14 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.buttons.TextButtonWithUnderline
-import com.example.datingapp.components.buttons.WhiteButton
-import com.example.datingapp.components.progress.ProgressLine
-import com.example.datingapp.navigation.NavigationProgress
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.example.datingapp.ui.theme.Typography
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.buttons.TextButtonWithUnderline
+import com.meetmap.datingapp.components.buttons.WhiteButton
+import com.meetmap.datingapp.components.progress.ProgressLine
+import com.meetmap.datingapp.navigation.NavigationProgress
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.ui.theme.Typography
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

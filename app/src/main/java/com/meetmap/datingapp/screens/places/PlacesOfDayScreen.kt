@@ -1,8 +1,7 @@
 // app/src/main/java/com/example/datingapp/screens/places/PlacesOfDayScreen.kt
-package com.example.datingapp.screens.places
+package com.meetmap.datingapp.screens.places
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -31,10 +30,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.datingapp.R
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.viewmodels.UserPlacesViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.viewmodels.UserPlacesViewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -45,14 +44,13 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.foundation.background
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import kotlinx.coroutines.flow.collectLatest
 import coil.decode.SvgDecoder
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import kotlin.math.abs
 import java.text.DecimalFormat
-import com.example.datingapp.screens.feedback.FeedbackAfterPlaceAdded
+import com.meetmap.datingapp.screens.feedback.FeedbackAfterPlaceAdded
 import java.util.Random
-import com.example.datingapp.viewmodels.FeedbackViewModel
+import com.meetmap.datingapp.viewmodels.FeedbackViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

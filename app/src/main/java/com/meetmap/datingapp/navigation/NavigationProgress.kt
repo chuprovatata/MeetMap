@@ -1,4 +1,4 @@
-package com.example.datingapp.navigation
+package com.meetmap.datingapp.navigation
 
 object NavigationProgress {
 

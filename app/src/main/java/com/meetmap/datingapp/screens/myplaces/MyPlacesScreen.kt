@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.myplaces
+package com.meetmap.datingapp.screens.myplaces
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -35,14 +35,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.datingapp.R
-import com.example.datingapp.components.headers.Heading
-import com.example.datingapp.data.models.PlaceInfo
-import com.example.datingapp.navigation.GlobalNavController
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.viewmodels.MyPlacesViewModel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.collectLatest
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.headers.Heading
+import com.meetmap.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.viewmodels.MyPlacesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,11 +1,10 @@
 // app/src/main/java/com/example/datingapp/data/firebase/ExcelToFirestoreService.kt
-package com.example.datingapp.data.firebase
+package com.meetmap.datingapp.data.firebase
 
 import android.content.Context
-import com.example.datingapp.data.csv.CsvImportService
-import com.example.datingapp.data.csv.CsvParseResult
-import com.example.datingapp.data.csv.SkippedRowInfo
-import com.example.datingapp.data.models.PlaceInfo
+import com.meetmap.datingapp.data.csv.CsvImportService
+import com.meetmap.datingapp.data.csv.SkippedRowInfo
+import com.meetmap.datingapp.data.models.PlaceInfo
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore

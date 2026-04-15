@@ -1,5 +1,5 @@
 // components/buttons/PrimaryButton.kt
-package com.example.datingapp.components.buttons
+package com.meetmap.datingapp.components.buttons
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

@@ -1,4 +1,4 @@
-package com.example.datingapp.components.blocks
+package com.meetmap.datingapp.components.blocks
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer

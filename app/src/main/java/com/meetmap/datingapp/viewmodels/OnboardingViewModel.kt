@@ -1,5 +1,5 @@
 // app/src/main/java/com/example/datingapp/viewmodels/OnboardingViewModel.kt
-package com.example.datingapp.viewmodels
+package com.meetmap.datingapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

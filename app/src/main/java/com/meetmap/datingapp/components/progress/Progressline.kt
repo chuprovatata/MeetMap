@@ -1,4 +1,4 @@
-package com.example.datingapp.components.progress
+package com.meetmap.datingapp.components.progress
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

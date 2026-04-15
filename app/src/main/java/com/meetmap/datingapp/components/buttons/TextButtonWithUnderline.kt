@@ -1,4 +1,4 @@
-package com.example.datingapp.components.buttons
+package com.meetmap.datingapp.components.buttons
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.wrapContentWidth

@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.main
+package com.meetmap.datingapp.screens.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -27,17 +27,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.components.blocks.SimpleBlock
-import com.example.datingapp.components.notifications.NotificationBanner
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.GrayLight
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.blocks.SimpleBlock
+import com.meetmap.datingapp.components.notifications.NotificationBanner
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.GrayLight
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.example.datingapp.viewmodels.NotificationViewModel
-import kotlinx.coroutines.launch
-import kotlin.math.min
+import com.meetmap.datingapp.viewmodels.NotificationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

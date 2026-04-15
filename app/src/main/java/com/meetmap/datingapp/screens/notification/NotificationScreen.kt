@@ -1,4 +1,4 @@
-package com.example.datingapp.screens.notification
+package com.meetmap.datingapp.screens.notification
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -14,17 +14,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.datingapp.components.notification.NotificationItem
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.R
-import com.example.datingapp.components.headers.Heading_Arrow
-import com.example.datingapp.data.models.Notification
-import com.example.datingapp.data.models.NotificationType
-import com.example.datingapp.viewmodels.NotificationViewModel
+import com.meetmap.datingapp.components.notification.NotificationItem
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.components.headers.Heading_Arrow
+import com.meetmap.datingapp.data.models.Notification
+import com.meetmap.datingapp.data.models.NotificationType
+import com.meetmap.datingapp.viewmodels.NotificationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

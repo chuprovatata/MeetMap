@@ -1,4 +1,4 @@
-package com.example.datingapp
+package com.meetmap.datingapp
 
 import org.junit.Test
 

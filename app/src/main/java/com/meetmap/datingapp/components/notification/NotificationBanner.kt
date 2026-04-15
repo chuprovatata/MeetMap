@@ -1,4 +1,4 @@
-package com.example.datingapp.components.notifications
+package com.meetmap.datingapp.components.notifications
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.datingapp.R
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.viewmodels.NotificationViewModel
+import com.meetmap.datingapp.R
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.viewmodels.NotificationViewModel
 import android.util.Log
 
 @Composable

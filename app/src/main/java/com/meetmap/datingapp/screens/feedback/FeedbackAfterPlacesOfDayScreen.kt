@@ -1,11 +1,10 @@
-package com.example.datingapp.screens.feedback
+package com.meetmap.datingapp.screens.feedback
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -15,17 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.datingapp.R
+import com.meetmap.datingapp.R
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.datingapp.components.buttons.PrimaryButton
-import com.example.datingapp.navigation.Screen
-import com.example.datingapp.ui.theme.LocalDatingAppSpacing
-import com.example.datingapp.viewmodels.FeedbackViewModel
-import kotlinx.coroutines.launch
+import com.meetmap.datingapp.components.buttons.PrimaryButton
+import com.meetmap.datingapp.navigation.Screen
+import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
+import com.meetmap.datingapp.viewmodels.FeedbackViewModel
 
 @Composable
 fun FeedbackAfterPlacesOfDayScreen(

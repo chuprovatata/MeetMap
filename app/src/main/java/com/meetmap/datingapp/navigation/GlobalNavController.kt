@@ -1,4 +1,4 @@
-package com.example.datingapp.navigation
+package com.meetmap.datingapp.navigation
 
 import androidx.navigation.NavController
 

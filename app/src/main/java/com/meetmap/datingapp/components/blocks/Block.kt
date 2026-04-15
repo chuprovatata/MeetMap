@@ -1,4 +1,4 @@
-package com.example.datingapp.components.blocks
+package com.meetmap.datingapp.components.blocks
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -14,11 +14,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.scale
-import com.example.datingapp.ui.theme.PurpleCard
-import com.example.datingapp.ui.theme.PurpleLight
-import com.example.datingapp.ui.theme.PurpleMedium
+import com.meetmap.datingapp.ui.theme.PurpleMedium
 
 @Composable
 fun SimpleBlock(

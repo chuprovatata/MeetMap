@@ -1,5 +1,5 @@
 // app/src/main/java/com/example/datingapp/screens/admin/TestCloudScreen.kt
-package com.example.datingapp.screens.admin
+package com.meetmap.datingapp.screens.admin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -12,7 +12,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.datingapp.utils.CloudImageUtils
+import com.meetmap.datingapp.utils.CloudImageUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
