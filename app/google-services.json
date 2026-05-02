@@ -7,25 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:634266978778:android:5daa277ff7b722fe5f98e3",
-        "android_client_info": {
-          "package_name": "com.example.datingapp"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDU7FlSPc0-fPZmJUoRMpvtQvR8gvCxaPQ"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:634266978778:android:5ccc42be972555235f98e3",
         "android_client_info": {
           "package_name": "com.meetmap.datingapp"
@@ -34,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDU7FlSPc0-fPZmJUoRMpvtQvR8gvCxaPQ"
+          "current_key": "AIzaSyDv-lBsfqWxQTYOeZb3DIQEROx4VAUZpJA"
         }
       ],
       "services": {

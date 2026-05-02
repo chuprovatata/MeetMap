@@ -44,9 +44,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("release.keystore")
-            storePassword = "MeetMap"
-            keyAlias = "key1"
-            keyPassword = "MeetMap"
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
         }
     }
 
@@ -130,6 +130,7 @@ dependencies {
     // Для работы с Яндекс.Облаком
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+
     // Для загрузки изображений
     implementation("io.coil-kt:coil-compose:2.5.0")
 
@@ -143,4 +144,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     // AppMetrica SDK.
     implementation("io.appmetrica.analytics:analytics:8.0.0")
+    // Google Places SDK for Android (новая версия)
+    implementation("com.google.android.libraries.places:places:4.0.0")
 }
