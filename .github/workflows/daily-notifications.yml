@@ -2,14 +2,20 @@ name: Daily Push Notifications
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # 9:00 UTC = 12:00 Москва
+    - cron: '0 9 * * *'
   workflow_dispatch:
 
 jobs:
   send-notification:
     runs-on: ubuntu-latest
 
+    env:
+      ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+      ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+
     steps:
+      - uses: actions/checkout@v4
+
       - name: Send notification to all users
         run: |
           curl --request POST \
@@ -28,4 +34,4 @@ jobs:
             }'
 
       - name: Log result
-        run: echo "✅ Уведомление отправлено $(date)"
+        run: echo "Уведомление отправлено $(date)"
