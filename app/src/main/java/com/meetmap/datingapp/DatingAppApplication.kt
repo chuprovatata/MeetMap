@@ -12,6 +12,6 @@ class DatingAppApplication : Application() {
         super.onCreate()
 
         OneSignal.Debug.logLevel = LogLevel.VERBOSE
-        OneSignal.initWithContext(this, BuildConfig.ONESIGNAL_APP_ID)
+        OneSignal.initWithContext(this)
     }
 }
