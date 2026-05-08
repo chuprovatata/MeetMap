@@ -14,28 +14,39 @@ import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.meetmap.datingapp.data.models.Notification
+import com.meetmap.datingapp.data.models.NotificationType
+import java.util.Date
+import com.google.firebase.Timestamp
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        // Показываем уведомление
-        remoteMessage.notification?.let { notification ->
-            showNotification(
-                title = notification.title ?: "Новое уведомление",
-                body = notification.body ?: ""
-            )
-        }
+        // Получаем данные из уведомления
+        val title = remoteMessage.notification?.title ?: "Новое уведомление"
+        val body = remoteMessage.notification?.body ?: ""
 
-        // Сохраняем в Firestore (чтобы было и внутри приложения)
-        saveNotificationToFirestore(remoteMessage)
+        // Получаем дополнительные данные (если есть)
+        val type = remoteMessage.data["type"] ?: "GENERAL"
+        val buttonText = remoteMessage.data["buttonText"] ?: "Открыть"
+        val actionId = remoteMessage.data["actionId"] ?: ""
+
+        // Показываем уведомление в системной панели
+        showNotification(title, body)
+
+        // Сохраняем уведомление в Firestore (чтобы появилось внутри приложения)
+        saveNotificationToFirestore(title, body, type, buttonText, actionId)
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Отправляем новый токен на сервер
-        sendTokenToServer(token)
+        android.util.Log.d("FCM_TOKEN", "Новый токен: $token")
+        saveTokenToFirestore(token)
     }
 
     private fun showNotification(title: String, body: String) {
@@ -53,17 +64,19 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // Создаем канал для Android 8+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "default_channel",
-                "Основные уведомления",
+                "daily_digest_channel",
+                "Ежедневная подборка",
                 NotificationManager.IMPORTANCE_HIGH
-            )
+            ).apply {
+                description = "Уведомления о новых подборках и событиях"
+            }
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = NotificationCompat.Builder(this, "default_channel")
+        val notification = NotificationCompat.Builder(this, "daily_digest_channel")
             .setContentTitle(title)
             .setContentText(body)
-            .setSmallIcon(R.drawable.icon_app_foreground) // Создайте иконку
+            .setSmallIcon(R.drawable.icon_app_foreground) // Убедитесь, что иконка есть
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -72,15 +85,89 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
-    private fun saveNotificationToFirestore(message: RemoteMessage) {
-        // TODO: Сохранить уведомление в Firestore
-        // чтобы оно отображалось и внутри приложения
+    private fun saveNotificationToFirestore(
+        title: String,
+        body: String,
+        type: String,
+        buttonText: String,
+        actionId: String
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                if (currentUser == null) {
+                    println("❌ Не удалось сохранить уведомление: пользователь не авторизован")
+                    return@launch
+                }
+
+                val notification = Notification(
+                    id = "", // Будет сгенерирован Firestore
+                    userId = currentUser.uid,
+                    type = mapStringToNotificationType(type),
+                    title = title,
+                    description = body,
+                    data = mapOf(
+                        "actionId" to actionId,
+                        "source" to "push"
+                    ),
+                    buttonText = buttonText,
+                    read = false,
+                    createdAt = Timestamp(Date())
+                )
+
+                val notificationsCollection = FirebaseFirestore.getInstance()
+                    .collection("notifications")
+
+                val docRef = notificationsCollection.document()
+                val notificationWithId = notification.copy(id = docRef.id)
+                docRef.set(notificationWithId).await()
+
+                println("✅ Уведомление сохранено в Firestore: $title")
+
+            } catch (e: Exception) {
+                println("❌ Ошибка сохранения уведомления в Firestore: ${e.message}")
+            }
+        }
     }
 
-    private fun sendTokenToServer(token: String) {
-        // Сохраняем токен в Firestore для текущего пользователя
+    private fun saveTokenToFirestore(token: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            // Получить текущего пользователя и сохранить token
+            try {
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                if (currentUser == null) {
+                    println("❌ Не удалось сохранить токен: пользователь не авторизован")
+                    return@launch
+                }
+
+                val tokenData = hashMapOf(
+                    "token" to token,
+                    "updatedAt" to Timestamp(Date()),
+                    "deviceType" to "android"
+                )
+
+                FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("fcm_tokens")
+                    .document(token)
+                    .set(tokenData)
+                    .await()
+
+                println("✅ FCM токен сохранен в Firestore")
+
+            } catch (e: Exception) {
+                println("❌ Ошибка сохранения FCM токена: ${e.message}")
+            }
+        }
+    }
+
+    private fun mapStringToNotificationType(type: String): NotificationType {
+        return when (type.uppercase()) {
+            "PLACES_OF_DAY_UPDATED" -> NotificationType.PLACES_OF_DAY_UPDATED
+            "FRIEND_REQUEST" -> NotificationType.FRIEND_REQUEST
+            "FRIEND_ACCEPTED" -> NotificationType.FRIEND_ACCEPTED
+            "NEW_PLACE_FROM_FRIEND" -> NotificationType.NEW_PLACE_FROM_FRIEND
+            else -> NotificationType.PLACES_OF_DAY_UPDATED // По умолчанию
         }
     }
 }

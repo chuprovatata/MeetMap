@@ -1,7 +1,5 @@
 package com.meetmap.datingapp.screens.settings
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,13 +29,13 @@ import com.meetmap.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.activity.compose.BackHandler
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.meetmap.datingapp.navigation.Screen
 import com.meetmap.datingapp.ui.theme.boundedFamily
@@ -129,11 +127,8 @@ fun SettingsScreen(
     var showDeleteFavoritePhotoDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    var isForProfilePhoto by remember { mutableStateOf(true) }
-    var showPermissionRationale by remember { mutableStateOf(false) }
-
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+    val profilePhotoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
             userViewModel.uploadProfileImage(it, context.contentResolver)
@@ -141,8 +136,8 @@ fun SettingsScreen(
         }
     }
 
-    val pickFavoritePlaceLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+    val favoritePlacePhotoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
             isUploadingFavoritePlace = true
@@ -157,48 +152,6 @@ fun SettingsScreen(
                     isUploadingFavoritePlace = false
                 }
             }
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            if (isForProfilePhoto) {
-                pickImageLauncher.launch("image/*")
-            } else {
-                pickFavoritePlaceLauncher.launch("image/*")
-            }
-        } else {
-            scope.launch {
-                snackbarHostState.showSnackbar("Нет разрешения на чтение файлов")
-            }
-        }
-    }
-
-    fun openGallery(isProfile: Boolean) {
-        isForProfilePhoto = isProfile
-
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-
-        val permissionCheck = ContextCompat.checkSelfPermission(
-            context,
-            permission
-        )
-
-        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
-            if (isProfile) {
-                pickImageLauncher.launch("image/*")
-            } else {
-                pickFavoritePlaceLauncher.launch("image/*")
-            }
-        } else {
-            // Всегда запрашиваем разрешение заново при нажатии
-            permissionLauncher.launch(permission)
         }
     }
 
@@ -459,7 +412,9 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         showDeletePhotoDialog = false
-                        openGallery(true)
+                        profilePhotoPicker.launch(PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        ))
                     }
                 ) {
                     Text("Выбрать новое")
@@ -840,7 +795,9 @@ fun SettingsScreen(
                                     )
                                     .clickable(enabled = favoritePlace.isNotBlank() && !isUploadingFavoritePlace) {
                                         if (favoritePlace.isNotBlank()) {
-                                            openGallery(false)
+                                            favoritePlacePhotoPicker.launch(PickVisualMediaRequest(
+                                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                                            ))
                                         }
                                     }
                                     .padding(16.dp),

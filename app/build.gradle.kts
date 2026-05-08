@@ -17,8 +17,8 @@ android {
         applicationId = "com.meetmap.datingapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.1"
+        versionCode = 6
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val localProperties = Properties()
@@ -37,9 +37,13 @@ android {
         val yandexOAuthToken = localProperties.getProperty("yandex.oauth.token")
             ?: System.getenv("YANDEX_OAUTH_TOKEN")
             ?: "default_oauth_token"
+        val onesignalAppId = localProperties.getProperty("ONESIGNAL_APP_ID")
+            ?: System.getenv("ONESIGNAL_APP_ID")
+            ?: throw GradleException("ONESIGNAL_APP_ID not found in local.properties")
         buildConfigField("String", "YANDEX_ACCESS_KEY_ID", "\"${yandexAccessKey}\"")
         buildConfigField("String", "YANDEX_SECRET_ACCESS_KEY", "\"${yandexSecretKey}\"")
         buildConfigField("String", "YANDEX_OAUTH_TOKEN", "\"${yandexOAuthToken}\"")
+        buildConfigField("String", "ONESIGNAL_APP_ID", "\"$onesignalAppId\"")
     }
     signingConfigs {
         create("release") {
@@ -130,6 +134,9 @@ dependencies {
     // Для работы с Яндекс.Облаком
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // ActivityX - для Photo Picker (версия 1.7.0+)
+    implementation("androidx.activity:activity-compose:1.9.3")
+
 
     // Для загрузки изображений
     implementation("io.coil-kt:coil-compose:2.5.0")
@@ -144,6 +151,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     // AppMetrica SDK.
     implementation("io.appmetrica.analytics:analytics:8.0.0")
-    // Google Places SDK for Android (новая версия)
-    implementation("com.google.android.libraries.places:places:4.0.0")
+
+    implementation("com.onesignal:OneSignal:5.6.1")
+    // ActivityX 1.7.0+ для Photo Picker
+    implementation("androidx.activity:activity-compose:1.9.3")
+    // Или для View-based приложений:
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("com.google.android.gms:play-services-basement:18.6.0")
 }

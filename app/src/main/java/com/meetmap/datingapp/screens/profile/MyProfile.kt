@@ -31,6 +31,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.meetmap.datingapp.ui.theme.boundedFamily
+private fun getPlacesDeclension(count: Int): String {
+    return when {
+        count % 10 == 1 && count % 100 != 11 -> "место отмечено"
+        count % 10 in 2..4 && (count % 100 < 10 || count % 100 > 20) -> "места отмечено"
+        else -> "мест отмечено"
+    }
+}
 
 @Composable
 fun MyProfile(navController: NavController, viewModel: UserViewModel) {
@@ -161,7 +168,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Text(
-                    text = "места отмечено",
+                    text = getPlacesDeclension(userPlacesCount),
                     style = MaterialTheme.typography.bodyLarge,
                     fontSize = 20.sp
                 )

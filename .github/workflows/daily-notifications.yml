@@ -1,0 +1,31 @@
+name: Daily Push Notifications
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9:00 UTC = 12:00 Москва
+  workflow_dispatch:
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send notification to all users
+        run: |
+          curl --request POST \
+            --url https://onesignal.com/api/v1/notifications \
+            --header 'Authorization: Basic ${{ secrets.ONESIGNAL_API_KEY }}' \
+            --header 'Content-Type: application/json' \
+            --data '{
+              "app_id": "${{ secrets.ONESIGNAL_APP_ID }}",
+              "included_segments": ["Total Subscriptions"],
+              "headings": {"en": "Новая подборка!"},
+              "contents": {"en": "Загляни, мы тут кое-что для тебя собрали 🔥"},
+              "data": {
+                "type": "daily_digest",
+                "timestamp": "$(date +%Y-%m-%d_%H:%M:%S)"
+              }
+            }'
+
+      - name: Log result
+        run: echo "✅ Уведомление отправлено $(date)"
