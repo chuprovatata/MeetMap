@@ -37,13 +37,9 @@ android {
         val yandexOAuthToken = localProperties.getProperty("yandex.oauth.token")
             ?: System.getenv("YANDEX_OAUTH_TOKEN")
             ?: "default_oauth_token"
-        val onesignalAppId = localProperties.getProperty("ONESIGNAL_APP_ID")
-            ?: System.getenv("ONESIGNAL_APP_ID")
-            ?: throw GradleException("ONESIGNAL_APP_ID not found in local.properties")
         buildConfigField("String", "YANDEX_ACCESS_KEY_ID", "\"${yandexAccessKey}\"")
         buildConfigField("String", "YANDEX_SECRET_ACCESS_KEY", "\"${yandexSecretKey}\"")
         buildConfigField("String", "YANDEX_OAUTH_TOKEN", "\"${yandexOAuthToken}\"")
-        buildConfigField("String", "ONESIGNAL_APP_ID", "\"$onesignalAppId\"")
     }
     signingConfigs {
         create("release") {
