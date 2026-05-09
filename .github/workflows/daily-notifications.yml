@@ -1,37 +1,29 @@
-name: Daily Push Notifications
+name: Daily Places of Day Notification
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 9 * * *'  # 12:00 Москва
   workflow_dispatch:
 
 jobs:
-  send-notification:
+  send:
     runs-on: ubuntu-latest
-
-    env:
-      ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-      ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Send notification to all users
-        run: |
-          curl --request POST \
-            --url https://onesignal.com/api/v1/notifications \
-            --header 'Authorization: Basic ${{ secrets.ONESIGNAL_API_KEY }}' \
-            --header 'Content-Type: application/json' \
-            --data '{
-              "app_id": "${{ secrets.ONESIGNAL_APP_ID }}",
-              "included_segments": ["Total Subscriptions"],
-              "headings": {"en": "Новая подборка!"},
-              "contents": {"en": "Загляни, мы тут кое-что для тебя собрали 🔥"},
-              "data": {
-                "type": "daily_digest",
-                "timestamp": "$(date +%Y-%m-%d_%H:%M:%S)"
-              }
-            }'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-      - name: Log result
-        run: echo "Уведомление отправлено $(date)"
+      - name: Install dependencies
+        run: npm install firebase-admin axios
+
+      - name: Send Places of Day Notification
+        run: node .github/scripts/sendPlacesOfDayNotification.js
+        env:
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}

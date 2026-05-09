@@ -20,7 +20,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import io.appmetrica.analytics.AppMetrica
 import io.appmetrica.analytics.AppMetricaConfig
-import com.onesignal.OneSignal
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
