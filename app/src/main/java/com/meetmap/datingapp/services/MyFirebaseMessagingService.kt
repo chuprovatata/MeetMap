@@ -19,7 +19,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.meetmap.datingapp.data.models.Notification
 import com.meetmap.datingapp.data.models.NotificationType
-import java.util.Date
 import com.google.firebase.Timestamp
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -27,26 +26,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        // Получаем данные из уведомления
-        val title = remoteMessage.notification?.title ?: "Новое уведомление"
-        val body = remoteMessage.notification?.body ?: ""
+        // OneSignal отправляет данные в remoteMessage.data
+        val data = remoteMessage.data
+        val title = data["headings"] ?: data["title"] ?: "Новое уведомление"
+        val body = data["contents"] ?: data["body"] ?: ""
+        val type = data["type"] ?: "PLACES_OF_DAY_UPDATED"
+        val buttonText = data["buttonText"] ?: "Смотреть"
 
-        // Получаем дополнительные данные (если есть)
-        val type = remoteMessage.data["type"] ?: "GENERAL"
-        val buttonText = remoteMessage.data["buttonText"] ?: "Открыть"
-        val actionId = remoteMessage.data["actionId"] ?: ""
-
-        // Показываем уведомление в системной панели
+        // Показываем пуш в панели уведомлений телефона
         showNotification(title, body)
 
-        // Сохраняем уведомление в Firestore (чтобы появилось внутри приложения)
-        saveNotificationToFirestore(title, body, type, buttonText, actionId)
+        // Сохраняем в Firestore (внутреннее уведомление для приложения)
+        saveNotificationToFirestore(title, body, type, buttonText)
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        android.util.Log.d("FCM_TOKEN", "Новый токен: $token")
-        saveTokenToFirestore(token)
+        // OneSignal сам управляет токенами, но сохраним для резерва
+        android.util.Log.d("FCM_TOKEN", "New token: $token")
     }
 
     private fun showNotification(title: String, body: String) {
@@ -61,7 +58,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Создаем канал для Android 8+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 "daily_digest_channel",
@@ -76,7 +72,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val notification = NotificationCompat.Builder(this, "daily_digest_channel")
             .setContentTitle(title)
             .setContentText(body)
-            .setSmallIcon(R.drawable.icon_app_foreground) // Убедитесь, что иконка есть
+            .setSmallIcon(R.drawable.icon_app_foreground)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -89,85 +85,44 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         title: String,
         body: String,
         type: String,
-        buttonText: String,
-        actionId: String
+        buttonText: String
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val currentUser = FirebaseAuth.getInstance().currentUser
                 if (currentUser == null) {
-                    println("❌ Не удалось сохранить уведомление: пользователь не авторизован")
+                    println("❌ Пользователь не авторизован, уведомление не сохранено")
                     return@launch
                 }
 
-                val notification = Notification(
-                    id = "", // Будет сгенерирован Firestore
-                    userId = currentUser.uid,
-                    type = mapStringToNotificationType(type),
-                    title = title,
-                    description = body,
-                    data = mapOf(
-                        "actionId" to actionId,
-                        "source" to "push"
-                    ),
-                    buttonText = buttonText,
-                    read = false,
-                    createdAt = Timestamp(Date())
+                val userId = currentUser.uid
+                val notification = mapOf(
+                    "id" to "", // будет сгенерирован
+                    "title" to title,
+                    "description" to body,
+                    "type" to type,
+                    "buttonText" to buttonText,
+                    "read" to false,
+                    "createdAt" to Timestamp.now(),
+                    "data" to mapOf("source" to "push")
                 )
 
-                val notificationsCollection = FirebaseFirestore.getInstance()
-                    .collection("notifications")
-
-                val docRef = notificationsCollection.document()
-                val notificationWithId = notification.copy(id = docRef.id)
-                docRef.set(notificationWithId).await()
-
-                println("✅ Уведомление сохранено в Firestore: $title")
-
-            } catch (e: Exception) {
-                println("❌ Ошибка сохранения уведомления в Firestore: ${e.message}")
-            }
-        }
-    }
-
-    private fun saveTokenToFirestore(token: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                if (currentUser == null) {
-                    println("❌ Не удалось сохранить токен: пользователь не авторизован")
-                    return@launch
-                }
-
-                val tokenData = hashMapOf(
-                    "token" to token,
-                    "updatedAt" to Timestamp(Date()),
-                    "deviceType" to "android"
-                )
-
-                FirebaseFirestore.getInstance()
+                val notificationsRef = FirebaseFirestore.getInstance()
                     .collection("users")
-                    .document(currentUser.uid)
-                    .collection("fcm_tokens")
-                    .document(token)
-                    .set(tokenData)
-                    .await()
+                    .document(userId)
+                    .collection("notifications")
+                    .document()
 
-                println("✅ FCM токен сохранен в Firestore")
+                val notificationWithId = notification.toMutableMap().apply {
+                    this["id"] = notificationsRef.id
+                }
+
+                notificationsRef.set(notificationWithId).await()
+                println("✅ Внутреннее уведомление сохранено в Firestore")
 
             } catch (e: Exception) {
-                println("❌ Ошибка сохранения FCM токена: ${e.message}")
+                println("❌ Ошибка сохранения: ${e.message}")
             }
-        }
-    }
-
-    private fun mapStringToNotificationType(type: String): NotificationType {
-        return when (type.uppercase()) {
-            "PLACES_OF_DAY_UPDATED" -> NotificationType.PLACES_OF_DAY_UPDATED
-            "FRIEND_REQUEST" -> NotificationType.FRIEND_REQUEST
-            "FRIEND_ACCEPTED" -> NotificationType.FRIEND_ACCEPTED
-            "NEW_PLACE_FROM_FRIEND" -> NotificationType.NEW_PLACE_FROM_FRIEND
-            else -> NotificationType.PLACES_OF_DAY_UPDATED // По умолчанию
         }
     }
 }

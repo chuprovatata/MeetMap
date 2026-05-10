@@ -28,6 +28,7 @@ data class Notification(
     val data: Map<String, String> = emptyMap(),
     val buttonText: String = "Открыть",
     val read: Boolean = false,
+    val pushSent: Boolean = false,
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     val expiresAt: Timestamp? = null

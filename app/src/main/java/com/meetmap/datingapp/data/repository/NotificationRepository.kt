@@ -27,21 +27,12 @@ class NotificationRepository @Inject constructor(
         private const val TAG = "NotificationRepository"
     }
 
-    /**
-     * Получить ID текущего пользователя
-     */
     fun getCurrentUserId(): String {
         return auth.currentUser?.uid ?: ""
     }
 
-    /**
-     * ПОЛУЧЕНИЕ УВЕДОМЛЕНИЙ
-     */
+    // ==================== ПОЛУЧЕНИЕ УВЕДОМЛЕНИЙ ====================
 
-    /**
-     * Получить уведомления текущего пользователя в реальном времени
-     * Используется для отображения в NotificationScreen
-     */
     fun getNotificationsFlow(): Flow<List<Notification>> = callbackFlow {
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -87,10 +78,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Получить количество непрочитанных уведомлений
-     * Используется для бейджа на иконке
-     */
     suspend fun getUnreadCount(): Int {
         val currentUser = auth.currentUser ?: return 0
         return try {
@@ -106,13 +93,8 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * ОБНОВЛЕНИЕ УВЕДОМЛЕНИЙ
-     */
+    // ==================== ОБНОВЛЕНИЕ УВЕДОМЛЕНИЙ ====================
 
-    /**
-     * Отметить уведомление как прочитанное
-     */
     suspend fun markAsRead(notificationId: String) {
         try {
             notificationsCollection
@@ -125,9 +107,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Отметить все уведомления пользователя как прочитанные
-     */
     suspend fun markAllAsRead() {
         val currentUser = auth.currentUser ?: return
         try {
@@ -148,9 +127,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Удалить уведомление
-     */
     suspend fun deleteNotification(notificationId: String) {
         try {
             notificationsCollection.document(notificationId).delete().await()
@@ -160,9 +136,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Удалить все уведомления пользователя (для очистки)
-     */
     suspend fun deleteAllNotifications() {
         val currentUser = auth.currentUser ?: return
         try {
@@ -182,13 +155,8 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * СОЗДАНИЕ УВЕДОМЛЕНИЙ
-     */
+    // ==================== СОЗДАНИЕ УВЕДОМЛЕНИЙ ====================
 
-    /**
-     * Уведомление: друг добавил новое место
-     */
     suspend fun createNewPlaceFromFriendNotification(
         friendId: String,
         placeId: String,
@@ -214,6 +182,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть место",
                 read = false,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(Date())
             )
 
@@ -226,9 +195,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Уведомление: обновилась подборка "Места дня"
-     */
     suspend fun createPlacesOfDayUpdatedNotification() {
         val notification = Notification(
             userId = "",
@@ -238,6 +204,7 @@ class NotificationRepository @Inject constructor(
             data = emptyMap(),
             buttonText = "Смотреть подборку",
             read = false,
+            pushSent = false,  // ← ДОБАВЛЕНО
             createdAt = com.google.firebase.Timestamp(Date())
         )
 
@@ -262,9 +229,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Уведомление о новом запросе в друзья
-     */
     suspend fun createFriendRequestNotification(
         fromUserId: String,
         toUserId: String
@@ -284,6 +248,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Перейти в заявки",
                 read = false,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(Date())
             )
 
@@ -296,9 +261,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * Уведомление о принятии заявки в друзья
-     */
     suspend fun createFriendAcceptedNotification(
         fromUserId: String,
         toUserId: String
@@ -318,6 +280,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть профиль",
                 read = false,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(Date())
             )
 
@@ -330,9 +293,8 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    /**
-     * СОЗДАНИЕ ТЕСТОВЫХ УВЕДОМЛЕНИЙ
-     */
+    // ==================== ТЕСТОВЫЕ УВЕДОМЛЕНИЯ ====================
+
     suspend fun createTestNotifications() {
         val currentUser = auth.currentUser ?: return
         val userId = currentUser.uid
@@ -369,6 +331,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть место",
                 read = false,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(java.util.Date())
             ),
             Notification(
@@ -379,6 +342,7 @@ class NotificationRepository @Inject constructor(
                 data = emptyMap(),
                 buttonText = "Смотреть подборку",
                 read = true,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 86400000))
             ),
             Notification(
@@ -392,6 +356,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Перейти в заявки",
                 read = false,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 7200000))
             ),
             Notification(
@@ -405,6 +370,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть профиль",
                 read = false,
+                pushSent = false,  // ← ДОБАВЛЕНО
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 1800000))
             )
         )

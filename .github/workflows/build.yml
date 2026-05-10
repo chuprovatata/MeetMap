@@ -2,9 +2,9 @@ name: Build Android App
 
 on:
   push:
-    branches: [ main, add_places, add_bd ]
+    branches: [ main, add_places, add_bd, feature/push-notifications ]
   pull_request:
-    branches: [ main, add_places, add_bd ]
+    branches: [ main, add_places, add_bd, feature/push-notifications ]
 
 jobs:
   build:
