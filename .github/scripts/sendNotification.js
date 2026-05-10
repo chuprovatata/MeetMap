@@ -15,9 +15,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const ONE_SIGNAL_API = 'https://onesignal.com/api/v1/notifications';
 
-// Конфигурация уведомлений (строго по твоей модели)
 const NOTIFICATION_CONFIG = {
-  // Точное совпадение с createPlacesOfDayUpdatedNotification()
   PLACES_OF_DAY_UPDATED: {
     push: {
       headings: { en: 'Свежие места дня 🔥', ru: 'Свежие места дня 🔥' },
@@ -32,77 +30,54 @@ const NOTIFICATION_CONFIG = {
       description: 'Подборка мест дня обновилась! Смотри, что нового мы для тебя нашли.',
       type: 'PLACES_OF_DAY_UPDATED',
       buttonText: 'Смотреть подборку',
-      data: {}  // пустой Map, как в твоём коде
-    }
-  },
-
-  // Для DAILY_DIGEST (новая подборка анкет) - если захочешь добавить
-  DAILY_DIGEST: {
-    push: {
-      headings: { en: 'Новая подборка! 💕', ru: 'Новая подборка! 💕' },
-      contents: {
-        en: 'Свежие анкеты уже ждут тебя! Заходи знакомиться.',
-        ru: 'Свежие анкеты уже ждут тебя! Заходи знакомиться.'
-      },
-      data: { type: 'DAILY_DIGEST' }
-    },
-    internal: {
-      title: 'Новая подборка! 💕',
-      description: 'Свежие анкеты уже ждут тебя! Заходи знакомиться.',
-      type: 'PLACES_OF_DAY_UPDATED',  // переиспользуем существующий тип
-      buttonText: 'Смотреть подборку',
       data: {}
     }
   }
 };
-
-// ==================== ОСНОВНАЯ ФУНКЦИЯ ====================
 
 async function sendPlacesOfDayNotification() {
   const config = NOTIFICATION_CONFIG.PLACES_OF_DAY_UPDATED;
 
   console.log('🚀 Отправляем уведомление о новых местах дня...');
 
-  // 1. Получаем всех пользователей
   const usersSnapshot = await db.collection('users').get();
   const allUsers = usersSnapshot.docs;
   console.log(`📊 Найдено пользователей: ${allUsers.length}`);
 
-  // 2. Отправляем пуш через OneSignal (всем сразу)
+  // Отправляем пуш
   await sendPushNotification(config);
 
-  // 3. Создаём внутренние уведомления (как в createPlacesOfDayUpdatedNotification)
+  // Создаём внутренние уведомления с pushSent = true
   await createInternalNotifications(config, allUsers);
 
   console.log('✅ Готово!');
 }
 
-// ==================== ОТПРАВКА ПУША ====================
-
 async function sendPushNotification(config) {
   console.log('📱 Отправляем пуш через OneSignal...');
 
-  const response = await axios.post(ONE_SIGNAL_API, {
-    app_id: process.env.ONESIGNAL_APP_ID,
-    included_segments: ['Total Subscriptions'],
-    headings: config.push.headings,
-    contents: config.push.contents,
-    data: {
-      ...config.push.data,
-      timestamp: new Date().toISOString()
-    }
-  }, {
-    headers: {
-      'Authorization': `Basic ${process.env.ONESIGNAL_API_KEY}`,
-      'Content-Type': 'application/json'
-    }
-  });
+  try {
+    const response = await axios.post(ONE_SIGNAL_API, {
+      app_id: process.env.ONESIGNAL_APP_ID,
+      included_segments: ['Total Subscriptions'],
+      headings: config.push.headings,
+      contents: config.push.contents,
+      data: {
+        ...config.push.data,
+        timestamp: new Date().toISOString()
+      }
+    }, {
+      headers: {
+        'Authorization': `Basic ${process.env.ONESIGNAL_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-  console.log(`✅ Пуш отправлен: ${response.data.recipients || 'всем'} получателям`);
+    console.log(`✅ Пуш отправлен: ${response.data.recipients || 'всем'} получателям`);
+  } catch (error) {
+    console.error(`❌ Ошибка отправки пуша: ${error.message}`);
+  }
 }
-
-// ==================== СОЗДАНИЕ ВНУТРЕННИХ УВЕДОМЛЕНИЙ ====================
-// ПОЛНОСТЬЮ ПОВТОРЯЕТ createPlacesOfDayUpdatedNotification() ИЗ ТВОЕГО КОДА
 
 async function createInternalNotifications(config, users) {
   console.log(`📝 Создаём внутренние уведомления для ${users.length} пользователей...`);
@@ -113,21 +88,19 @@ async function createInternalNotifications(config, users) {
 
   for (const userDoc of users) {
     const userId = userDoc.id;
+    const notificationRef = db.collection('notifications').doc();
 
-    const notificationRef = db
-      .collection('notifications')  // ← ВНИМАНИЕ: у тебя коллекция "notifications"
-      .doc();
-
-    // ТОЧНОЕ СООТВЕТСТВИЕ ТВОЕЙ МОДЕЛИ Notification
     const notification = {
       id: notificationRef.id,
       userId: userId,
       type: config.internal.type,
       title: config.internal.title,
       description: config.internal.description,
-      data: config.internal.data,  // пустой Map {}
+      data: config.internal.data,
       buttonText: config.internal.buttonText,
       read: false,
+      pushSent: true,  // ← ДОБАВЛЕНО! Пуш уже отправлен
+      pushSentAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       expiresAt: null
     };
@@ -136,7 +109,6 @@ async function createInternalNotifications(config, users) {
     count++;
     batchCount++;
 
-    // Firebase batch лимит: 500 операций
     if (batchCount >= 500) {
       await batch.commit();
       console.log(`📦 Сохранено ${count} уведомлений`);
@@ -145,7 +117,6 @@ async function createInternalNotifications(config, users) {
     }
   }
 
-  // Сохраняем остатки
   if (batchCount > 0) {
     await batch.commit();
   }
@@ -153,5 +124,4 @@ async function createInternalNotifications(config, users) {
   console.log(`✅ Создано ${count} внутренних уведомлений`);
 }
 
-// ==================== ЗАПУСК ====================
 sendPlacesOfDayNotification().catch(console.error);
