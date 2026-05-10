@@ -24,7 +24,8 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    private val notificationRepository: NotificationRepository
 ) {
 
     // ==================== ЗАГРУЗКА ФОТО ====================
@@ -271,62 +272,16 @@ class UserRepository @Inject constructor(
     }
 
     /**
-     * Сохранить запрос на отправку пуша (будет обработан GitHub Actions)
-     */
-    private suspend fun schedulePushRequest(
-        playerId: String,
-        title: String,
-        message: String,
-        type: String,
-        additionalData: Map<String, String> = emptyMap()
-    ) {
-        try {
-            val pushRequest = mapOf(
-                "playerId" to playerId,
-                "title" to title,
-                "message" to message,
-                "type" to type,
-                "additionalData" to additionalData,
-                "createdAt" to com.google.firebase.Timestamp.now(),
-                "status" to "pending"
-            )
-
-            firestore.collection("push_requests")
-                .add(pushRequest)
-                .await()
-
-            Log.d("UserRepository", "✅ Push request scheduled for playerId: $playerId")
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Failed to schedule push request", e)
-        }
-    }
-
-    /**
-     * ОТПРАВИТЬ ЗАЯВКУ В ДРУЗЬЯ (с пуш-уведомлением через GitHub Actions)
+     * ОТПРАВИТЬ ЗАЯВКУ В ДРУЗЬЯ
+     * (создаёт внутреннее уведомление → GitHub Actions отправит пуш)
      */
     suspend fun sendFriendRequest(fromUserId: String, toUserId: String, fromUserName: String) {
         try {
             updateFriendStatusForUser(fromUserId, toUserId, "pending")
             updateFriendStatusForUser(toUserId, fromUserId, "incoming")
 
-            val userDoc = firestore.collection("users")
-                .document(toUserId)
-                .get()
-                .await()
-
-            val playerId = userDoc.getString("oneSignalPlayerId")
-            if (playerId != null && playerId.isNotEmpty()) {
-                schedulePushRequest(
-                    playerId = playerId,
-                    title = "Новая заявка в друзья 👋",
-                    message = "$fromUserName хочет добавить вас в друзья",
-                    type = "FRIEND_REQUEST",
-                    additionalData = mapOf(
-                        "friendId" to fromUserId,
-                        "friendName" to fromUserName
-                    )
-                )
-            }
+            // ✅ Внутреннее уведомление (pushSent = false → триггер для GitHub Actions)
+            notificationRepository.createFriendRequestNotification(fromUserId, toUserId)
 
             Log.d("UserRepository", "Friend request sent from $fromUserId to $toUserId")
         } catch (e: Exception) {
@@ -336,31 +291,16 @@ class UserRepository @Inject constructor(
     }
 
     /**
-     * ПРИНЯТЬ ЗАЯВКУ В ДРУЗЬЯ (с пуш-уведомлением через GitHub Actions)
+     * ПРИНЯТЬ ЗАЯВКУ В ДРУЗЬЯ
+     * (создаёт внутреннее уведомление → GitHub Actions отправит пуш)
      */
     suspend fun acceptFriendRequest(currentUserId: String, friendId: String, friendName: String) {
         try {
             updateFriendStatusForUser(currentUserId, friendId, "friend")
             updateFriendStatusForUser(friendId, currentUserId, "friend")
 
-            val userDoc = firestore.collection("users")
-                .document(friendId)
-                .get()
-                .await()
-
-            val playerId = userDoc.getString("oneSignalPlayerId")
-            if (playerId != null && playerId.isNotEmpty()) {
-                schedulePushRequest(
-                    playerId = playerId,
-                    title = "Заявка принята! 🎉",
-                    message = "$friendName принял(а) вашу заявку в друзья",
-                    type = "FRIEND_ACCEPTED",
-                    additionalData = mapOf(
-                        "friendId" to currentUserId,
-                        "friendName" to friendName
-                    )
-                )
-            }
+            // ✅ Внутреннее уведомление (pushSent = false → триггер для GitHub Actions)
+            notificationRepository.createFriendAcceptedNotification(friendId, currentUserId)
 
             Log.d("UserRepository", "Friend request accepted: $currentUserId accepted $friendId")
         } catch (e: Exception) {

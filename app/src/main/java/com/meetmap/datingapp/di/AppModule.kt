@@ -44,8 +44,9 @@ object AppModule {
     fun provideUserRepository(
         auth: FirebaseAuth,
         firestore: FirebaseFirestore,
-        okHttpClient: OkHttpClient
-    ): UserRepository = UserRepository(auth, firestore, okHttpClient)
+        okHttpClient: OkHttpClient,
+        notificationRepository: NotificationRepository
+    ): UserRepository = UserRepository(auth, firestore, okHttpClient, notificationRepository)
 
     @Provides
     @Singleton
