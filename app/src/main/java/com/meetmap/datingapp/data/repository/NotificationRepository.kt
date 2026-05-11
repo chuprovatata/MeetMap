@@ -36,35 +36,35 @@ class NotificationRepository @Inject constructor(
     fun getNotificationsFlow(): Flow<List<Notification>> = callbackFlow {
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Log.e(TAG, "❌ Пользователь не авторизован")
+            Log.e(TAG, "Пользователь не авторизован")
             close()
             return@callbackFlow
         }
 
-        Log.d(TAG, "🔍 Начинаем прослушивание уведомлений для пользователя: ${currentUser.uid}")
+        Log.d(TAG, "Начинаем прослушивание уведомлений для пользователя: ${currentUser.uid}")
 
         val registration = notificationsCollection
             .whereEqualTo("userId", currentUser.uid)
             .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "❌ Ошибка получения уведомлений", error)
+                    Log.e(TAG, "Ошибка получения уведомлений", error)
                     return@addSnapshotListener
                 }
 
                 if (snapshot == null) {
-                    Log.e(TAG, "❌ Snapshot is null")
+                    Log.e(TAG, "Snapshot is null")
                     return@addSnapshotListener
                 }
 
-                Log.d(TAG, "📊 Получен snapshot, размер: ${snapshot.size()} документов")
+                Log.d(TAG, "Получен snapshot, размер: ${snapshot.size()} документов")
 
                 val notifications = snapshot.documents.mapNotNull { doc ->
                     try {
                         val notification = doc.toObject<Notification>()?.copy(id = doc.id)
                         notification
                     } catch (e: Exception) {
-                        Log.e(TAG, "❌ Ошибка преобразования документа ${doc.id}", e)
+                        Log.e(TAG, "Ошибка преобразования документа ${doc.id}", e)
                         null
                     }
                 }
@@ -73,7 +73,7 @@ class NotificationRepository @Inject constructor(
             }
 
         awaitClose {
-            Log.d(TAG, "👋 Закрываем поток уведомлений")
+            Log.d(TAG, "Закрываем поток уведомлений")
             registration.remove()
         }
     }
@@ -182,7 +182,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть место",
                 read = false,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(Date())
             )
 
@@ -204,7 +204,7 @@ class NotificationRepository @Inject constructor(
             data = emptyMap(),
             buttonText = "Смотреть подборку",
             read = false,
-            pushSent = false,  // ← ДОБАВЛЕНО
+            pushSent = false,
             createdAt = com.google.firebase.Timestamp(Date())
         )
 
@@ -248,7 +248,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Перейти в заявки",
                 read = false,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(Date())
             )
 
@@ -280,7 +280,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть профиль",
                 read = false,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(Date())
             )
 
@@ -331,7 +331,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть место",
                 read = false,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(java.util.Date())
             ),
             Notification(
@@ -342,7 +342,7 @@ class NotificationRepository @Inject constructor(
                 data = emptyMap(),
                 buttonText = "Смотреть подборку",
                 read = true,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 86400000))
             ),
             Notification(
@@ -356,7 +356,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Перейти в заявки",
                 read = false,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 7200000))
             ),
             Notification(
@@ -370,7 +370,7 @@ class NotificationRepository @Inject constructor(
                 ),
                 buttonText = "Посмотреть профиль",
                 read = false,
-                pushSent = false,  // ← ДОБАВЛЕНО
+                pushSent = false,
                 createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 1800000))
             )
         )

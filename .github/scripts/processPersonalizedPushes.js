@@ -24,9 +24,8 @@ const PUSH_TYPES = [
 ];
 
 async function processPersonalizedPushes() {
-  console.log('🔄 Проверяем новые уведомления для отправки пушей...');
+  console.log('Проверяем новые уведомления для отправки пушей...');
 
-  // Ищем непрочитанные уведомления нужных типов, где пуш ещё не отправлен
   const snapshot = await db.collection('notifications')
     .where('pushSent', '==', false)
     .where('type', 'in', PUSH_TYPES)
@@ -34,11 +33,11 @@ async function processPersonalizedPushes() {
     .get();
 
   if (snapshot.empty) {
-    console.log('📭 Нет новых уведомлений для отправки');
+    console.log('Нет новых уведомлений для отправки');
     return;
   }
 
-  console.log(`📦 Найдено ${snapshot.size} уведомлений для отправки`);
+  console.log(`Найдено ${snapshot.size} уведомлений для отправки`);
 
   for (const doc of snapshot.docs) {
     const notification = doc.data();
@@ -77,10 +76,9 @@ async function processPersonalizedPushes() {
           pushResponseId: response.data.id
         });
 
-        console.log(`✅ Пуш отправлен: ${notification.type} для пользователя ${notification.userId}`);
+        console.log(`Пуш отправлен: ${notification.type} для пользователя ${notification.userId}`);
       } else {
-        console.log(`⚠️ Нет playerId для пользователя ${notification.userId}`);
-        // Отмечаем как безнадёжное (чоб не проверять снова)
+        console.log(`Нет playerId для пользователя ${notification.userId}`);
         await doc.ref.update({
           pushSent: true,
           pushError: 'No playerId'
@@ -88,15 +86,13 @@ async function processPersonalizedPushes() {
       }
 
     } catch (error) {
-      console.error(`❌ Ошибка отправки пуша: ${error.message}`);
-      // Можно повторить позже, не помечаем как отправленное
+      console.error(`Ошибка отправки пуша: ${error.message}`);
     }
 
-    // Небольшая задержка
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 
-  console.log('🎉 Обработка завершена');
+  console.log('Обработка завершена');
 }
 
 processPersonalizedPushes().catch(console.error);

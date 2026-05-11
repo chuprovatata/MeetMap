@@ -38,23 +38,21 @@ const NOTIFICATION_CONFIG = {
 async function sendPlacesOfDayNotification() {
   const config = NOTIFICATION_CONFIG.PLACES_OF_DAY_UPDATED;
 
-  console.log('🚀 Отправляем уведомление о новых местах дня...');
+  console.log('Отправляем уведомление о новых местах дня...');
 
   const usersSnapshot = await db.collection('users').get();
   const allUsers = usersSnapshot.docs;
-  console.log(`📊 Найдено пользователей: ${allUsers.length}`);
+  console.log(`Найдено пользователей: ${allUsers.length}`);
 
-  // Отправляем пуш
   await sendPushNotification(config);
 
-  // Создаём внутренние уведомления с pushSent = true
   await createInternalNotifications(config, allUsers);
 
-  console.log('✅ Готово!');
+  console.log('Готово!');
 }
 
 async function sendPushNotification(config) {
-  console.log('📱 Отправляем пуш через OneSignal...');
+  console.log('Отправляем пуш через OneSignal...');
 
   try {
     const response = await axios.post(ONE_SIGNAL_API, {
@@ -73,14 +71,14 @@ async function sendPushNotification(config) {
       }
     });
 
-    console.log(`✅ Пуш отправлен: ${response.data.recipients || 'всем'} получателям`);
+    console.log(`Пуш отправлен: ${response.data.recipients || 'всем'} получателям`);
   } catch (error) {
-    console.error(`❌ Ошибка отправки пуша: ${error.message}`);
+    console.error(`Ошибка отправки пуша: ${error.message}`);
   }
 }
 
 async function createInternalNotifications(config, users) {
-  console.log(`📝 Создаём внутренние уведомления для ${users.length} пользователей...`);
+  console.log(`Создаём внутренние уведомления для ${users.length} пользователей...`);
 
   let count = 0;
   let batch = db.batch();
@@ -99,7 +97,7 @@ async function createInternalNotifications(config, users) {
       data: config.internal.data,
       buttonText: config.internal.buttonText,
       read: false,
-      pushSent: true,  // ← ДОБАВЛЕНО! Пуш уже отправлен
+      pushSent: true,
       pushSentAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       expiresAt: null
@@ -111,7 +109,7 @@ async function createInternalNotifications(config, users) {
 
     if (batchCount >= 500) {
       await batch.commit();
-      console.log(`📦 Сохранено ${count} уведомлений`);
+      console.log(`Сохранено ${count} уведомлений`);
       batch = db.batch();
       batchCount = 0;
     }
@@ -121,7 +119,7 @@ async function createInternalNotifications(config, users) {
     await batch.commit();
   }
 
-  console.log(`✅ Создано ${count} внутренних уведомлений`);
+  console.log(`Создано ${count} внутренних уведомлений`);
 }
 
 sendPlacesOfDayNotification().catch(console.error);

@@ -280,7 +280,7 @@ class UserRepository @Inject constructor(
             updateFriendStatusForUser(fromUserId, toUserId, "pending")
             updateFriendStatusForUser(toUserId, fromUserId, "incoming")
 
-            // ✅ Внутреннее уведомление (pushSent = false → триггер для GitHub Actions)
+            // Внутреннее уведомление (pushSent = false → триггер для GitHub Actions)
             notificationRepository.createFriendRequestNotification(fromUserId, toUserId)
 
             Log.d("UserRepository", "Friend request sent from $fromUserId to $toUserId")
@@ -299,7 +299,7 @@ class UserRepository @Inject constructor(
             updateFriendStatusForUser(currentUserId, friendId, "friend")
             updateFriendStatusForUser(friendId, currentUserId, "friend")
 
-            // ✅ Внутреннее уведомление (pushSent = false → триггер для GitHub Actions)
+            // Внутреннее уведомление (pushSent = false → триггер для GitHub Actions)
             notificationRepository.createFriendAcceptedNotification(friendId, currentUserId)
 
             Log.d("UserRepository", "Friend request accepted: $currentUserId accepted $friendId")

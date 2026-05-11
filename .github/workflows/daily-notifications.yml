@@ -2,7 +2,7 @@ name: Daily Places of Day Notification
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # 12:00 Москва
+    - cron: '0 8 * * *'  # 11:00 Москва
   workflow_dispatch:
 
 jobs:

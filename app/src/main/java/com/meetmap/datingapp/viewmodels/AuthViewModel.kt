@@ -111,15 +111,8 @@ class AuthViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                val error = when (e.message) {
-                    "The password is invalid or the user does not have a password." ->
-                        "Неверный пароль"
-                    "There is no user record corresponding to this identifier. The user may have been deleted." ->
-                        "Пользователь с таким email не найден"
-                    "The email address is badly formatted." ->
-                        "Некорректный формат email"
-                    else -> "Ошибка входа: ${e.message}"
-                }
+                // Общая ошибка для всех случаев: неверный email или неверный пароль
+                val error = "Неправильный email или пароль"
                 _errorMessage.value = error
                 onError(error)
             } finally {
