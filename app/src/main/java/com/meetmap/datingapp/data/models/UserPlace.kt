@@ -4,7 +4,7 @@ import com.google.firebase.Timestamp
 
 data class UserPlace(
     val id: String = "",
-    val userId: String = "",  // Убираем аннотации
+    val userId: String = "",
     val placeId: String = "",
     val status: String = "",
     val addedTime: Timestamp? = null,

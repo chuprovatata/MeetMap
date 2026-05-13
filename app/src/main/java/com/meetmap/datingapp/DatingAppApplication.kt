@@ -7,10 +7,12 @@ import com.onesignal.debug.LogLevel
 import dagger.hilt.android.HiltAndroidApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.yandex.mapkit.MapKitFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+
 
 @HiltAndroidApp
 class DatingAppApplication : Application() {
@@ -27,6 +29,12 @@ class DatingAppApplication : Application() {
         if (playerId != null && playerId.isNotEmpty()) {
             savePlayerIdToFirestore(playerId)
         }
+
+
+        //карты
+        MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY)
+
+        Log.d("MAPKIT", "KEY = ${BuildConfig.MAPKIT_API_KEY}")
     }
 
     private fun savePlayerIdToFirestore(playerId: String) {

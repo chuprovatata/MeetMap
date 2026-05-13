@@ -2,6 +2,7 @@ package com.meetmap.datingapp.screens.profile
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,7 +30,13 @@ import com.meetmap.datingapp.navigation.Screen
 import com.meetmap.datingapp.viewmodels.UserViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import com.meetmap.datingapp.ui.theme.GrayLight
+import com.meetmap.datingapp.ui.theme.GrayMedium
+import com.meetmap.datingapp.ui.theme.GrayPerson
+import com.meetmap.datingapp.ui.theme.PurpleMedium
+import com.meetmap.datingapp.ui.theme.PurplePrimary
 import com.meetmap.datingapp.ui.theme.boundedFamily
 private fun getPlacesDeclension(count: Int): String {
     return when {
@@ -85,7 +92,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     .background(Color.White)
                     .padding(top = 40.dp)
             ) {
-                // Убираем Box и переделываем Row напрямую
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -171,6 +178,18 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     text = getPlacesDeclension(userPlacesCount),
                     style = MaterialTheme.typography.bodyLarge,
                     fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "(посмотреть на карте)",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 10.sp,
+                        color = PurplePrimary,
+                        textDecoration = TextDecoration.Underline
+                    ),
+                    modifier = Modifier.clickable {
+                        navController.navigate(Screen.MyProfileMap.route)
+                    }
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))

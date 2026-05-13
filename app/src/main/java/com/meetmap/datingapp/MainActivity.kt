@@ -17,6 +17,7 @@ import com.meetmap.datingapp.navigation.AppNavigation
 import com.meetmap.datingapp.ui.theme.DatingAppTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import com.yandex.mapkit.MapKitFactory
 import dagger.hilt.android.AndroidEntryPoint
 import io.appmetrica.analytics.AppMetrica
 import io.appmetrica.analytics.AppMetricaConfig
@@ -35,6 +36,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        //карты
+        MapKitFactory.initialize(this)
 
         requestNotificationPermission()
 
@@ -73,4 +77,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.meetmap.datingapp.screens.myplaces
 
+import android.graphics.PointF
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,18 +18,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import androidx.hilt.navigation.compose.hiltViewModel
+
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.decode.SvgDecoder
 import com.meetmap.datingapp.R
+import com.meetmap.datingapp.components.map.TestMapScreen
 import com.meetmap.datingapp.data.models.AppUser
 import com.meetmap.datingapp.data.models.PlaceInfo
 import com.meetmap.datingapp.navigation.Screen
@@ -36,6 +42,7 @@ import com.meetmap.datingapp.screens.feedback.FeedbackAfterPlaceDeleted
 import com.meetmap.datingapp.viewmodels.FeedbackViewModel
 import com.meetmap.datingapp.viewmodels.MyPlaceDetailViewModel
 import com.meetmap.datingapp.viewmodels.UserViewModel
+
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +77,9 @@ fun MyPlaceDetailScreen(
 
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    //для карты
+    var isMapInteracting by remember { mutableStateOf(false) }
 
     LaunchedEffect(placeId) {
         viewModel.loadPlaceDetails(placeId)
@@ -111,6 +121,7 @@ fun MyPlaceDetailScreen(
                             popUpTo(0) { inclusive = false }
                             launchSingleTop = true
                         }
+
                     }
                     ) {
                         Icon(
@@ -174,7 +185,7 @@ fun MyPlaceDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .verticalScroll(scrollState)
+                    .verticalScroll(scrollState, enabled = !isMapInteracting)
             ) {
                 // Фото места
                 Box(
@@ -283,7 +294,8 @@ fun MyPlaceDetailScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
                             if (place.metroLine.isNotBlank()) {
-                                val metroLineImageUrl = "https://storage.yandexcloud.net/meetmap/metrostation/Moskwa_Metro_Line_${place.metroLine}.svg"
+                                val metroLineImageUrl =
+                                    "https://storage.yandexcloud.net/meetmap/metrostation/Moskwa_Metro_Line_${place.metroLine}.svg"
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(metroLineImageUrl)
@@ -354,6 +366,13 @@ fun MyPlaceDetailScreen(
                             modifier = Modifier.padding(16.dp)
                         )
                     }
+                    // карта
+                    TestMapScreen(
+                        text = place.name,
+                        latitude = place.latitude,
+                        longitude = place.longitude,
+                        onInteractionChange = { isMapInteracting = it }
+                    )
 
                     // Блок с количеством пользователей
                     UsersCountCard(count = usersCount)
@@ -604,6 +623,7 @@ fun UserItem(
                 "friend" -> {
                     navController.navigate("cur_friend/${user.id}")
                 }
+
                 else -> {
                     val pageTitle = when (status) {
                         "request" -> "Входящая заявка"
@@ -704,3 +724,5 @@ fun getLikesWord(count: Int): String {
         else -> "лайков"
     }
 }
+
+

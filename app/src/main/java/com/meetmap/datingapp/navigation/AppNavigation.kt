@@ -27,6 +27,7 @@ import com.meetmap.datingapp.screens.onboarding.*
 import com.meetmap.datingapp.screens.places.PlacesOfDayScreen
 import com.meetmap.datingapp.screens.profile.CategorySelectionScreen
 import com.meetmap.datingapp.screens.profile.MyProfile
+import com.meetmap.datingapp.screens.profile.MyProfileMap
 import com.meetmap.datingapp.screens.profile.ProfileSetupScreen
 import com.meetmap.datingapp.screens.profile.TargetSelectionScreen
 import com.meetmap.datingapp.screens.recommendation.PeopleOfDay
@@ -394,5 +395,11 @@ fun AppNavigation() {
         composable(Screen.Notification.route) {
             NotificationScreen(navController = navController)
         }
+
+        composable(Screen.MyProfileMap.route) {
+           MyProfileMap(navController = navController, userViewModel)
+        }
+
+
     }
 }

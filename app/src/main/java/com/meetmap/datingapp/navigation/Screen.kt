@@ -39,6 +39,11 @@ sealed class Screen(val route: String) {
     object FeedbackAfterPlacesOfDay: Screen("feedback_after_places_of_day")
     object PeopleOfDay: Screen("people_of_day")
 
+    object MyProfileMap: Screen("my_profile_map")
+
+
+
+
     fun withArgs(vararg args: String): String {
         return buildString {
             append(route)

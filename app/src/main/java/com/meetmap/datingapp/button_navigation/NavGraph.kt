@@ -16,6 +16,7 @@ import com.meetmap.datingapp.screens.meets.ReqFriend
 import com.meetmap.datingapp.screens.myplaces.MyPlaceDetailScreen
 import com.meetmap.datingapp.screens.myplaces.MyPlacesScreen
 import com.meetmap.datingapp.screens.profile.MyProfile
+import com.meetmap.datingapp.screens.profile.MyProfileMap
 import com.meetmap.datingapp.screens.recommendation.PeopleOfDay
 import com.meetmap.datingapp.screens.settings.SettingsScreen
 import com.meetmap.datingapp.viewmodels.UserViewModel
@@ -100,6 +101,7 @@ fun NavGraph(
                 viewModel = viewModel
             )
         }
+
 
         composable(
             route = "req_friend/{friendId}/{pageTitle}",

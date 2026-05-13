@@ -40,6 +40,14 @@ android {
         buildConfigField("String", "YANDEX_ACCESS_KEY_ID", "\"${yandexAccessKey}\"")
         buildConfigField("String", "YANDEX_SECRET_ACCESS_KEY", "\"${yandexSecretKey}\"")
         buildConfigField("String", "YANDEX_OAUTH_TOKEN", "\"${yandexOAuthToken}\"")
+
+
+
+        val mapkitApiKey = localProperties.getProperty("MAPKIT_API_KEY")
+            ?: System.getenv("MAPKIT_API_KEY")
+            ?: ""
+
+        buildConfigField("String", "MAPKIT_API_KEY", "\"${mapkitApiKey}\"")
     }
     signingConfigs {
         create("release") {
@@ -154,4 +162,8 @@ dependencies {
     // Или для View-based приложений:
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("com.google.android.gms:play-services-basement:18.6.0")
+
+    // Яндекс карты
+    implementation("com.yandex.android:maps.mobile:4.5.0-full")
+
 }
