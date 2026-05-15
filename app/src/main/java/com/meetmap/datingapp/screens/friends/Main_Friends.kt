@@ -28,7 +28,7 @@ fun Main_Friends(navController: NavController ) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(vertical = 40.dp, horizontal = 25.dp)
+                    .padding(vertical = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), horizontal = 25.dp)
             ) {
                 Heading("Мои друзья",  false, false, navController=navController)
             }

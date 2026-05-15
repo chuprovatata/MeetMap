@@ -3,6 +3,8 @@ package com.meetmap.datingapp.screens.main
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -109,8 +111,9 @@ fun MainScreen(
         topBar = {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = topBarPadding, horizontal = spacing.large)
+                    .fillMaxWidth().padding(top=WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+
+                    .padding( horizontal = spacing.large).padding(bottom = 20.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -130,18 +133,17 @@ fun MainScreen(
                         // Кнопка профиля
                         Box(
                             modifier = Modifier
-                                .size(finalIconSize)
+
                                 .clip(RoundedCornerShape(30.dp))
                                 .clickable {
                                     navController.navigate("my_profile")
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
+                            Image(
                                 painter = painterResource(id = R.drawable.icon_person),
                                 contentDescription = "Профиль",
-                                modifier = Modifier.size(finalIconSize),
-                                tint = MaterialTheme.colorScheme.primary
+                                modifier = Modifier.size(35.dp)
                             )
                         }
 

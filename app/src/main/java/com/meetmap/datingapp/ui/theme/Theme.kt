@@ -59,14 +59,16 @@ fun DatingAppTheme(
     val colorScheme = LightColorScheme  // Используем только светлую тему
 
     // Настройка статус бара
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
-        }
-    }
+    //Удалим, так как требует гугл
+    //val view = LocalView.current
+    //if (!view.isInEditMode) {
+        //SideEffect {
+           // val window = (view.context as Activity).window
+            //window.statusBarColor = colorScheme.primary.toArgb()
+            //WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+        //}
+    //}
+
 
     CompositionLocalProvider(
         LocalDatingAppSpacing provides DatingAppSpacing(),

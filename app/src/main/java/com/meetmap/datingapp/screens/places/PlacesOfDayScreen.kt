@@ -325,7 +325,7 @@ fun PlacesOfDayScreen(
                     .fillMaxWidth()
                     .background(Color.White)
                     .padding(horizontal = 6.dp)
-                    .padding(top = 40.dp, bottom = 20.dp)
+                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 20.dp)
             ) {
                 TopAppBar(
                     title = {

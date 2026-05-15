@@ -90,7 +90,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(top = 40.dp)
+                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
             ) {
 
                 Row(
