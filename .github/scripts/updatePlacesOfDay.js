@@ -31,11 +31,19 @@ async function updatePlacesOfDay() {
   const fiveDaysAgo = new Date();
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - DAYS_BETWEEN_REPEATS);
 
-  const sortedPlaces = allPlaces.map(doc => ({
-    doc,
-    data: doc.data(),
-    priority: calculatePriority(doc.data(), fiveDaysAgo)
-  }));
+  const sortedPlaces = allPlaces
+    .filter(doc => doc && doc.id)
+    .map(doc => ({
+      doc: doc,
+      data: doc.data(),
+      priority: calculatePriority(doc.data(), fiveDaysAgo)
+    }))
+    .filter(item => item.doc !== undefined);
+
+  if (sortedPlaces.length === 0) {
+    console.log(' Нет корректных мест для выбора');
+    return;
+  }
 
   sortedPlaces.sort((a, b) => b.priority - a.priority);
 
@@ -48,14 +56,17 @@ async function updatePlacesOfDay() {
   let batchCount = 0;
 
   for (const { doc } of allPlaces) {
-    const isSelected = selectedPlaces.some(sp => sp.doc.id === doc.id);
+    if (!doc || !doc.id) continue;
+
+    const isSelected = selectedPlaces.some(sp => sp.doc && sp.doc.id === doc.id);
 
     if (isSelected) {
       batch.update(doc.ref, {
         place_ofday: true,
         lastTimeInDigest: now
       });
-      console.log(`   ✅ ${doc.data().name}`);
+      const placeName = doc.data()?.name || 'Без названия';
+      console.log(`   ✅ ${placeName}`);
     } else {
       batch.update(doc.ref, { place_ofday: false });
     }
@@ -80,6 +91,8 @@ async function updatePlacesOfDay() {
 
 function calculatePriority(placeData, fiveDaysAgo) {
   let priority = 0;
+
+  if (!placeData) return priority;
 
   const lastTimeInDigest = placeData.lastTimeInDigest?.toDate();
   if (lastTimeInDigest && lastTimeInDigest > fiveDaysAgo) {
