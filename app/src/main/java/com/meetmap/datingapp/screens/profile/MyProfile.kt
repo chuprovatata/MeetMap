@@ -162,7 +162,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 isUploadingImage = isUploadingImage,
                 showTelegram = false
             )
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -174,16 +174,18 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(20.dp))
-                Text(
-                    text = getPlacesDeclension(userPlacesCount),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontSize = 20.sp
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "(посмотреть на карте)",
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = getPlacesDeclension(userPlacesCount),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontSize = 20.sp
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Text(
+                    text = "(смотреть на карте)",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 10.sp,
+                        fontSize = 13.sp,
                         color = PurplePrimary,
                         textDecoration = TextDecoration.Underline
                     ),
@@ -191,6 +193,9 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                         navController.navigate(Screen.MyProfileMap.route)
                     }
                 )
+                }
+
+
             }
             Spacer(modifier = Modifier.height(16.dp))
 
