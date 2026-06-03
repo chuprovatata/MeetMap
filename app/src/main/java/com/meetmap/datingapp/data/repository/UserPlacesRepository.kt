@@ -13,6 +13,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.google.firebase.firestore.FieldPath
 
 @Singleton
 class UserPlacesRepository @Inject constructor(
@@ -291,28 +292,27 @@ class UserPlacesRepository @Inject constructor(
      */
     suspend fun getPlacesDetails(placeIds: List<String>): Result<List<PlaceInfo>> {
         return try {
-            if (placeIds.isEmpty()) {
+            val distinctPlaceIds = placeIds
+                .filter { it.isNotBlank() }
+                .distinct()
+
+            if (distinctPlaceIds.isEmpty()) {
                 return Result.success(emptyList())
             }
 
             val allPlaces = mutableListOf<PlaceInfo>()
 
-            for (placeId in placeIds) {
-                try {
-                    val doc = firestore.collection("places_info")
-                        .document(placeId)
-                        .get()
-                        .await()
+            distinctPlaceIds.chunked(10).forEach { chunk ->
+                val snapshot = firestore.collection("places_info")
+                    .whereIn(FieldPath.documentId(), chunk)
+                    .get()
+                    .await()
 
-                    if (doc.exists()) {
-                        val place = doc.toObject(PlaceInfo::class.java)
-                        if (place != null) {
-                            allPlaces.add(place.copy(id = doc.id))
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("UserPlacesRepository", "Error loading place $placeId", e)
+                val places = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(PlaceInfo::class.java)?.copy(id = doc.id)
                 }
+
+                allPlaces.addAll(places)
             }
 
             Result.success(allPlaces)
@@ -343,6 +343,97 @@ class UserPlacesRepository @Inject constructor(
             Result.success(places)
         } catch (e: Exception) {
             Log.e("UserPlacesRepository", "DEBUG: Ошибка", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getLikedPlacesForUsers(userIds: List<String>): Result<Map<String, List<UserPlace>>> {
+        return try {
+            val result = mutableMapOf<String, MutableList<UserPlace>>()
+
+            val distinctUserIds = userIds
+                .filter { it.isNotBlank() }
+                .distinct()
+
+            if (distinctUserIds.isEmpty()) {
+                return Result.success(emptyMap())
+            }
+
+            distinctUserIds.chunked(10).forEach { chunk ->
+                val snapshot = collection
+                    .whereIn("userId", chunk)
+                    .whereEqualTo("status", "liked")
+                    .get()
+                    .await()
+
+                snapshot.documents.forEach { doc ->
+                    val userPlace = doc.toObject(UserPlace::class.java)
+                    if (userPlace != null && userPlace.userId.isNotBlank()) {
+                        result.getOrPut(userPlace.userId) { mutableListOf() }
+                            .add(userPlace.copy(id = doc.id))
+                    }
+                }
+            }
+
+            Result.success(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка пакетной загрузки liked places", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getUsersWhoLikedAnyPlaces(
+        placeIds: List<String>,
+        excludedUserIds: Set<String>,
+        maxCandidates: Int = 60
+    ): Result<Map<String, List<UserPlace>>> {
+        return try {
+            val distinctPlaceIds = placeIds
+                .filter { it.isNotBlank() }
+                .distinct()
+
+            if (distinctPlaceIds.isEmpty()) {
+                return Result.success(emptyMap())
+            }
+
+            val placesByUser = mutableMapOf<String, MutableList<UserPlace>>()
+
+            distinctPlaceIds.chunked(10).forEach { chunk ->
+                val snapshot = collection
+                    .whereIn("placeId", chunk)
+                    .whereEqualTo("status", "liked")
+                    .get()
+                    .await()
+
+                snapshot.documents.forEach { doc ->
+                    val userPlace = doc.toObject(UserPlace::class.java)?.copy(id = doc.id)
+                        ?: return@forEach
+
+                    if (
+                        userPlace.userId.isNotBlank() &&
+                        userPlace.userId !in excludedUserIds
+                    ) {
+                        placesByUser
+                            .getOrPut(userPlace.userId) { mutableListOf() }
+                            .add(userPlace)
+                    }
+                }
+            }
+
+            val limited = placesByUser
+                .entries
+                .sortedByDescending { it.value.map { place -> place.placeId }.distinct().size }
+                .take(maxCandidates)
+                .associate { it.key to it.value.toList() }
+
+            Log.d(
+                TAG,
+                "Быстрые кандидаты PeopleOfDay: найдено=${placesByUser.size}, взято=${limited.size}"
+            )
+
+            Result.success(limited)
+        } catch (e: Exception) {
+            Log.e(TAG, "Ошибка быстрой загрузки кандидатов PeopleOfDay", e)
             Result.failure(e)
         }
     }

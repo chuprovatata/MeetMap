@@ -48,6 +48,12 @@ android {
             ?: ""
 
         buildConfigField("String", "MAPKIT_API_KEY", "\"${mapkitApiKey}\"")
+
+        val oneSignalAppId = localProperties.getProperty("ONESIGNAL_APP_ID")
+            ?: System.getenv("ONESIGNAL_APP_ID")
+            ?: ""
+
+        buildConfigField("String", "ONESIGNAL_APP_ID", "\"${oneSignalAppId}\"")
     }
     signingConfigs {
         create("release") {

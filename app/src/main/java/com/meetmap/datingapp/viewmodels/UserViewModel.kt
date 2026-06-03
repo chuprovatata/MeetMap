@@ -618,6 +618,7 @@ class UserViewModel @Inject constructor(
      * Улучшенная формула расчета совместимости
      * Учитывает: общие места (70%), общие категории мест (20%), общих друзей (10%)
      */
+
     fun calculateEnhancedCompatibility(
         myPlaces: List<UserPlace>,
         otherUserPlaces: List<UserPlace>,
@@ -657,6 +658,40 @@ class UserViewModel @Inject constructor(
 
         // Суммируем и округляем
         return (placesScore + categoriesScore + friendsScore).toInt().coerceIn(0, 100)
+    }
+
+    private fun calculateFastPeopleOfDayCompatibility(
+        myPlaces: List<UserPlace>,
+        otherUserPlaces: List<UserPlace>,
+        currentUserFriendIds: Set<String>,
+        otherUserFriendIds: Set<String>
+    ): Int {
+        if (myPlaces.isEmpty() || otherUserPlaces.isEmpty()) return 0
+
+        val myPlaceIds = myPlaces.map { it.placeId }.toSet()
+        val otherPlaceIds = otherUserPlaces.map { it.placeId }.toSet()
+
+        val mutualPlacesCount = myPlaceIds.intersect(otherPlaceIds).size
+        val totalUniquePlaces = (myPlaceIds + otherPlaceIds).size
+
+        val placesScore = if (totalUniquePlaces > 0) {
+            (mutualPlacesCount * 100.0 / totalUniquePlaces) * 0.85
+        } else {
+            0.0
+        }
+
+        val mutualFriendsCount = currentUserFriendIds.intersect(otherUserFriendIds).size
+        val totalFriendsCount = currentUserFriendIds.size.coerceAtMost(10)
+
+        val friendsScore = if (totalFriendsCount > 0) {
+            (mutualFriendsCount * 100.0 / totalFriendsCount) * 0.15
+        } else {
+            0.0
+        }
+
+        return (placesScore + friendsScore)
+            .toInt()
+            .coerceIn(0, 100)
     }
 
     fun clearMutualFriends() {
@@ -702,6 +737,9 @@ class UserViewModel @Inject constructor(
 
     private val _usersCompatibility = MutableStateFlow<Map<String, Int>>(emptyMap())
     val usersCompatibility: StateFlow<Map<String, Int>> = _usersCompatibility.asStateFlow()
+
+    private var recommendationsLoadedAtMillis: Long = 0L
+    private val recommendationsCacheTtlMillis: Long = 5 * 60 * 1000L
 
     fun loadRecommendedUsers() {
         viewModelScope.launch {
@@ -792,12 +830,12 @@ class UserViewModel @Inject constructor(
 
                         if (percent > 0) {
                             validUsers.add(user to percent)
-                            Log.d("UserViewModel", "✅ ДОБАВЛЕН: ${user.name} с $percent%")
+                            Log.d("UserViewModel", "ДОБАВЛЕН: ${user.name} с $percent%")
                         } else {
-                            Log.d("UserViewModel", "❌ ПОЛЬЗОВАТЕЛЬ НЕ ДОБАВЛЕН (0%)")
+                            Log.d("UserViewModel", "ПОЛЬЗОВАТЕЛЬ НЕ ДОБАВЛЕН (0%)")
                         }
                     } else {
-                        Log.d("UserViewModel", "❌ У ПОЛЬЗОВАТЕЛЯ НЕТ ЛАЙКНУТЫХ МЕСТ")
+                        Log.d("UserViewModel", "У ПОЛЬЗОВАТЕЛЯ НЕТ ЛАЙКНУТЫХ МЕСТ")
                     }
                 }
 
@@ -824,96 +862,132 @@ class UserViewModel @Inject constructor(
 
     fun refreshRecommendedUsers() {
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                Log.d("PeopleOfDay", "🔄 ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ РЕКОМЕНДАЦИЙ")
+            val now = System.currentTimeMillis()
 
-                // ШАГ 1: Загружаем СВЕЖИЕ данные текущего пользователя (НЕ ИЗ КЕША!)
+            if (
+                _recommendedUsers.value.isNotEmpty() &&
+                now - recommendationsLoadedAtMillis < recommendationsCacheTtlMillis
+            ) {
+                Log.d("PeopleOfDay", "Используем кеш рекомендаций")
+                return@launch
+            }
+
+            if (_isLoading.value) {
+                Log.d("PeopleOfDay", "Загрузка уже идет, повторный запуск пропущен")
+                return@launch
+            }
+
+            _isLoading.value = true
+
+            try {
+                Log.d("PeopleOfDay", "Быстрая загрузка Людей дня без getAllUsers")
+
                 val freshCurrentUser = userRepository.getCurrentUser()
 
                 if (freshCurrentUser == null) {
-                    Log.e("PeopleOfDay", "❌ Не удалось загрузить текущего пользователя")
+                    Log.e("PeopleOfDay", "Не удалось загрузить текущего пользователя")
                     _recommendedUsers.value = emptyList()
                     _usersCompatibility.value = emptyMap()
                     return@launch
                 }
 
-                // Обновляем кеш в ViewModel
                 _myUser.value = freshCurrentUser
-                Log.d("PeopleOfDay", "✅ Загружен свежий пользователь: ${freshCurrentUser.name}")
-                Log.d("PeopleOfDay", "📊 Количество друзей: ${freshCurrentUser.friends.size}")
 
-                // ШАГ 2: Получаем всех пользователей
-                val allUsers = userRepository.getAllUsers()
-
-                // ШАГ 3: Исключаем текущего и друзей
-                val excludedUserIds = freshCurrentUser.friends.keys.toSet() + freshCurrentUser.uid
-                val potentialUsers = allUsers.filter { it.uid !in excludedUserIds }
-
-                Log.d("PeopleOfDay", "👥 Потенциальных пользователей: ${potentialUsers.size}")
-
-                // ШАГ 4: Загружаем места текущего пользователя
-                val myPlacesResult = userPlacesRepository.getUserLikedPlaces()
-                val myPlaces = myPlacesResult.getOrNull() ?: emptyList()
+                val myPlaces = userPlacesRepository
+                    .getUserLikedPlaces(freshCurrentUser.uid)
+                    .getOrNull()
+                    ?: emptyList()
 
                 if (myPlaces.isEmpty()) {
-                    Log.d("PeopleOfDay", "⚠️ У пользователя нет мест - пустые рекомендации")
+                    Log.d("PeopleOfDay", "У пользователя нет лайкнутых мест")
                     _recommendedUsers.value = emptyList()
                     _usersCompatibility.value = emptyMap()
                     return@launch
                 }
 
-                // ШАГ 5: Загружаем детали мест для категорий
-                val myPlaceIds = myPlaces.map { it.placeId }
-                val myPlaceDetailsResult = userPlacesRepository.getPlacesDetails(myPlaceIds)
-                val myPlaceDetails = myPlaceDetailsResult.getOrNull() ?: emptyList()
+                val myRecentPlaceIds = myPlaces
+                    .sortedByDescending { it.addedTime?.seconds ?: 0L }
+                    .map { it.placeId }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .take(30)
 
-                // ШАГ 6: Общее количество друзей для нормализации
-                val totalFriendsCount = freshCurrentUser.friends.count { it.value.status == "friend" }.coerceAtMost(10)
+                val excludedUserIds = freshCurrentUser.friends.keys.toSet() + freshCurrentUser.uid
 
-                val validUsers = mutableListOf<Pair<MyUser, Int>>()
+                val placesByCandidateUser = userPlacesRepository
+                    .getUsersWhoLikedAnyPlaces(
+                        placeIds = myRecentPlaceIds,
+                        excludedUserIds = excludedUserIds,
+                        maxCandidates = 60
+                    )
+                    .getOrNull()
+                    ?: emptyMap()
 
-                // ШАГ 7: Обрабатываем каждого потенциального пользователя
-                for (user in potentialUsers) {
-                    // Загружаем СВЕЖИЕ данные о местах пользователя
-                    val otherPlacesResult = userPlacesRepository.getUserLikedPlaces(user.uid)
-                    val otherPlaces = otherPlacesResult.getOrNull() ?: emptyList()
+                if (placesByCandidateUser.isEmpty()) {
+                    Log.d("PeopleOfDay", "Кандидатов с общими местами не найдено")
+                    _recommendedUsers.value = emptyList()
+                    _usersCompatibility.value = emptyMap()
+                    return@launch
+                }
 
-                    if (otherPlaces.isNotEmpty()) {
-                        val otherPlaceIds = otherPlaces.map { it.placeId }
-                        val otherPlaceDetailsResult = userPlacesRepository.getPlacesDetails(otherPlaceIds)
-                        val otherPlaceDetails = otherPlaceDetailsResult.getOrNull() ?: emptyList()
+                val candidateIds = placesByCandidateUser.keys.toList()
 
-                        // Загружаем СВЕЖИЕ данные об общих друзьях
-                        val mutualFriendsCount = userRepository.getMutualFriendsCount(user.uid)
+                val candidateUsers = userRepository
+                    .getUsersByIds(candidateIds)
+                    .filter { it.profileComplete }
 
-                        val percent = calculateEnhancedCompatibility(
+                if (candidateUsers.isEmpty()) {
+                    Log.d("PeopleOfDay", "Нет кандидатов с заполненным профилем")
+                    _recommendedUsers.value = emptyList()
+                    _usersCompatibility.value = emptyMap()
+                    return@launch
+                }
+
+                val currentUserFriendIds = freshCurrentUser.friends
+                    .filter { it.value.status == "friend" }
+                    .keys
+                    .toSet()
+
+                val sortedUsers = candidateUsers
+                    .mapNotNull { user ->
+                        val otherPlaces = placesByCandidateUser[user.uid].orEmpty()
+
+                        if (otherPlaces.isEmpty()) {
+                            return@mapNotNull null
+                        }
+
+                        val otherFriendIds = user.friends
+                            .filter { it.value.status == "friend" }
+                            .keys
+                            .toSet()
+
+                        val percent = calculateFastPeopleOfDayCompatibility(
                             myPlaces = myPlaces,
                             otherUserPlaces = otherPlaces,
-                            myPlaceDetails = myPlaceDetails,
-                            otherUserPlaceDetails = otherPlaceDetails,
-                            mutualFriendsCount = mutualFriendsCount,
-                            totalFriendsCount = totalFriendsCount
+                            currentUserFriendIds = currentUserFriendIds,
+                            otherUserFriendIds = otherFriendIds
                         )
 
                         if (percent > 0) {
-                            validUsers.add(user to percent)
-                            Log.d("PeopleOfDay", "✅ ${user.name}: $percent%")
+                            user to percent
+                        } else {
+                            null
                         }
                     }
-                }
-
-                // ШАГ 8: Сортируем и сохраняем
-                val sortedUsers = validUsers.sortedByDescending { it.second }
+                    .sortedByDescending { it.second }
+                    .take(20)
 
                 _recommendedUsers.value = sortedUsers.map { it.first }
                 _usersCompatibility.value = sortedUsers.associate { it.first.uid to it.second }
+                recommendationsLoadedAtMillis = System.currentTimeMillis()
 
-                Log.d("PeopleOfDay", "🎯 ИТОГО: ${sortedUsers.size} рекомендаций")
+                Log.d("PeopleOfDay", "Быстро загружено рекомендаций: ${sortedUsers.size}")
 
             } catch (e: Exception) {
-                Log.e("PeopleOfDay", "❌ Ошибка: ${e.message}", e)
+                Log.e("PeopleOfDay", "Ошибка быстрой загрузки рекомендаций", e)
                 _dataLoadError.value = e.message ?: "Ошибка загрузки"
+                _recommendedUsers.value = emptyList()
+                _usersCompatibility.value = emptyMap()
             } finally {
                 _isLoading.value = false
             }

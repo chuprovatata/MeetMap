@@ -512,6 +512,38 @@ class UserRepository @Inject constructor(
         }
     }
 
+    suspend fun getUsersByIds(userIds: List<String>): List<MyUser> {
+        return try {
+            val distinctUserIds = userIds
+                .filter { it.isNotBlank() }
+                .distinct()
+
+            if (distinctUserIds.isEmpty()) {
+                return emptyList()
+            }
+
+            val users = mutableListOf<MyUser>()
+
+            distinctUserIds.chunked(10).forEach { chunk ->
+                val snapshot = firestore.collection("users")
+                    .whereIn(FieldPath.documentId(), chunk)
+                    .get()
+                    .await()
+
+                val chunkUsers = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(MyUser::class.java)?.copy(uid = doc.id)
+                }
+
+                users.addAll(chunkUsers)
+            }
+
+            users
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error getting users by ids", e)
+            emptyList()
+        }
+    }
+
     suspend fun getPlacesDetails(placeIds: List<String>): Result<List<PlaceInfo>> =
         withContext(Dispatchers.IO) {
             try {

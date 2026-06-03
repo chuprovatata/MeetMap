@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -20,8 +19,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.meetmap.datingapp.R
 import com.meetmap.datingapp.components.blocks.Title_Block
@@ -36,26 +33,6 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
     val usersCompatibility by viewModel.usersCompatibility.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    Log.d("PeopleOfDay", "📱 Экран стал активным - обновляем данные")
-                    viewModel.refreshRecommendedUsers()
-                }
-                else -> {}
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
     LaunchedEffect(Unit) {
         Log.d("PeopleOfDay", "🚀 Первое открытие экрана")
         viewModel.refreshRecommendedUsers()
@@ -68,7 +45,10 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                     .fillMaxWidth()
                     .background(Color.White)
                     .padding(horizontal = 6.dp)
-                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 20.dp)
+                    .padding(
+                        top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+                        bottom = 20.dp
+                    )
             ) {
                 Heading_Arrow("Люди дня", navController)
             }
@@ -142,7 +122,12 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                                 Text(
                                     text = buildAnnotatedString {
                                         append("Добавляй места из подборки ")
-                                        withStyle(style = SpanStyle(color = PurpleCard, fontWeight = FontWeight.Bold)) {
+                                        withStyle(
+                                            style = SpanStyle(
+                                                color = PurpleCard,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        ) {
                                             append("Места дня")
                                         }
                                         append(", чтобы мы могли найти людей с похожими интересами!")
@@ -167,7 +152,10 @@ fun PeopleOfDay(navController: NavController, viewModel: UserViewModel) {
                                 bottom = 88.dp
                             )
                         ) {
-                            items(recommendedUsers) { user ->
+                            items(
+                                items = recommendedUsers,
+                                key = { it.uid }
+                            ) { user ->
                                 RecommendedUserItem(
                                     user = user,
                                     compatibilityPercent = usersCompatibility[user.uid] ?: 0,

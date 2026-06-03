@@ -23,7 +23,7 @@ class DatingAppApplication : Application() {
         super.onCreate()
 
         OneSignal.Debug.logLevel = LogLevel.VERBOSE
-        OneSignal.initWithContext(this)
+        OneSignal.initWithContext(this, BuildConfig.ONESIGNAL_APP_ID)
 
         val playerId = OneSignal.User.pushSubscription.id
         if (playerId != null && playerId.isNotEmpty()) {
