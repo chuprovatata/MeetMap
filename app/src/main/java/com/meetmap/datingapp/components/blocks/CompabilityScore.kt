@@ -18,15 +18,9 @@ fun CompatibilityScore(
 ) {
     Row(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "$percent%",
+            text = "${getScoreDescription(percent)}",
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.width(20.dp))
-        Text(
-            text = "ваших мест совпадают!\n${getScoreDescription(percent)}",
-            style = MaterialTheme.typography.bodyLarge,
-            fontSize = 15.sp
         )
     }
 }

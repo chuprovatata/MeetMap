@@ -1,9 +1,15 @@
 package com.meetmap.datingapp.screens.recommendation
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -11,16 +17,20 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.meetmap.datingapp.R
 import com.meetmap.datingapp.data.repository.MyUser
 import com.meetmap.datingapp.ui.theme.PurpleCard
+import com.meetmap.datingapp.utils.getCompatibilityShortText
 
 @Composable
 fun RecommendedUserItem(
@@ -28,6 +38,10 @@ fun RecommendedUserItem(
     compatibilityPercent: Int,
     onUserClick: () -> Unit
 ) {
+    val compatibilityText = remember(compatibilityPercent) {
+        getCompatibilityShortText(compatibilityPercent)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -41,10 +55,9 @@ fun RecommendedUserItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 14.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Аватарка
             Image(
                 painter = painterResource(
                     when (user.gender.lowercase()) {
@@ -61,7 +74,6 @@ fun RecommendedUserItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Информация о пользователе
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -69,13 +81,17 @@ fun RecommendedUserItem(
                     text = user.name,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 1
+                    color = Color.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
                     text = "${user.age} лет",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 if (user.university.isNotBlank()) {
@@ -83,26 +99,35 @@ fun RecommendedUserItem(
                         text = user.university,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            // Процент совместимости
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(
-                        PurpleCard
-                    ),
-                contentAlignment = Alignment.Center
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column(
+                modifier = Modifier.widthIn(min = 88.dp, max = 120.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "$compatibilityPercent%",
+                    text = compatibilityText.accent,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    color = PurpleCard,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = compatibilityText.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

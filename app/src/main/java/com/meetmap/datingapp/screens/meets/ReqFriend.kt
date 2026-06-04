@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -42,11 +41,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
+import com.meetmap.datingapp.components.blocks.CompatibilityScore
 import com.meetmap.datingapp.components.blocks.FavPlace
 import com.meetmap.datingapp.components.blocks.FriendsHorizontal
 import com.meetmap.datingapp.components.blocks.MutPlaces
@@ -77,24 +76,18 @@ fun ReqFriend(
     val screenHeight = configuration.screenHeightDp.dp
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Получаем NotificationViewModel
     val notificationViewModel: NotificationViewModel = hiltViewModel()
 
-    // Состояние для отслеживания отправки/отмены заявки
     var isProcessing by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
-
-    // Состояние для отслеживания проверки дружбы
     var friendshipChecked by remember { mutableStateOf(false) }
 
-    // Динамический отступ снизу в зависимости от наличия нижней навигации
     val bottomButtonPadding = if (hasBottomNavigation) {
         (screenHeight * 0.12f).coerceAtLeast(140.dp)
     } else {
         60.dp
     }
 
-    // Получаем статус дружбы из Flow (обновляется в реальном времени)
     val realtimeFriendshipStatus by viewModel.friendshipStatus.collectAsState()
 
     LaunchedEffect(friendId) {
@@ -103,34 +96,30 @@ fun ReqFriend(
         viewModel.loadMutualPlaces(friendId)
         viewModel.loadCompatibility(friendId)
 
-        // Начинаем отслеживать изменения статуса дружбы
         viewModel.observeFriendshipStatus(friendId)
     }
 
-    // Отписываемся при уходе с экрана
     DisposableEffect(Unit) {
         onDispose {
             viewModel.stopObservingFriendshipStatus()
         }
     }
 
-    // Следим за жизненным циклом, чтобы переподписываться при возвращении на экран
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    // При возвращении на экран перезапускаем наблюдение
                     viewModel.observeFriendshipStatus(friendId)
-                    // Также обновляем данные пользователя
                     viewModel.loadUserById(friendId)
                     viewModel.loadMutualFriends(friendId)
                     viewModel.loadMutualPlaces(friendId)
                     viewModel.loadCompatibility(friendId)
                 }
+
                 Lifecycle.Event.ON_PAUSE -> {
-                    // При уходе с экрана отписываемся
                     viewModel.stopObservingFriendshipStatus()
                 }
+
                 else -> {}
             }
         }
@@ -149,13 +138,14 @@ fun ReqFriend(
     val isLoading by viewModel.isLoading.collectAsState()
     val compatibilityPercent by viewModel.compatibilityPercent.collectAsState()
 
-    // Определяем статус дружбы - используем realtimeFriendshipStatus, если он есть, иначе из myUser
-    val friendshipStatus = realtimeFriendshipStatus ?: myUser?.friends?.get(friendId)?.status ?: ""
+    val friendshipStatus = realtimeFriendshipStatus
+        ?: myUser?.friends?.get(friendId)?.status
+        ?: ""
 
-    // Проверяем, является ли пользователь другом, и перенаправляем на Cur_Friend
     LaunchedEffect(friendshipStatus, otherUser, friendshipChecked) {
         if (!friendshipChecked && friendshipStatus == FriendStatus.FRIEND.value && otherUser != null) {
             friendshipChecked = true
+
             navController.navigate(Screen.CurFriend.passFriendId(friendId)) {
                 popUpTo(navController.currentBackStackEntry?.destination?.route ?: return@navigate) {
                     inclusive = true
@@ -165,11 +155,15 @@ fun ReqFriend(
     }
 
     if (isLoading && otherUser == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             CircularProgressIndicator()
         }
     } else {
         val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
         Scaffold(
             topBar = {
                 Column(
@@ -182,9 +176,13 @@ fun ReqFriend(
                     Heading_Arrow(pageTitle, navController)
                 }
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
+            snackbarHost = {
+                SnackbarHost(snackbarHostState)
+            }
         ) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -204,23 +202,16 @@ fun ReqFriend(
 
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        ProgressLine(compatibilityPercent / 100f, height = 12)
+                        ProgressLine(
+                            progress = compatibilityPercent / 100f,
+                            height = 12
+                        )
 
                         Spacer(modifier = Modifier.height(15.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = "$compatibilityPercent%",
-                                style = MaterialTheme.typography.displayLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Text(
-                                text = "ваших мест совпадают!\nэто больше, чем в среднем",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 15.sp
-                            )
-                        }
+                        CompatibilityScore(
+                            percent = compatibilityPercent
+                        )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
@@ -230,6 +221,7 @@ fun ReqFriend(
                                 photoUrl = user.favoritePlacePhoto,
                                 isEditable = false
                             )
+
                             Spacer(modifier = Modifier.height(25.dp))
                         }
 
@@ -240,11 +232,13 @@ fun ReqFriend(
                                     navController.navigate("myPlaceDetail/${place.id}")
                                 }
                             )
+
                             Spacer(modifier = Modifier.height(25.dp))
                         }
 
                         if (mutualFriends.isNotEmpty()) {
                             FriendsHorizontal("Общие друзья", mutualFriends, navController)
+
                             Spacer(modifier = Modifier.height(25.dp))
                         }
                     }
@@ -252,40 +246,54 @@ fun ReqFriend(
 
                 if (showCancelDialog) {
                     AlertDialog(
-                        onDismissRequest = { showCancelDialog = false },
-                        title = { Text("Отменить заявку") },
-                        text = { Text("Вы уверены, что хотите отменить заявку в друзья?") },
+                        onDismissRequest = {
+                            showCancelDialog = false
+                        },
+                        title = {
+                            Text("Отменить заявку")
+                        },
+                        text = {
+                            Text("Вы уверены, что хотите отменить заявку в друзья?")
+                        },
                         confirmButton = {
                             TextButton(
                                 onClick = {
                                     showCancelDialog = false
+
                                     scope.launch {
                                         isProcessing = true
+
                                         try {
                                             viewModel.removeFriendshipStatus(
                                                 myUserId = myUser?.uid ?: "",
                                                 friendId = friendId
                                             )
+
                                             snackbarHostState.showSnackbar("Заявка отменена")
-                                            // Не нужно загружать вручную - обновится через слушатель
                                         } finally {
                                             isProcessing = false
                                         }
                                     }
                                 }
                             ) {
-                                Text("Отменить", color = PurpleCard)
+                                Text(
+                                    text = "Отменить",
+                                    color = PurpleCard
+                                )
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { showCancelDialog = false }) {
+                            TextButton(
+                                onClick = {
+                                    showCancelDialog = false
+                                }
+                            ) {
                                 Text("Закрыть")
                             }
                         }
                     )
                 }
 
-                // Нижняя панель с кнопками
                 when {
                     isProcessing -> {
                         Box(
@@ -323,6 +331,7 @@ fun ReqFriend(
                                         .clickable {
                                             scope.launch {
                                                 isProcessing = true
+
                                                 try {
                                                     viewModel.updateFriendshipStatus(
                                                         myUserId = myUser?.uid ?: "",
@@ -361,6 +370,7 @@ fun ReqFriend(
                                         .clickable {
                                             scope.launch {
                                                 isProcessing = true
+
                                                 try {
                                                     viewModel.updateFriendshipStatus(
                                                         myUserId = myUser?.uid ?: "",
@@ -368,6 +378,7 @@ fun ReqFriend(
                                                         newStatusForMe = FriendStatus.DENY,
                                                         newStatusForFriend = FriendStatus.MY_APPLICATION
                                                     )
+
                                                     snackbarHostState.showSnackbar("Заявка отклонена")
                                                     navController.popBackStack()
                                                 } finally {
@@ -402,7 +413,9 @@ fun ReqFriend(
                                     .height(48.dp)
                                     .clip(RoundedCornerShape(13.dp))
                                     .background(Color.Gray.copy(alpha = 0.3f))
-                                    .clickable { showCancelDialog = true },
+                                    .clickable {
+                                        showCancelDialog = true
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -459,6 +472,7 @@ fun ReqFriend(
                                     .clickable {
                                         scope.launch {
                                             isProcessing = true
+
                                             try {
                                                 viewModel.updateFriendshipStatus(
                                                     myUserId = myUser?.uid ?: "",
@@ -473,7 +487,6 @@ fun ReqFriend(
                                                 )
 
                                                 snackbarHostState.showSnackbar("Заявка отправлена")
-                                                // Не нужно загружать вручную - обновится через слушатель
                                             } finally {
                                                 isProcessing = false
                                             }
