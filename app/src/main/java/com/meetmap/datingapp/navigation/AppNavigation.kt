@@ -39,6 +39,10 @@ import com.meetmap.datingapp.viewmodels.ProfileSetupViewModel
 import com.meetmap.datingapp.viewmodels.UserViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import com.meetmap.datingapp.screens.events.EventsScreen
+import androidx.navigation.navArgument
+import com.meetmap.datingapp.screens.events.EventDetailsScreen
+import com.meetmap.datingapp.screens.events.CreateEventScreen
 
 @Composable
 fun AppNavigation() {
@@ -400,6 +404,42 @@ fun AppNavigation() {
            MyProfileMap(navController = navController, userViewModel)
         }
 
+        composable(Screen.Events.route) {
+            EventsScreen(navController = navController)
+        }
 
+        composable(
+            route = Screen.CreateEvent.route,
+            arguments = listOf(
+                navArgument("eventId") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = ""
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId").orEmpty()
+
+            CreateEventScreen(
+                navController = navController,
+                eventId = eventId
+            )
+        }
+
+        composable(
+            route = Screen.EventDetails.route,
+            arguments = listOf(
+                navArgument("eventId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+
+            EventDetailsScreen(
+                navController = navController,
+                eventId = eventId
+            )
+        }
     }
 }

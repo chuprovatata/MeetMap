@@ -3,6 +3,7 @@ package com.meetmap.datingapp.di
 import com.meetmap.datingapp.data.repository.NotificationRepository
 import com.meetmap.datingapp.data.repository.UserPlacesRepository
 import com.meetmap.datingapp.data.repository.UserRepository
+import com.meetmap.datingapp.data.repository.EventsRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -62,4 +63,11 @@ object AppModule {
         auth: FirebaseAuth,
         firestore: FirebaseFirestore
     ): NotificationRepository = NotificationRepository(auth, firestore)
+
+    @Provides
+    @Singleton
+    fun provideEventsRepository(
+        auth: FirebaseAuth,
+        firestore: FirebaseFirestore
+    ): EventsRepository = EventsRepository(auth, firestore)
 }

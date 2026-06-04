@@ -38,12 +38,24 @@ sealed class Screen(val route: String) {
     object  MainMeets: Screen("screen_1")
     object FeedbackAfterPlacesOfDay: Screen("feedback_after_places_of_day")
     object PeopleOfDay: Screen("people_of_day")
+    object Events : Screen("events")
+    object CreateEvent : Screen("create_event?eventId={eventId}") {
+        fun create(): String {
+            return "create_event"
+        }
+
+        fun edit(eventId: String): String {
+            return "create_event?eventId=$eventId"
+        }
+    }
 
     object MyProfileMap: Screen("my_profile_map")
 
-
-
-
+    object EventDetails : Screen("event_details/{eventId}") {
+        fun passEventId(eventId: String): String {
+            return "event_details/$eventId"
+        }
+    }
     fun withArgs(vararg args: String): String {
         return buildString {
             append(route)

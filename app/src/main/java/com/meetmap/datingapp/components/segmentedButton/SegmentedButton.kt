@@ -167,7 +167,7 @@ fun CustomTabsComponent(
                     )
 
                     if (icon2 != 0) {
-                        Icon(painter = painterResource(id = icon1), contentDescription = "icon")
+                        Icon(painter = painterResource(id = icon2), contentDescription = "icon")
                     }
                 }
 
