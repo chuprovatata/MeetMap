@@ -33,9 +33,6 @@ data class Notification(
     val createdAt: Timestamp? = null,
     val expiresAt: Timestamp? = null
 ) {
-    /**
-     * Вспомогательные функции для получения данных
-     */
     fun getPlaceId(): String? = data["placeId"]
     fun getFriendId(): String? = data["friendId"]
     fun getFriendName(): String? = data["friendName"]

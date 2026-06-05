@@ -31,7 +31,6 @@ class NotificationRepository @Inject constructor(
         return auth.currentUser?.uid ?: ""
     }
 
-    // ==================== ПОЛУЧЕНИЕ УВЕДОМЛЕНИЙ ====================
 
     fun getNotificationsFlow(): Flow<List<Notification>> = callbackFlow {
         val currentUser = auth.currentUser
@@ -93,7 +92,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    // ==================== ОБНОВЛЕНИЕ УВЕДОМЛЕНИЙ ====================
 
     suspend fun markAsRead(notificationId: String) {
         try {
@@ -155,7 +153,6 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    // ==================== СОЗДАНИЕ УВЕДОМЛЕНИЙ ====================
 
     suspend fun createNewPlaceFromFriendNotification(
         friendId: String,
@@ -291,95 +288,5 @@ class NotificationRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Ошибка при создании уведомления FRIEND_ACCEPTED", e)
         }
-    }
-
-    // ==================== ТЕСТОВЫЕ УВЕДОМЛЕНИЯ ====================
-
-    suspend fun createTestNotifications() {
-        val currentUser = auth.currentUser ?: return
-        val userId = currentUser.uid
-
-        Log.d(TAG, "Создание тестовых уведомлений для пользователя $userId")
-
-        try {
-            val oldNotifications = notificationsCollection
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("title", "Тестовое уведомление")
-                .get()
-                .await()
-
-            val batch = firestore.batch()
-            oldNotifications.documents.forEach { doc ->
-                batch.delete(doc.reference)
-            }
-            batch.commit().await()
-        } catch (e: Exception) {
-            Log.e(TAG, "Ошибка при удалении старых тестовых уведомлений", e)
-        }
-
-        val testNotifications = listOf(
-            Notification(
-                userId = userId,
-                type = NotificationType.NEW_PLACE_FROM_FRIEND,
-                title = "Анна добавила новое место ✨",
-                description = "Анна добавила кафе 'Кофе и Книги' в избранное",
-                data = mapOf(
-                    "friendId" to "test_friend_1",
-                    "placeId" to "test_place_1",
-                    "friendName" to "Анна",
-                    "placeName" to "Кофе и Книги"
-                ),
-                buttonText = "Посмотреть место",
-                read = false,
-                pushSent = false,
-                createdAt = com.google.firebase.Timestamp(java.util.Date())
-            ),
-            Notification(
-                userId = userId,
-                type = NotificationType.PLACES_OF_DAY_UPDATED,
-                title = "Свежие места дня 🔥",
-                description = "Подборка мест дня обновилась! Смотри, что нового мы для тебя нашли.",
-                data = emptyMap(),
-                buttonText = "Смотреть подборку",
-                read = true,
-                pushSent = false,
-                createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 86400000))
-            ),
-            Notification(
-                userId = userId,
-                type = NotificationType.FRIEND_REQUEST,
-                title = "Запрос в друзья 👋",
-                description = "Екатерина хочет добавить вас в друзья",
-                data = mapOf(
-                    "friendId" to "test_friend_3",
-                    "friendName" to "Екатерина"
-                ),
-                buttonText = "Перейти в заявки",
-                read = false,
-                pushSent = false,
-                createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 7200000))
-            ),
-            Notification(
-                userId = userId,
-                type = NotificationType.FRIEND_ACCEPTED,
-                title = "Заявка принята ✅",
-                description = "Дмитрий принял вашу заявку в друзья!",
-                data = mapOf(
-                    "friendId" to "test_friend_4",
-                    "friendName" to "Дмитрий"
-                ),
-                buttonText = "Посмотреть профиль",
-                read = false,
-                pushSent = false,
-                createdAt = com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() - 1800000))
-            )
-        )
-
-        testNotifications.forEach { notification ->
-            val docRef = notificationsCollection.document()
-            docRef.set(notification.copy(id = docRef.id)).await()
-        }
-
-        Log.d(TAG, "Все тестовые уведомления созданы")
     }
 }

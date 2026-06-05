@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,13 +54,11 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             val user = auth.currentUser
             if (user != null) {
-                // Проверяем, действительно ли пользователь существует в Firebase
                 val isValid = checkIfUserExists(user)
                 if (isValid) {
                     _currentUser.value = user
                     updateAuthState(user)
                 } else {
-                    // Пользователь был удален - выходим
                     forceSignOut()
                 }
             } else {
@@ -75,13 +74,11 @@ class AuthViewModel : ViewModel() {
             user.getIdToken(true).await()
             true
         } catch (e: FirebaseAuthInvalidUserException) {
-            // Пользователь удален или отключен
             Log.e("AuthViewModel", "User no longer exists: ${e.message}")
             false
         } catch (e: Exception) {
-            // Другие ошибки - в этом случае оставляем пользователя, но логируем ошибку
             Log.e("AuthViewModel", "Error checking user existence: ${e.message}")
-            true // Предполагаем, что пользователь существует
+            true
         }
     }
 
@@ -153,13 +150,9 @@ class AuthViewModel : ViewModel() {
 
     fun logout() {
         auth.signOut()
-        // Дополнительно очищаем любые локальные данные
         clearLocalData()
     }
 
-    /**
-     * Принудительный выход без проверок
-     */
     fun forceSignOut() {
         auth.signOut()
         clearLocalData()
@@ -168,65 +161,36 @@ class AuthViewModel : ViewModel() {
         Log.d("AuthViewModel", "Force sign out executed")
     }
 
-    /**
-     * Очистка локальных данных
-     */
     private fun clearLocalData() {
     }
 
-    /**
-     * Проверка валидности текущей сессии
-     */
     suspend fun checkSessionValidity(): Boolean {
         val user = auth.currentUser ?: return false
 
         return try {
-            // Пытаемся обновить токен, если пользователь удален - будет исключение
             user.getIdToken(true).await()
             true
         } catch (e: FirebaseAuthInvalidUserException) {
-            // Пользователь удален
             forceSignOut()
             false
         } catch (e: Exception) {
-            // Другие ошибки - в этом случае оставляем текущее состояние
             true
-        }
-    }
-
-    /**
-     * Получить валидного пользователя или null
-     */
-    suspend fun getValidCurrentUser(): FirebaseUser? {
-        val user = auth.currentUser ?: return null
-
-        return try {
-            user.getIdToken(true).await()
-            user
-        } catch (e: FirebaseAuthInvalidUserException) {
-            forceSignOut()
-            null
-        } catch (e: Exception) {
-            user
         }
     }
 
     fun sendPasswordResetEmail(email: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             _isLoading.value = true
-
             try {
-                val methods = auth.fetchSignInMethodsForEmail(email).await()
-
-                if (methods.signInMethods?.isEmpty() == true) {
-                    onError("Пользователь с таким email не зарегистрирован")
-                } else {
-                    auth.sendPasswordResetEmail(email).await()
-                    _successMessage.value = "Письмо для восстановления пароля отправлено на $email"
-                    onSuccess()
-                }
+                auth.sendPasswordResetEmail(email).await()
+                _successMessage.value = "Письмо для сброса пароля отправлено на $email"
+                onSuccess()
+            } catch (e: FirebaseAuthInvalidUserException) {
+                _successMessage.value = "Письмо для сброса пароля отправлено на $email"
+                onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "Ошибка отправки письма")
+                _errorMessage.value = "Ошибка: ${e.message}"
+                onError(e.message ?: "Неизвестная ошибка")
             } finally {
                 _isLoading.value = false
             }

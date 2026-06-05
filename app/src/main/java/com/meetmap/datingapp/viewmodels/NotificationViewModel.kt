@@ -49,7 +49,6 @@ class NotificationViewModel @Inject constructor(
                     .collect { notifications ->
                         _notifications.value = notifications
                         _isLoading.value = false
-                        // Обновляем счетчик при получении новых уведомлений
                         loadUnreadCount()
                     }
             } catch (e: Exception) {
@@ -80,9 +79,7 @@ class NotificationViewModel @Inject constructor(
     fun markAsRead(notificationId: String) {
         viewModelScope.launch {
             notificationRepository.markAsRead(notificationId)
-            // Обновляем счетчик
             loadUnreadCount()
-            // Обновляем список, чтобы изменился статус прочтения
             _notifications.value = _notifications.value.map {
                 if (it.id == notificationId) it.copy(read = true) else it
             }
@@ -105,22 +102,12 @@ class NotificationViewModel @Inject constructor(
         }
     }
 
-    fun createTestNotifications() {
-        viewModelScope.launch {
-            notificationRepository.createTestNotifications()
-            refreshNotifications()
-        }
-    }
 
-    /**
-     * Создать уведомление о новой заявке в друзья
-     */
     fun createFriendRequestNotification(fromUserId: String, toUserId: String) {
         viewModelScope.launch {
             try {
                 notificationRepository.createFriendRequestNotification(fromUserId, toUserId)
                 Log.d("NotificationVM", "Уведомление о заявке создано: from=$fromUserId, to=$toUserId")
-                // Обновляем счетчик для получателя
                 if (toUserId == notificationRepository.getCurrentUserId()) {
                     loadUnreadCount()
                 }
@@ -129,16 +116,11 @@ class NotificationViewModel @Inject constructor(
             }
         }
     }
-
-    /**
-     * Создать уведомление о принятии заявки в друзья
-     */
     fun createFriendAcceptedNotification(fromUserId: String, toUserId: String) {
         viewModelScope.launch {
             try {
                 notificationRepository.createFriendAcceptedNotification(fromUserId, toUserId)
                 Log.d("NotificationVM", "Уведомление о принятии заявки создано: from=$fromUserId, to=$toUserId")
-                // Обновляем счетчик для получателя
                 if (toUserId == notificationRepository.getCurrentUserId()) {
                     loadUnreadCount()
                 }

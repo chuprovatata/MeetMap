@@ -148,21 +148,4 @@ class FeedbackRepository @Inject constructor(
 
         return saveFeedbackInternal(feedback)
     }
-
-    suspend fun getAllFeedback(): Result<List<AppFeedback>> {
-        return try {
-            val snapshot = collection
-                .orderBy("created_at", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .get()
-                .await()
-
-            val feedbacks = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(AppFeedback::class.java)?.copy(id = doc.id)
-            }
-
-            Result.success(feedbacks)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 }

@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/datingapp/viewmodels/OnboardingViewModel.kt
 package com.meetmap.datingapp.viewmodels
 
 import androidx.lifecycle.ViewModel
@@ -19,14 +18,14 @@ class OnboardingViewModel @Inject constructor() : ViewModel() {
     fun setFirstLaunchComplete() {
         viewModelScope.launch {
             _isFirstLaunch.value = false
-            println("🔥 OnboardingViewModel: First launch set to FALSE")
+            println("OnboardingViewModel: First launch set to FALSE")
         }
     }
 
     fun resetFirstLaunch() {
         viewModelScope.launch {
             _isFirstLaunch.value = true
-            println("🔥 OnboardingViewModel: First launch reset to TRUE")
+            println("OnboardingViewModel: First launch reset to TRUE")
         }
     }
 }
