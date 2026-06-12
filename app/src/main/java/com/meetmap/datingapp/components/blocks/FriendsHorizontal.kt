@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -28,17 +30,21 @@ import com.meetmap.datingapp.ui.theme.PurpleCard
 import com.meetmap.datingapp.ui.theme.boundedFamily
 
 @Composable
-fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavController) {
+fun FriendsHorizontal(
+    header: String, friends: List<MyUser>, navController: NavController,
+    fontSize: TextUnit = 25.sp,size: Dp = 78.dp
+
+    ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = header,
             style = MaterialTheme.typography.displayMedium,
-            fontSize = 25.sp
+            fontSize = fontSize
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         if (friends.isEmpty()) {
-            // Текст без горизонтального скролла
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,7 +60,7 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
                     color = PurpleCard,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        // ИСПРАВЛЕНО: Кнопка "Знакомства" ведет на экран "Люди дня" (PeopleOfDay)
+
                         navController.navigate(Screen.PeopleOfDay.route)
                     }
                 )
@@ -69,7 +75,7 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
                     color = PurpleCard,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        // ИСПРАВЛЕНО: Кнопка "Друзья" ведет на экран "Знакомства" с сохранением нижнего меню
+
                         navController.navigate("main_bottom_menu/screen_1")
                     }
                 )
@@ -81,7 +87,7 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
                     .horizontalScroll(rememberScrollState())
             ) {
                 friends.forEach { friend ->
-                    ItemFriendsHorizontal(friend, navController)
+                    ItemFriendsHorizontal(friend, navController, size)
                     Spacer(modifier = Modifier.width(23.dp))
                 }
             }
@@ -90,14 +96,18 @@ fun FriendsHorizontal(header: String, friends: List<MyUser>, navController: NavC
 }
 
 @Composable
-fun ItemFriendsHorizontal(user: MyUser, navController: NavController) {
+fun ItemFriendsHorizontal(
+    user: MyUser,
+    navController: NavController,
+    size: Dp = 78.dp
+) {
     Column(modifier = Modifier.clickable {
         navController.navigate(Screen.CurFriend.passFriendId(user.uid))
     }, horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
             painter = painterResource(id = R.drawable.profile_male),
             contentDescription = "icon",
-            modifier = Modifier.size(78.dp)
+            modifier = Modifier.size(size)
         )
         Text(
             text = user.username,

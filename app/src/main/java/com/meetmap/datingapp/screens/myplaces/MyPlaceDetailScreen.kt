@@ -1,6 +1,5 @@
 package com.meetmap.datingapp.screens.myplaces
 
-import android.graphics.PointF
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +33,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.decode.SvgDecoder
 import com.meetmap.datingapp.R
-import com.meetmap.datingapp.components.map.TestMapScreen
+import com.meetmap.datingapp.components.map.OnePointMap
 import com.meetmap.datingapp.data.models.AppUser
 import com.meetmap.datingapp.data.models.PlaceInfo
 import com.meetmap.datingapp.navigation.Screen
@@ -367,7 +366,7 @@ fun MyPlaceDetailScreen(
                         )
                     }
                     // карта
-                    TestMapScreen(
+                    OnePointMap(
                         text = place.name,
                         latitude = place.latitude,
                         longitude = place.longitude,

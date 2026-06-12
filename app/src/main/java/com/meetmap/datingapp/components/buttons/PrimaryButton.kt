@@ -26,20 +26,22 @@ fun PrimaryButton(
     minWidthFraction: Float = 0.85f,
     maxWidthFraction: Float = 0.9f,
     fixedWidth: Dp? = null,
-    fixedHeight: Dp? = null
+    fixedHeight: Dp? = null,
+    containerColor: Color? = null,  // ← добавить
+    contentColor: Color? = null      // ← добавить
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
     val buttonHeight = fixedHeight ?: when {
-        configuration.screenWidthDp < 360 -> minHeight.dp // Маленькие экраны
-        configuration.screenWidthDp < 600 -> 52.dp       // Средние экраны
-        else -> 57.dp                                    // Большие экраны
+        configuration.screenWidthDp < 360 -> minHeight.dp
+        configuration.screenWidthDp < 600 -> 52.dp
+        else -> 57.dp
     }.coerceIn(minHeight.dp, maxHeight.dp)
 
     val buttonWidth = fixedWidth ?: (screenWidth * minWidthFraction)
         .coerceAtMost(screenWidth * maxWidthFraction)
-        .coerceAtLeast(280.dp) // Минимальная ширина
+        .coerceAtLeast(280.dp)
 
     val textHorizontalPadding = when {
         configuration.screenWidthDp < 360 -> 24.dp
@@ -60,13 +62,14 @@ fun PrimaryButton(
         else -> 20.sp
     }
 
-    val containerColor = if (enabled) {
+    // Используем переданные цвета или цвета по умолчанию
+    val finalContainerColor = containerColor ?: if (enabled) {
         MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.outline
     }
 
-    val contentColor = if (enabled) {
+    val finalContentColor = contentColor ?: if (enabled) {
         MaterialTheme.colorScheme.onPrimary
     } else {
         Color.Gray
@@ -75,7 +78,7 @@ fun PrimaryButton(
     val buttonTextStyle = MaterialTheme.typography.labelLarge.copy(
         fontSize = adaptiveTextSize,
         textAlign = TextAlign.Center,
-        color = contentColor
+        color = finalContentColor
     )
 
     Button(
@@ -86,10 +89,10 @@ fun PrimaryButton(
             .fillMaxWidth(fraction = minWidthFraction),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            disabledContainerColor = containerColor,
-            disabledContentColor = contentColor
+            containerColor = finalContainerColor,
+            contentColor = finalContentColor,
+            disabledContainerColor = finalContainerColor,
+            disabledContentColor = finalContentColor
         ),
         enabled = enabled,
         contentPadding = PaddingValues(0.dp)

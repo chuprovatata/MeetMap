@@ -29,11 +29,18 @@ import com.yandex.runtime.image.ImageProvider
 import kotlin.collections.forEach
 import kotlin.collections.set
 
+
+
+
 @Composable
 fun AllPointMap(
     places: List<PlaceInfo>,
     onPlaceClick: (PlaceInfo) -> Unit
 ) {
+    //для тестов с временем
+    val startTime = System.currentTimeMillis()
+
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val mapView = remember { MapView(context) }
@@ -64,7 +71,7 @@ fun AllPointMap(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                android.util.Log.d("MAP_DEBUG", "ON_RESUME - принудительная перерисовка")
+                android.util.Log.d("MAP_DEBUG", "ON_RESUME - принудительно перерисовываем")
                 mapViewRef?.post {
                     mapViewRef?.requestLayout()
                     mapViewRef?.invalidate()
@@ -95,6 +102,7 @@ fun AllPointMap(
 
     // пересоздание маркерво
     LaunchedEffect(places) {
+
         android.util.Log.d("MAP_DEBUG", " ${places.size} мест")
 
         // очистка старых слушателей
@@ -152,6 +160,14 @@ fun AllPointMap(
 
 
     }
+
+    val endTime = System.currentTimeMillis()
+    val loadTime = endTime - startTime
+
+    android.util.Log.d(
+        "MAP_PERFORMANCE",
+        "Загрузка ${places.size} маркеров: ${loadTime} мс"
+    )
 
     AndroidView(
         factory = {

@@ -1,5 +1,6 @@
 package com.meetmap.datingapp.components.map
 
+import android.annotation.SuppressLint
 import android.graphics.PointF
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,8 +27,9 @@ import com.yandex.mapkit.map.TextStyle
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.runtime.image.ImageProvider
 
+@SuppressLint("ClickableViewAccessibility")
 @Composable
-fun TestMapScreen(
+fun OnePointMap(
     text: String,
     latitude: Double,
     longitude: Double,

@@ -38,6 +38,14 @@ sealed class Screen(val route: String) {
     object  MainMeets: Screen("screen_1")
     object FeedbackAfterPlacesOfDay: Screen("feedback_after_places_of_day")
     object PeopleOfDay: Screen("people_of_day")
+    object EventMain: Screen("event_main")
+
+    object EventDetail: Screen("event_detail")
+
+    object EventCreate: Screen("create_event")
+
+
+
 
     object MyProfileMap: Screen("my_profile_map")
 
