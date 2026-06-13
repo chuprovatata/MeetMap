@@ -19,6 +19,10 @@ import com.meetmap.datingapp.screens.admin.TestCloudScreen
 import com.meetmap.datingapp.screens.auth.LoginScreen
 import com.meetmap.datingapp.screens.auth.RegistrationScreen
 import com.meetmap.datingapp.screens.favoriteplace.FavoritePlaceScreen
+import com.meetmap.datingapp.screens.events.EventCreate
+import com.meetmap.datingapp.screens.events.EventDetail
+import com.meetmap.datingapp.screens.events.EventEdit
+import com.meetmap.datingapp.screens.events.EventMain
 import com.meetmap.datingapp.screens.feedback.FeedbackAfterPlacesOfDayScreen
 import com.meetmap.datingapp.screens.friends.Cur_Friend
 import com.meetmap.datingapp.screens.meets.MainMeets
@@ -404,6 +408,42 @@ fun AppNavigation() {
         composable(Screen.MyProfileMap.route) {
            MyProfileMap(navController = navController, userViewModel)
         }
+
+        composable(Screen.EventMain.route) {
+            EventMain(navController = navController, userViewModel)
+        }
+        composable(
+            route = "event_detail/{eventId}",
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventDetail(
+                eventId = eventId,
+                navController = navController,
+                userViewModel = userViewModel
+            )
+        }
+
+        composable(Screen.EventCreate.route) {
+            EventCreate(navController = navController, userViewModel)
+        }
+
+        composable(
+            route = "edit_event/{eventId}",
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventEdit(
+                eventId = eventId,
+                navController = navController,
+                userViewModel = userViewModel
+            )
+        }
+
+
+
+
+
 
 
     }

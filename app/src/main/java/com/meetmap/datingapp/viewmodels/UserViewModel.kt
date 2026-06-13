@@ -956,9 +956,18 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-
     override fun onCleared() {
         super.onCleared()
         stopObservingFriendshipStatus()
+    }
+
+
+    suspend fun getUserById(userId: String): MyUser? {
+        return try {
+            userRepository.getUserById(userId)
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "Error getting user by id: $userId", e)
+            null
+        }
     }
 }

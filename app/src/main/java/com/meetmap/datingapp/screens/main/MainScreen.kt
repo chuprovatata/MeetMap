@@ -198,6 +198,19 @@ fun MainScreen(
                         showImage = false,
                         containerColor = GrayLight
                     )
+                    Spacer(modifier = Modifier.height(if (isLandscape) 8.dp else screenHeight * 0.02f))
+                    SimpleBlock(
+                        title = "Мероприятия",
+                        subtitle = "Некуда сходить? Мы поможем!",
+                        imageResId = null,
+                        onClick = {
+                            navController.navigate(Screen.EventMain.route)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        height = finalPeopleBlockHeight,
+                        showImage = false,
+
+                    )
                 }
             }
         }

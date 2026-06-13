@@ -174,7 +174,7 @@ fun MyProfileMap(
 
                 else -> {
                     AllPointMap(
-                        places = validPlaces,
+                        validPlaces,
                         onPlaceClick = { selectedPlace = it }
                     )
                 }

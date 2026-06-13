@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -31,7 +32,8 @@ import com.meetmap.datingapp.ui.theme.boundedFamily
 fun Heading_Arrow(
     heading: String,
     navController: NavController,
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
+    textSize: TextUnit = 35.sp
 ) {
     Row(
         modifier = Modifier
@@ -55,7 +57,7 @@ fun Heading_Arrow(
 
         Text(
             text = heading,
-            fontSize = 35.sp,
+            fontSize = textSize,
             fontFamily = boundedFamily,
             fontWeight = FontWeight.Normal,
             modifier = Modifier
@@ -74,8 +76,10 @@ fun Heading(
     showSettings: Boolean = true,
     showProfile: Boolean = true,
     onBackClick: (() -> Unit)? = null,
-    navController: NavController
-) {
+    navController: NavController,
+    size: TextUnit = 35.sp,
+
+    ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -106,7 +110,8 @@ fun Heading(
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            fontSize = size
         )
 
         Row(
