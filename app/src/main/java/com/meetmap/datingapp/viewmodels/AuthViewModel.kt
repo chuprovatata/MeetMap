@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -117,7 +118,36 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+    fun signInWithGoogle(idToken: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
 
+            try {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                val authResult = auth.signInWithCredential(credential).await()
+                val user = authResult.user
+
+                if (user != null) {
+                    Log.d("AuthViewModel", "Google sign in success: ${user.email}")
+                    onSuccess()
+                } else {
+                    val error = "Ошибка входа через Google"
+                    _errorMessage.value = error
+                    onError(error)
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Google sign in error", e)
+                val error = when (e.message) {
+                    else -> "Ошибка входа через Google: ${e.message}"
+                }
+                _errorMessage.value = error
+                onError(error)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
     fun register(email: String, password: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             _isLoading.value = true

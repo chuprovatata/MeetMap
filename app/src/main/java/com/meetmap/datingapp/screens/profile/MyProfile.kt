@@ -38,6 +38,7 @@ import com.meetmap.datingapp.ui.theme.GrayPerson
 import com.meetmap.datingapp.ui.theme.PurpleMedium
 import com.meetmap.datingapp.ui.theme.PurplePrimary
 import com.meetmap.datingapp.ui.theme.boundedFamily
+
 private fun getPlacesDeclension(count: Int): String {
     return when {
         count % 10 == 1 && count % 100 != 11 -> "место отмечено"
@@ -55,6 +56,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
     val profileImageUrl by viewModel.profileImageUrl.collectAsState()
     val userData by viewModel.userData.collectAsState()
     val userPlacesCount by viewModel.userPlacesCount.collectAsState()
+    val favoritePlaceAddress by viewModel.favoritePlaceAddress.collectAsState()
 
     var profileImageState by remember { mutableStateOf<Any?>(null) }
 
@@ -80,6 +82,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
     LaunchedEffect(userData, user) {
         Log.d("MyProfile", "favoritePlaceName: $favoritePlaceName")
         Log.d("MyProfile", "favoritePlacePhoto: $favoritePlacePhoto")
+        Log.d("MyProfile", "favoritePlaceAddress: $favoritePlaceAddress")
         Log.d("MyProfile", "user: $user")
         Log.d("MyProfile", "userData: $userData")
     }
@@ -102,7 +105,7 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f, fill = false) // занимает место, но не бесконечно
+                        modifier = Modifier.weight(1f, fill = false)
                     ) {
                         IconButton(
                             onClick = {
@@ -130,7 +133,6 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                         )
                     }
 
-                    // Правая часть - иконка настроек
                     IconButton(
                         onClick = {
                             navController.navigate(Screen.Settings.route)
@@ -183,16 +185,16 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
                     Spacer(modifier = Modifier.width(10.dp))
 
                     Text(
-                    text = "(смотреть на карте)",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 13.sp,
-                        color = PurplePrimary,
-                        textDecoration = TextDecoration.Underline
-                    ),
-                    modifier = Modifier.clickable {
-                        navController.navigate(Screen.MyProfileMap.route)
-                    }
-                )
+                        text = "(смотреть на карте)",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 13.sp,
+                            color = PurplePrimary,
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        modifier = Modifier.clickable {
+                            navController.navigate(Screen.MyProfileMap.route)
+                        }
+                    )
                 }
 
 
@@ -201,12 +203,11 @@ fun MyProfile(navController: NavController, viewModel: UserViewModel) {
 
             FavPlace(
                 placeName = favoritePlaceName,
+                placeAddress = favoritePlaceAddress,
                 photoUrl = favoritePlacePhoto,
+                placeComment = viewModel.favoritePlaceComment.collectAsState().value,
                 isUploading = isUploadingFavoritePlace,
-                isEditable = true,
-                onCardClick = {
-                    navController.navigate(Screen.Settings.route)
-                }
+                isEditable = true
             )
             Spacer(modifier = Modifier.height(25.dp))
 

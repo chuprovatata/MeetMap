@@ -40,6 +40,7 @@ sealed class Screen(val route: String) {
     object PeopleOfDay: Screen("people_of_day")
 
     object MyProfileMap: Screen("my_profile_map")
+    object FavoritePlace: Screen("favorite_place")
 
 
 

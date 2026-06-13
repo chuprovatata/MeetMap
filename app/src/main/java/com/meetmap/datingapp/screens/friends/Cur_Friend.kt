@@ -77,6 +77,7 @@ fun Cur_Friend(
     val compatibilityPercent by viewModel.compatibilityPercent.collectAsState()
     val myUser by viewModel.myUser.collectAsState()
     val username = otherUser?.username ?: ""
+    val favoritePlaceAddress = otherUser?.favoritePlaceAddress ?: ""
 
     LaunchedEffect(friendId) {
         viewModel.loadMutualFriends(friendId)
@@ -94,13 +95,11 @@ fun Cur_Friend(
                     .padding(horizontal = 6.dp)
                     .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 20.dp)
             ) {
-                // Убираем Box и делаем Row с правильным распределением
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Левая часть - стрелка и заголовок
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f, fill = false)
@@ -129,7 +128,6 @@ fun Cur_Friend(
                         )
                     }
 
-                    // Правая часть - меню с тремя точками
                     Box {
                         IconButton(
                             onClick = { showMenu = true }
@@ -237,8 +235,10 @@ fun Cur_Friend(
 
                         FavPlace(
                             placeName = user.favoritePlace,
+                            placeAddress = favoritePlaceAddress,
                             photoUrl = user.favoritePlacePhoto,
-                            isEditable = false
+                            placeComment = user.favoritePlaceComment,
+                            isEditable = false,
                         )
 
                         Spacer(modifier = Modifier.height(25.dp))
@@ -262,7 +262,6 @@ fun Cur_Friend(
         }
     }
 
-    // Диалог подтверждения удаления из друзей
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -275,12 +274,10 @@ fun Cur_Friend(
                         isDeleting = true
                         scope.launch {
                             try {
-                                // Удаляем дружбу
                                 viewModel.removeFriendshipStatus(
                                     myUserId = myUser?.uid ?: "",
                                     friendId = friendId
                                 )
-                                // Возвращаемся назад
                                 navController.popBackStack()
                             } finally {
                                 isDeleting = false

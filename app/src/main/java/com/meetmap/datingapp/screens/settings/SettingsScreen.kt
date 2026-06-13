@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.meetmap.datingapp.components.forms.DatingTextField
@@ -96,6 +97,8 @@ fun SettingsScreen(
     val saveError by userViewModel.saveError.collectAsState()
     val saveSuccess by userViewModel.saveSuccess.collectAsState()
     val favoritePlacePhotoUrl by userViewModel.favoritePlacePhotoUrl.collectAsState()
+    val favoritePlaceAddress by userViewModel.favoritePlaceAddress.collectAsState()
+    val favoritePlaceComment by userViewModel.favoritePlaceComment.collectAsState()
 
     var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -104,6 +107,8 @@ fun SettingsScreen(
     var age by remember { mutableStateOf("") }
     var university by remember { mutableStateOf("") }
     var favoritePlace by remember { mutableStateOf("") }
+    var favoritePlaceAddressValue by remember { mutableStateOf("") }
+    var favoritePlaceCommentValue by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
 
     var isPrivateAccount by remember { mutableStateOf(false) }
@@ -168,6 +173,8 @@ fun SettingsScreen(
             age = (data["age"] as? Long)?.toString() ?: ""
             university = data["university"] as? String ?: ""
             favoritePlace = data["favoritePlace"] as? String ?: ""
+            favoritePlaceAddressValue = data["favoritePlaceAddress"] as? String ?: ""
+            favoritePlaceCommentValue = data["favoritePlaceComment"] as? String ?: ""
             isPrivateAccount = data["isPrivateAccount"] as? Boolean ?: false
             isNotificationsEnabled = data["notificationsEnabled"] as? Boolean ?: true
             isNotificationSoundEnabled = data["notificationSoundEnabled"] as? Boolean ?: true
@@ -215,6 +222,8 @@ fun SettingsScreen(
                 age != ((originalData["age"] as? Long)?.toString() ?: "") ||
                 university != (originalData["university"] as? String ?: "") ||
                 favoritePlace != (originalData["favoritePlace"] as? String ?: "") ||
+                favoritePlaceAddressValue != (originalData["favoritePlaceAddress"] as? String ?: "") ||
+                favoritePlaceCommentValue != (originalData["favoritePlaceComment"] as? String ?: "") ||
                 isPrivateAccount != (originalData["isPrivateAccount"] as? Boolean ?: false) ||
                 isNotificationsEnabled != (originalData["notificationsEnabled"] as? Boolean ?: true) ||
                 isNotificationSoundEnabled != (originalData["notificationSoundEnabled"] as? Boolean ?: true) ||
@@ -249,6 +258,8 @@ fun SettingsScreen(
             "age" to age.toLongOrNull(),
             "university" to university,
             "favoritePlace" to favoritePlace,
+            "favoritePlaceAddress" to favoritePlaceAddressValue,
+            "favoritePlaceComment" to favoritePlaceCommentValue,
             "isPrivateAccount" to isPrivateAccount,
             "notificationsEnabled" to isNotificationsEnabled,
             "notificationSoundEnabled" to isNotificationSoundEnabled,
@@ -669,6 +680,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(spacing.medium))
                 }
+
                 item {
                     DatingTextField(
                         value = description,
@@ -695,18 +707,96 @@ fun SettingsScreen(
                 }
 
                 item {
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large),
+                        thickness = 0.5.dp,
+                        color = Color.Gray.copy(alpha = 0.3f)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(spacing.small))
+                }
+
+                item {
+                    Text(
+                        text = "Любимое место",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = spacing.large)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Расскажи о месте, которое тебе дорого",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(horizontal = spacing.large)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                item {
                     DatingTextField(
                         value = favoritePlace,
                         onValueChange = {
                             favoritePlace = it
                             hasUnsavedChanges = true
                         },
-                        label = "Любимое место",
-                        placeholder = "Твое любимое место",
+                        label = "Название места",
+                        placeholder = "Например: Центральный парк, Кофейня «Уют»",
                         enabled = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = spacing.large)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                item {
+                    DatingTextField(
+                        value = favoritePlaceAddressValue,
+                        onValueChange = {
+                            favoritePlaceAddressValue = it
+                            hasUnsavedChanges = true
+                        },
+                        label = "Адрес места",
+                        placeholder = "Например: ул. Пушкина, д. 10, г. Москва",
+                        enabled = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                item {
+                    DatingTextField(
+                        value = favoritePlaceCommentValue,
+                        onValueChange = {
+                            favoritePlaceCommentValue = it
+                            hasUnsavedChanges = true
+                        },
+                        label = "Комментарий",
+                        placeholder = "Расскажи, почему это место особенное для тебя...",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.large)
+                            .heightIn(min = 100.dp),
+                        singleLine = false,
+                        maxLines = Int.MAX_VALUE,
+                        maxCharacters = 300,
+                        showCharacterCounter = true
                     )
                 }
 
@@ -853,44 +943,9 @@ fun SettingsScreen(
                     )
                 }
 
-                    /* item {
-                    TermsSwitch(
-                        checked = isNotificationsEnabled,
-                        onCheckedChange = {
-                            isNotificationsEnabled = it
-                            hasUnsavedChanges = true
-                        },
-                        text = "Уведомления",
-                        showDetailsLink = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = spacing.large)
-                    )
-                }
-
                 item {
                     Spacer(modifier = Modifier.height(spacing.medium))
                 }
-
-                item {
-                    TermsSwitch(
-                        checked = isNotificationSoundEnabled,
-                        onCheckedChange = {
-                            isNotificationSoundEnabled = it
-                            hasUnsavedChanges = true
-                        },
-                        text = "Звук уведомлений",
-                        showDetailsLink = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = spacing.large)
-                    )
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(spacing.medium))
-                }
-                     */
 
                 item {
                     Row(
@@ -992,6 +1047,7 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(spacing.medium))
                 }
+
                 item {
                     Row(
                         modifier = Modifier

@@ -3,6 +3,7 @@ package com.meetmap.datingapp.data.repository
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
+import org.w3c.dom.Comment
 
 data class MyUser(
     @DocumentId
@@ -22,6 +23,8 @@ data class MyUser(
     val friends: Map<String, FriendInfo> = emptyMap(),
     val favoritePlace: String = "",
     val favoritePlacePhoto: String = "",
+    val favoritePlaceAddress: String = "",
+    val favoritePlaceComment: String = "",
     val fcmToken: String = "",
     val profileImageUrl: String = "",
     @ServerTimestamp

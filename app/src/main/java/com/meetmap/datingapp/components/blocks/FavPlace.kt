@@ -3,6 +3,7 @@ package com.meetmap.datingapp.components.blocks
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,9 +20,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -41,6 +47,8 @@ import com.meetmap.datingapp.utils.CloudImageUtils
 @Composable
 fun FavPlace(
     placeName: String?,
+    placeAddress: String? = null,
+    placeComment: String? = null,
     photoUrl: String? = null,
     isUploading: Boolean = false,
     isEditable: Boolean = false,
@@ -48,35 +56,64 @@ fun FavPlace(
 ) {
     if (placeName.isNullOrBlank() && !isEditable) return
 
-    val modifier = if (isEditable) {
-        Modifier
-            .fillMaxWidth()
-            .clickable { onCardClick?.invoke() }
-            .clip(RoundedCornerShape(16.dp))
-    } else {
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-    }
+    var isExpanded by remember { mutableStateOf(false) }
+    val hasComment = !placeComment.isNullOrBlank()
+    val showExpandButton = hasComment
+
+    val commentHeight = if (isExpanded && hasComment) {
+        val lines = (placeComment?.length ?: 0) / 30 + 2
+        (lines * 24).dp + 24.dp
+    } else 0.dp
+
+    val cardHeight = 200.dp + commentHeight
 
     Box(
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(cardHeight)
+            .clip(RoundedCornerShape(16.dp))
             .background(color = PurpleMedium)
-            .height(200.dp)
             .padding(top = 15.dp)
             .padding(horizontal = 13.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Любимое место",
-                style = MaterialTheme.typography.displayMedium,
-                fontSize = 25.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Любимое место",
+                    style = MaterialTheme.typography.displayMedium,
+                    fontSize = 25.sp
+                )
+
+                if (showExpandButton) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { isExpanded = !isExpanded }
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isExpanded) R.drawable.icon_arrow_up else R.drawable.icon_arrow_down
+                            ),
+                            contentDescription = if (isExpanded) "Свернуть" else "Развернуть",
+                            modifier = Modifier.size(28.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 val hasValidPhoto = !photoUrl.isNullOrBlank() &&
                         photoUrl != CloudImageUtils.NO_PICTURE_URL &&
@@ -138,15 +175,31 @@ fun FavPlace(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     if (!placeName.isNullOrBlank()) {
                         Text(
                             text = placeName,
                             fontFamily = montserratFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 20.sp,
-                            lineHeight = 24.sp
+                            lineHeight = 24.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+
+                        if (!placeAddress.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = placeAddress,
+                                fontFamily = montserratFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 13.sp,
+                                lineHeight = 16.sp,
+                                color = Color.Gray,
+                                maxLines = 2
+                            )
+                        }
                     } else if (isEditable) {
                         Text(
                             text = buildAnnotatedString {
@@ -163,6 +216,27 @@ fun FavPlace(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
+                }
+            }
+
+            if (isExpanded && hasComment) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = placeComment,
+                        fontFamily = montserratFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
                 }
             }
         }

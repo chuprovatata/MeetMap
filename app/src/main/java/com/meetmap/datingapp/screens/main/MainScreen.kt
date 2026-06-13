@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,15 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.meetmap.datingapp.R
 import com.meetmap.datingapp.components.blocks.SimpleBlock
@@ -41,21 +35,14 @@ import com.meetmap.datingapp.components.notifications.NotificationBanner
 import com.meetmap.datingapp.navigation.Screen
 import com.meetmap.datingapp.ui.theme.GrayLight
 import com.meetmap.datingapp.ui.theme.LocalDatingAppSpacing
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.meetmap.datingapp.ui.theme.PurpleCard
 import com.meetmap.datingapp.viewmodels.NotificationViewModel
-import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.geometry.Point
-import com.yandex.mapkit.map.CameraPosition
-import com.yandex.mapkit.map.IconStyle
-import com.yandex.mapkit.mapview.MapView
-import com.yandex.runtime.image.ImageProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    navController: NavController,  // Глобальный контроллер для внешних переходов
-    localNavController: NavController // Локальный контроллер для переходов внутри меню
+    navController: NavController,
+    localNavController: NavController
 ) {
     val spacing = LocalDatingAppSpacing.current
     val configuration = LocalConfiguration.current
@@ -64,15 +51,9 @@ fun MainScreen(
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
-    // Получаем ViewModel для уведомлений
     val notificationViewModel: NotificationViewModel = hiltViewModel()
 
     val isLandscape = screenWidth > screenHeight
-
-    val topBarPadding = if (isLandscape) 8.dp else screenHeight * 0.05f
-    val iconSize = if (isLandscape) 28.dp else screenWidth * 0.08f
-    val maxIconSize = 36.dp
-    val finalIconSize = minOf(iconSize, maxIconSize)
 
     val blockHeight = if (isLandscape) 100.dp else screenHeight * 0.2f
     val peopleBlockHeight = if (isLandscape) 80.dp else screenHeight * 0.15f
@@ -80,40 +61,23 @@ fun MainScreen(
     val finalBlockHeight = minOf(blockHeight, maxBlockHeight)
     val finalPeopleBlockHeight = minOf(peopleBlockHeight, maxBlockHeight - 20.dp)
 
-    val bottomPadding = if (isLandscape) 16.dp else screenHeight * 0.06f
     val notificationTopPadding = if (isLandscape) 20.dp else screenHeight * 0.15f
     val notificationOffset = if (isLandscape) 0.dp else screenWidth * 0.08f
     val bottomNavHeight = 80.dp
 
-    // Высота уведомления
     val notificationHeight = 60.dp
 
-    // Верхняя граница для скроллируемой области (после уведомлений)
     val scrollAreaTopOffset = notificationTopPadding + notificationHeight + spacing.medium + 20.dp
-
-    // Нижняя граница для скроллируемой области (до нижней навигации)
     val scrollAreaBottomOffset = bottomNavHeight + spacing.large
-
-    // Проверка для админки
-    val ADMIN_EMAILS = listOf(
-        "meetmap.team@gmail.com",
-        "chuprova_tata@mail.ru",
-        "vmbaizdrenko@gmail.com",
-        "liliadyrnina7464@gmail.com"
-    )
-    var currentUserEmail by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        currentUserEmail = Firebase.auth.currentUser?.email
-    }
 
     Scaffold(
         topBar = {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth().padding(top=WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-
-                    .padding( horizontal = spacing.large).padding(bottom = 20.dp)
+                    .fillMaxWidth()
+                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                    .padding(horizontal = spacing.large)
+                    .padding(bottom = 20.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -130,10 +94,8 @@ fun MainScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(7.dp)
                     ) {
-                        // Кнопка профиля
                         Box(
                             modifier = Modifier
-
                                 .clip(RoundedCornerShape(30.dp))
                                 .clickable {
                                     navController.navigate("my_profile")
@@ -146,38 +108,23 @@ fun MainScreen(
                                 modifier = Modifier.size(35.dp)
                             )
                         }
-
-//                        // Временная кнопка для создания тестовых уведомлений
-//                        Box(
-//                            modifier = Modifier
-//                                .size(finalIconSize)
-//                                .clip(RoundedCornerShape(30.dp))
-//                                .clickable {
-//                                    scope.launch {
-//                                        notificationViewModel.createTestNotifications()
-//                                    }
-//                                },
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Icon(
-//                                painter = painterResource(id = R.drawable.icon_bell),
-//                                contentDescription = "Тест уведомлений",
-//                                modifier = Modifier.size(finalIconSize),
-//                                tint = MaterialTheme.colorScheme.primary
-//                            )
-//                        }
                     }
                 }
             }
         },
         floatingActionButton = {
-            if (currentUserEmail in ADMIN_EMAILS) {
-                FloatingActionButton(
-                    onClick = { navController.navigate(Screen.PlacesAdmin.route) },
-                    modifier = Modifier.padding(bottom = if (isLandscape) 16.dp else screenHeight * 0.08f)
-                ) {
-                    Icon(Icons.Default.AdminPanelSettings, contentDescription = "Админка")
-                }
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.FavoritePlace.route) },
+                modifier = Modifier.padding(bottom = if (isLandscape) 16.dp else screenHeight * 0.12f),
+                containerColor = PurpleCard,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Добавить любимое место",
+                    tint = androidx.compose.ui.graphics.Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
             }
         }
     ) { paddingValues ->
@@ -199,17 +146,14 @@ fun MainScreen(
                 contentScale = ContentScale.Crop
             )
 
-            // Уведомления - поверх всего
             NotificationBanner(
                 navController = navController,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = notificationTopPadding)
                     .offset(x = notificationOffset)
-                    .zIndex(10f)
             )
 
-            // Основной контент с ограниченной областью для скролла
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -218,11 +162,10 @@ fun MainScreen(
                         bottom = scrollAreaBottomOffset
                     )
             ) {
-                // Скроллируемая область с блоками
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f) // Занимает все доступное пространство между верхним и нижним отступами
+                        .weight(1f)
                         .verticalScroll(scrollState)
                         .padding(horizontal = spacing.large)
                 ) {
@@ -255,13 +198,8 @@ fun MainScreen(
                         showImage = false,
                         containerColor = GrayLight
                     )
-
-
-
                 }
             }
         }
     }
 }
-
-

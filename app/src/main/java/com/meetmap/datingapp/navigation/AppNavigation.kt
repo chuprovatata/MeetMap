@@ -18,6 +18,7 @@ import com.meetmap.datingapp.screens.admin.PlacesAdminScreen
 import com.meetmap.datingapp.screens.admin.TestCloudScreen
 import com.meetmap.datingapp.screens.auth.LoginScreen
 import com.meetmap.datingapp.screens.auth.RegistrationScreen
+import com.meetmap.datingapp.screens.favoriteplace.FavoritePlaceScreen
 import com.meetmap.datingapp.screens.feedback.FeedbackAfterPlacesOfDayScreen
 import com.meetmap.datingapp.screens.friends.Cur_Friend
 import com.meetmap.datingapp.screens.meets.MainMeets
@@ -343,6 +344,10 @@ fun AppNavigation() {
         // Settings
         composable(Screen.Settings.route) {
             SettingsScreen(navController = navController)
+        }
+        // Favorite place
+        composable(Screen.FavoritePlace.route) {
+            FavoritePlaceScreen(navController = navController)
         }
 
         // My profile

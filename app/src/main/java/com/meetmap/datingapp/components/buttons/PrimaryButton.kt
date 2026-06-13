@@ -26,7 +26,8 @@ fun PrimaryButton(
     minWidthFraction: Float = 0.85f,
     maxWidthFraction: Float = 0.9f,
     fixedWidth: Dp? = null,
-    fixedHeight: Dp? = null
+    fixedHeight: Dp? = null,
+    isLoading: Boolean = false
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
